@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: November 23, 2021
-#Date Updated: November 23, 2021
+#Date Updated: November 24, 2021
 #Purpose: Explore Landsat NIRv, NDMI, and LMA data at flux tower sites
 
 #Run the script: R < pixel_sample.r --vanilla
@@ -71,3 +71,37 @@ p5 <- ggplot(data = data, mapping = aes(x=yday, y = brightness_mean, color = yea
 p5
 
 ggsave(filename = 'Fig5_Landsat_Brightness.png', height=12, width=16, units = 'cm', dpi=900)
+
+# data %>% filter(month == 8 | month == 9 | month == 10) %>%
+#   group_by(year, site.name) #%>% 
+#   #mutate(LMA.mean = mean(LMA_mean))
+
+#LMA Time Series
+p6 <- ggplot(data = data %>% filter((month == 8 | month == 9 | month == 10) & (LMA_mean < 1 & LMA_mean > -1)) %>%
+                                    # & (Site == "US-SCf" | Site == "US-CZ1" | Site == "US-CZ2" | Site == "US-CZ3" |
+                                    #    Site == "US-CZ4" | Site == "US-SCw")) %>% 
+               group_by(site.name, year) %>% mutate(LMA.mean = mean(LMA_mean))) + #& LMA_mean < 1 & LMA_mean > -1)) + #%>%
+            #group_by(year, site.name) %>% mutate(LMA.mean = mean(LMA_mean))) +
+            geom_line(mapping = aes(x = date, y = LMA.mean), color = 'black', size = 1) +
+            xlab('Year') + ylab(expression('LMA (g m'^-2*')')) + facet_wrap(~ site.name) + theme_bw()
+p6
+
+ggsave(filename = 'Fig6_Landsat_LMA_time_series.png', height=12, width=16, units = 'cm', dpi=900)
+
+#NDMI Time Series
+p7 <- ggplot(data = data %>% filter(month == 8 | month == 9 | month == 10 )%>% 
+               group_by(site.name, year) %>% mutate(NDMI.mean = mean(NDMI_mean))) +
+  geom_line(mapping = aes(x = date, y = NDMI.mean), color = 'black', size = 1) +
+  xlab('Year') + ylab('NDMI') + facet_wrap(~ site.name) + theme_bw()
+p7
+
+ggsave(filename = 'Fig7_Landsat_NDMI_time_series.png', height=12, width=16, units = 'cm', dpi=900)
+
+#NIRv Time Series
+p8 <- ggplot(data = data %>% filter(month == 8 | month == 9 | month == 10) %>% 
+               group_by(site.name, year) %>% mutate(NIRv.mean = mean(NIRv_mean))) +
+  geom_line(mapping = aes(x = date, y = NIRv.mean), color = 'black', size = 1) +
+  xlab('Year') + ylab('NIRv') + facet_wrap(~ site.name) + theme_bw()
+p8
+
+ggsave(filename = 'Fig8_Landsat_NIRv_time_series.png', height=12, width=16, units = 'cm', dpi=900)

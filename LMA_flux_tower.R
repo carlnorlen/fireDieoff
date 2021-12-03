@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: November 23, 2021
-#Date Updated: November 24, 2021
+#Date Updated: December 3, 2021
 #Purpose: Explore Landsat NIRv, NDMI, and LMA data at flux tower sites
 
 #Run the script: R < pixel_sample.r --vanilla
@@ -89,7 +89,7 @@ p6
 ggsave(filename = 'Fig6_Landsat_LMA_time_series.png', height=12, width=16, units = 'cm', dpi=900)
 
 #NDMI Time Series
-p7 <- ggplot(data = data %>% filter(month == 8 | month == 9 | month == 10 )%>% 
+p7 <- ggplot(data = data %>% filter(month == 8 | month == 9 | month == 10 & !is.na(NDMI_mean))%>% 
                group_by(site.name, year) %>% mutate(NDMI.mean = mean(NDMI_mean))) +
   geom_line(mapping = aes(x = date, y = NDMI.mean), color = 'black', size = 1) +
   xlab('Year') + ylab('NDMI') + facet_wrap(~ site.name) + theme_bw()
@@ -98,7 +98,7 @@ p7
 ggsave(filename = 'Fig7_Landsat_NDMI_time_series.png', height=12, width=16, units = 'cm', dpi=900)
 
 #NIRv Time Series
-p8 <- ggplot(data = data %>% filter(month == 8 | month == 9 | month == 10) %>% 
+p8 <- ggplot(data = data %>% filter(month == 8 | month == 9 | month == 10 & !is.na(NIRv_mean)) %>% 
                group_by(site.name, year) %>% mutate(NIRv.mean = mean(NIRv_mean))) +
   geom_line(mapping = aes(x = date, y = NIRv.mean), color = 'black', size = 1) +
   xlab('Year') + ylab('NIRv') + facet_wrap(~ site.name) + theme_bw()

@@ -72,17 +72,19 @@ p5
 
 ggsave(filename = 'Fig5_Landsat_Brightness.png', height=12, width=16, units = 'cm', dpi=900)
 
-# data %>% filter(month == 8 | month == 9 | month == 10) %>%
-#   group_by(year, site.name) #%>% 
-#   #mutate(LMA.mean = mean(LMA_mean))
+# data.annual <- data %>% filter(Site != "US-SCd")
+# 
+# # data$month <- is.numeric(data$month)
+# data %>% filter((month == '05' | month == '06' | month == '07'))
 
 #LMA Time Series
-p6 <- ggplot(data = data %>% filter((month == 8 | month == 9 | month == 10) & (LMA_mean < 1 & LMA_mean > -1)) %>%
-                                    # & (Site == "US-SCf" | Site == "US-CZ1" | Site == "US-CZ2" | Site == "US-CZ3" |
-                                    #    Site == "US-CZ4" | Site == "US-SCw")) %>% 
-               group_by(site.name, year) %>% mutate(LMA.mean = mean(LMA_mean))) + #& LMA_mean < 1 & LMA_mean > -1)) + #%>%
-            #group_by(year, site.name) %>% mutate(LMA.mean = mean(LMA_mean))) +
-            geom_line(mapping = aes(x = date, y = LMA.mean), color = 'black', size = 1) +
+p6 <- ggplot() + 
+      geom_line(data = data %>% filter((month == '08' | month == '09' | month == '10') & (LMA_mean < 1 & LMA_mean > -1) & Site != "US-SCd" & Site != "US-CZ4" & Site != "US-CZ3") %>%
+                        group_by(site.name, year) %>% mutate(LMA.late = mean(LMA_mean)), mapping = aes(x = date, y = LMA.late), color = 'black', size = 1) +
+      geom_line(data = data %>% filter((month == '06' | month == '07') & (LMA_mean < 1 & LMA_mean > -1) & Site != "US-SCd" & Site != "US-CZ4" & Site != "US-CZ3") %>%
+              group_by(site.name, year) %>% mutate(LMA.mid = mean(LMA_mean)), mapping = aes(x = date, y = LMA.mid), color = 'blue', size = 1) +
+      geom_line(data = data %>% filter((month == '04' | month == '05') & (LMA_mean < 1 & LMA_mean > -1) & Site != "US-SCd" & Site != "US-CZ4" & Site != "US-CZ3") %>%
+              group_by(site.name, year) %>% mutate(LMA.early = mean(LMA_mean)), mapping = aes(x = date, y = LMA.early), color = 'red', size = 1) +
             xlab('Year') + ylab(expression('LMA (g m'^-2*')')) + facet_wrap(~ site.name) + theme_bw()
 p6
 

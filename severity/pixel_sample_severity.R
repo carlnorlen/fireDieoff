@@ -38,7 +38,7 @@ pixel.data$stand.age <- as.numeric(pixel.data$vi.year) - as.numeric(pixel.data$f
 # summary(pixel.data %>% filter(bin == 13))
 
 #Create a GAM to predict NDMI by stand.age
-ndmi.gam <- gam(data = filter(pixel.data, vi.year <= 2012 & stand.age > 0), #fire.year >= 1919 & 
+ndmi.gam <- gam(data = filter(pixel.data, vi.year <= 2012 & stand.age >= 0), #fire.year >= 1919 & 
                 formula = NDMI ~ s(stand.age, bs = "cs", k = 5) + s(clm_precip_sum, k = 3) + s(clm_temp_mean, k = 3) + s(latitude, k = 3) + s(fire_sev_last, k = 3))
 summary(ndmi.gam)
 #Add a new column
@@ -150,7 +150,12 @@ pixel.data <- pixel.data %>% mutate(age.bin = case_when(
   stand.age > 20 & stand.age <= 30 ~ '21 to 30',
   stand.age > 30 & stand.age <= 40 ~ '31 to 34'))
 
-ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = date)) + facet_wrap(~age.bin)
+# pixel.data
+#Stand Age years
+p6 <- ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = date)) + facet_wrap(~age.bin)
+p6
+
+ggsave(filename = 'Fig6_Stand_age_bins.png', height=12.5, width= 16, units = 'cm', dpi=900)
 
 #Create new name for data bins
 #Bin names will need to be updated
@@ -171,39 +176,34 @@ pixel.data <- pixel.data %>% mutate(sev.bin = case_when(
                                     fire_sev_last == '3' ~ 'Mid',
                                     fire_sev_last == '4' ~ 'High',
                                     fire_sev_last == '255' ~ 'Masked')) # end function
-
+pixel.data
 #Make the bin lables in the correct order
 pixel.data$elevation.control = with(pixel.data, factor(elevation.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
 pixel.data$temp.control = with(pixel.data, factor(temp.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
 pixel.data$precip.control = with(pixel.data, factor(precip.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
 
 #Make the years bin lables in the correct order
-pixel.data$age.bin = with(pixel.data, factor(age.bin, levels = c('Masked', 'Lowest', 'Low','Mid', 'High')))
+pixel.data$sev.bin = with(pixel.data, factor(sev.bin, levels = c('Masked', 'Lowest', 'Low','Mid', 'High')))
 
 #Burn Severity Bin
-pixel.data$sev.bin = with(pixel.data, factor(sev.bin, levels = c('-32 to -21', '-20 to -11', '-10 to -1','0 to 10', '11 to 20', '21 to 30', '31 to 34')))
+pixel.data$age.bin = with(pixel.data, factor(age.bin, levels = c('-32 to -21', '-20 to -11', '-10 to -1','0 to 10', '11 to 20', '21 to 30', '31 to 34')))
 
 #Fire Year Bins
 pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2017','2001-2010','1991-2000','1984-1990')))
 
 #Calculate dNDMI based on predictions
-pixel.data$dNDMI <- pixel.data$NDMI - pixel.data$NDMI.predict
-
-#Exploratory figure of NDMI Time Series by stand age with a GAM fit
-p1 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age > 0 & !is.na(NDMI) & fire_sev_last != 255), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d() +
-  # geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 1), color = 'grey80') +
-  # geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 2), color = 'grey60') +
-  # geom_smooth(method = 'lm', formula = y ~ poly(x, 4), se = FALSE, color = 'blue') +
+pixel.data$dNDMI <- pixel.data$NDMI - pixel.data$NDMI.predictions
+pixel.data
+#Exploratory figure of NDMI Time Series by stand age with a GAM fit )
+p1 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age >= 0 & !is.na(NDMI) & fire_sev_last != 255), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d() +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), se = FALSE, mapping = aes(color = sev.bin)) +
-  # geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), se = FALSE, color = 'black') +
-  # geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), color = 'grey0') +#facet_wrap(~precip.control) +
-  scale_fill_gradient2(limits = c(10,1200), breaks = c(10,300,600,900), midpoint = 600, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
+  scale_fill_gradient2(limits = c(10,600), breaks = c(10,150,300,450), midpoint = 300, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
 p1
 
 ggsave(filename = 'Fig1_NDMI_Chrono_Sequence_filtered.png', height=12.5, width= 16, units = 'cm', dpi=900)
 
 #Time series of NDMI
-p2 <- ggplot(data = filter(pixel.data, stand.age > 0 & !is.na(dNDMI) & fire.year <= 2010 & fire_sev_last != 255), mapping = aes(x = date, y = dNDMI)) + 
+p2 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(dNDMI) & fire.year <= 2010 & fire_sev_last != 255), mapping = aes(x = date, y = dNDMI)) + 
   geom_bin2d(alpha = 0.8) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
@@ -221,7 +221,7 @@ p2
 ggsave(filename = 'Fig2_dNDMI_fire_year_time_series.png', height=18, width= 20, units = 'cm', dpi=900)
 
 #Figure of Water Stress separated by fire years
-p3 <- ggplot(data = filter(pixel.data, stand.age > 0 & !is.na(Water_Stress) & fire.year <= 2010 & fire_sev_last != 255), mapping = aes(x = date, y = Water_Stress)) + 
+p3 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(Water_Stress) & fire.year <= 2010 & fire_sev_last != 255), mapping = aes(x = date, y = Water_Stress)) + 
   geom_bin2d(alpha = 0.8) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
@@ -239,7 +239,7 @@ p3
 ggsave(filename = 'Fig3_Water_Stress_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #Figure of Soil Moisture separated by fire years
-p4 <- ggplot(data = filter(pixel.data, stand.age > 0 & !is.na(Soil_Moisture) & fire.year <= 2010 & fire_sev_last != 255), mapping = aes(x = date, y = Soil_Moisture)) + 
+p4 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(Soil_Moisture) & fire.year <= 2010 & fire_sev_last != 255), mapping = aes(x = date, y = Soil_Moisture)) + 
   geom_bin2d(alpha = 0.8) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
@@ -257,7 +257,7 @@ p4
 ggsave(filename = 'Fig4_Soil_Moisture_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #Figure of Biomass separated by fire years
-p5 <- ggplot(data = filter(pixel.data, stand.age > 0 & fire.year <= 2010  & fire_sev_last != 255), mapping = aes(x = date, y = emapr_biomass)) + 
+p5 <- ggplot(data = filter(pixel.data, stand.age >= 0 & fire.year <= 2010  & fire_sev_last != 255), mapping = aes(x = date, y = emapr_biomass)) + 
   geom_bin2d(alpha = 0.8) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%

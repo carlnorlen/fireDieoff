@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 10, 2021
-#Date Edited: December 10, 2021
+#Date Edited: December 17, 2021
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -66,6 +66,9 @@ live <- dbFetch(q1, n = -1)
 # dbDisconnect(db)
 summary(live)
 
+#Convert per acre to per hectare
+live$count <- live$count * 2.47105
+
 # live %>% filter(STDAGE > 0 & !is.na(STDAGE)) %>% select(STDAGE) %>% unique()
 # live %>% filter(INVYR == 2001) %>% select(PLOT) %>% unique() %>% count()
 # 
@@ -77,52 +80,57 @@ summary(live)
 f1<- ggplot() + geom_line(data = live %>% filter(STATUSCD == 1) %>% group_by(INVYR) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
            geom_line(data = live %>% filter(STATUSCD == 2 & !is.na(MORTYR)) %>% group_by(MORTYR) %>% summarize(Dead.count = sum(count)), mapping = aes(x = MORTYR, y = Dead.count), color = 'red') +
            xlab('Year') + ylab(expression('Count (trees ha'^-1*')')) + theme_bw()
+f1
 
 ggsave(filename = 'Fig1_mortality_time_series_FIA.png', height=6, width= 10, units = 'cm', dpi=900)
 
 #Calculate the Quintiles of stand age
-stdage.q <- as.data.frame(unname(quantile(live$STDAGE, prob = seq(0,1, 1/5), na.rm = TRUE)))
+stdage.q <- as.data.frame(unname(quantile(live$STDAGE, prob = seq(0,1, 1/5), type = 3, na.rm = TRUE)))
 # precip.q
 colnames(stdage.q) <- 'STDAGE'
-stdage.q$'Quintile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+stdage.q$'Quintile' <- c(0.0, 0.2,0.4, 0.6, 0.8, 1.0)
 # temp.q
 stdage.q
 
 #Bin data by Stand Age. Bins are quintiles.
 live <- live %>% mutate(stdage.bin = case_when(
-  STDAGE >= stdage.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '211+',
+  STDAGE >= stdage.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '200+',
   STDAGE >= stdage.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < stdage.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '161-210',
+    STDAGE < stdage.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '155-199',
   STDAGE >= stdage.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < stdage.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '126-160',
-  STDAGE >= stdage.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric()  & 
-    STDAGE < stdage.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '96-125',
-  STDAGE < stdage.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-95'))
+    STDAGE < stdage.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '120-154',
+  STDAGE >= stdage.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < stdage.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '90-119',
+  STDAGE < stdage.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-89'))
 
 #Order the stand age bins
-live$stdage.bin = with(live, factor(stdage.bin, levels = c('0-95','96-125','126-160','161-210','211+')))
+live$stdage.bin = with(live, factor(stdage.bin, levels = c('0-89','90-119','120-154','155-199','200+')))
+# summary(live)
 
+#Replace MORTYR that is NA with INVYR
+live[is.na(live$MORTYR), ]$MORTYR <- live[is.na(live$MORTYR), ]$INVYR 
+# live%>% dplyr::filter(stdage.bin == '138-154')
 #Calculate the Quintiles of tree age (breast height age)
-bhage.q <- as.data.frame(unname(quantile(live$BHAGE, prob = seq(0,1, 1/5), na.rm = TRUE)))
+bhage.q <- as.data.frame(unname(quantile(live$BHAGE, prob = seq(0,1, 1/5), type = 3, na.rm = TRUE)))
 # precip.q
 colnames(bhage.q) <- 'BHAGE'
 bhage.q$'Quintile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
 # temp.q
 bhage.q
-live %>% filter(!is.na(BHAGE))
+# live %>% filter(!is.na(BHAGE))
 #Bin data by Stand Age. Bins are quintiles.
 live <- live %>% filter(!is.na(BHAGE)) %>% mutate(bhage.bin = case_when(
-  BHAGE >= bhage.q %>% filter(Quintile == 0.8) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '172+',
+  BHAGE >= bhage.q %>% filter(Quintile == 0.8) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '171+',
   BHAGE >= bhage.q %>% filter(Quintile == 0.6) %>% dplyr::select(BHAGE) %>% as.numeric() & 
-    BHAGE < bhage.q %>% filter(Quintile == 0.8) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '111-171',
+    BHAGE < bhage.q %>% filter(Quintile == 0.8) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '110-170',
   BHAGE >= bhage.q %>% filter(Quintile == 0.4) %>% dplyr::select(BHAGE) %>% as.numeric() & 
-    BHAGE < bhage.q %>% filter(Quintile == 0.6) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '79-110',
+    BHAGE < bhage.q %>% filter(Quintile == 0.6) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '78-109',
   BHAGE >= bhage.q %>% filter(Quintile == 0.2) %>% dplyr::select(BHAGE) %>% as.numeric()  & 
-    BHAGE < bhage.q %>% filter(Quintile == 0.4) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '58-78',
-  BHAGE < bhage.q %>% filter(Quintile == 0.2) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '6-57'))
+    BHAGE < bhage.q %>% filter(Quintile == 0.4) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '57-77',
+  BHAGE < bhage.q %>% filter(Quintile == 0.2) %>% dplyr::select(BHAGE) %>% as.numeric() ~ '6-56'))
 
 #Order the stand age bins
-live$bhage.bin = with(live, factor(bhage.bin, levels = c('6-57','58-78','79-110','111-171','172+')))
+live$bhage.bin = with(live, factor(bhage.bin, levels = c('6-56','57-77','78-109','110-170','171+')))
 
 
 #Stand Age Histogram with data binned by stand age
@@ -135,18 +143,21 @@ f2 <- ggplot() + geom_histogram(data = (live %>% filter(STDAGE > 0 & !is.na(STDA
 
 ggsave(filename = 'Fig2_Stand_Age_Quintiles_historgram.png', height=6, width= 10, units = 'cm', dpi=900)
 
+live %>% filter(STATUSCD == 2 & !is.na(MORTYR) & !is.na(STDAGE)) %>% group_by(MORTYR, stdage.bin) %>% summarize(Dead.count = sum(count))
+
 #Mortality binned by stand age
+#For some reason 138-154 doesn't work
 f3<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
   geom_line(data = live %>% filter(STATUSCD == 2 & !is.na(MORTYR) & !is.na(STDAGE)) %>% group_by(MORTYR, stdage.bin) %>% summarize(Dead.count = sum(count)), mapping = aes(x = MORTYR, y = Dead.count), color = 'red') +
-  xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw() + facet_wrap(~stdage.bin)
+  xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw() + facet_wrap(~stdage.bin, ncol = 5)
 
 f3
 ggsave(filename = 'Fig3_stand_age_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
 
 #Mortality binned by tree age
-f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
+f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, bhage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
   geom_line(data = live %>% filter(STATUSCD == 2 & !is.na(MORTYR) & !is.na(STDAGE)) %>% group_by(MORTYR, bhage.bin) %>% summarize(Dead.count = sum(count)), mapping = aes(x = MORTYR, y = Dead.count), color = 'red') +
-  xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw() + facet_wrap(~bhage.bin)
+  xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw() + facet_wrap(~bhage.bin, ncol = 5)
 
 f4
 ggsave(filename = 'Fig4_tree_age_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)

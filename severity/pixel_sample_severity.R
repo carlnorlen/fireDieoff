@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 6, 2021
-#Date Updated: 
+#Date Updated: December 20, 2021
 #Purpose: Explore pixel sampling data.
 
 # cd /C/Users/Carl/mystuff/fireDieoff/severity
@@ -22,11 +22,18 @@ dir_in <- "D:\\Large_Files\\CECS\\Stand_Age"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the data
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
-pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_fire_year_fire_severity_11292021_30m.csv"), header = TRUE, na.strings = "NaN")
+pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_fire_year_fire_severity_12132021_30m.csv"), header = TRUE, na.strings = "NaN")
 # summary(pixel.data)
 #Get a  of the data
 # summary(pixel.data)
 # pixel.data <- pixel.data %>% filter(fire.year >= 1919 & !is.na(stand.age) & !is.na(NDMI))
+summary(pixel.data)
+
+#Convert missing TPA data to NAs
+pixel.data[pixel.data$tpa_max == -9999,]$tpa_max <- NA
+
+#Convert to trees per hectare
+pixel.data$tpa_max <- pixel.data$tpa_max * 2.47105
 
 #Make the dates into date time format for R
 pixel.data$date <- as.Date(pixel.data$date)
@@ -310,3 +317,24 @@ p7 <- ggplot(data = filter(pixel.data, stand.age >= 0 & fire.year <= 2010  & fir
 p7
 
 ggsave(filename = 'Fig7_Biomass_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
+
+summary(pixel.data)
+
+#Figure of Dead Trees per acre separated by fire years with time series
+p8 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(tpa_max) & fire.year <= 2010 & fire_sev_last != 255), mapping = aes(x = date, y = tpa_max)) + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_bin2d(alpha = 0.8) +
+  geom_hline(yintercept = 0) +
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= 0 & fire.year <= 2010 & !is.na(tpa_max) & fire_sev_last != 255) %>%
+              group_by(date, sev.bin, year.bin) %>%
+              summarize(tpa_max.mean = mean(tpa_max)), mapping = aes(x = date, y = tpa_max.mean), 
+            color = 'black', size = 1
+  ) +
+  scale_fill_gradient2(limits = c(0,700), breaks = c(200,400,600), midpoint = 350,
+                       low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  facet_grid(sev.bin ~ year.bin) + ylab(expression('Die-off (trees ha'^-1*')')) + xlab('Year') + 
+  theme_bw()
+p8
+
+ggsave(filename = 'Fig8_ADS_dieoff_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)

@@ -22,7 +22,7 @@ dir_in <- "D:\\Large_Files\\CECS\\Stand_Age"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the data
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
-pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_fire_year_fire_severity_12132021_30m.csv"), header = TRUE, na.strings = "NaN")
+pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_fire_year_fire_severity_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # summary(pixel.data)
 #Get a  of the data
 # summary(pixel.data)
@@ -41,6 +41,12 @@ pixel.data$vi.year <- format(pixel.data$date , '%Y')
 pixel.data$fire.year <- pixel.data$fire_year
 # head(pixel.data)
 pixel.data$stand.age <- as.numeric(pixel.data$vi.year) - as.numeric(pixel.data$fire.year) 
+
+#Update Cover data to 100% scale
+pixel.data$Tree_Cover <- pixel.data$Tree_Cover / 100
+pixel.data$Shrub_Cover <- pixel.data$Shrub_Cover / 100
+pixel.data$Herb_Cover <- pixel.data$Herb_Cover / 100
+pixel.data$Bare_Cover <- pixel.data$Bare_Cover / 100
 
 # summary(pixel.data %>% filter(bin == 13))
 
@@ -200,12 +206,12 @@ pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2017','
 
 #Calculate dNDMI based on predictions
 pixel.data$dNDMI <- pixel.data$NDMI - pixel.data$NDMI.predict
-summary(pixel.data)
+# summary(pixel.data)
 #Exploratory figure of NDMI Time Series by stand age with a GAM fit )
-p1 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age >= -5 & !is.na(NDMI) & fire_sev_last != 255), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d() +
+p1 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age >= -5 & !is.na(NDMI) & fire_sev_last != 255), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d(binwidth = c(2, 0.015)) +
   geom_smooth(data = filter(pixel.data, vi.year <= 2012 & stand.age >= 0 & !is.na(NDMI) & fire_sev_last != 255), method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), se = FALSE, mapping = aes(color = sev.bin)) +
   geom_vline(xintercept = 0) + xlab('Year') +
-  scale_fill_gradient2(limits = c(0,800), breaks = c(200,400,600), midpoint = 400, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
+  scale_fill_gradient2(limits = c(0,400), breaks = c(100,200,300), midpoint = 200, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
 p1
 
 ggsave(filename = 'Fig1_NDMI_Chrono_Sequence_filtered.png', height=12.5, width= 16, units = 'cm', dpi=900)
@@ -338,3 +344,38 @@ p8 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(tpa_max) & fire.y
 p8
 
 ggsave(filename = 'Fig8_ADS_dieoff_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
+
+#Create a manual color scale
+cols <- c("Shrub"="green","Herb"="brown","Tree"="forest green", "Bare" = "gray")
+
+#Figure of mean Cover changes by stand age
+p9 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire_sev_last != 255) %>%
+              group_by(stand.age, sev.bin) %>%
+              summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) + 
+  #Create a Tree Cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Tree_Cover) & vi.year <= 2012 & fire_sev_last != 255) %>%
+              group_by(stand.age, sev.bin) %>%
+              summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = stand.age, y = Tree_Cover.mean, color = 'Tree'), size = 1) + 
+  #Create an Herb cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Herb_Cover) & vi.year <= 2012 & fire_sev_last != 255) %>%
+              group_by(stand.age, sev.bin) %>%
+              summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = stand.age, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
+  #Create a Bare cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Bare_Cover) & vi.year <= 2012 & fire_sev_last != 255) %>%
+              group_by(stand.age, sev.bin) %>%
+              summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = stand.age, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
+  scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
+  ylab(expression('Cover (%)')) + xlab('Years Since Fire') + facet_grid(factor(sev.bin, levels = c("Lowest", "Low", "Mid", "High")) ~ .) + theme_bw()
+p9
+
+#Save the data
+ggsave(filename = 'Fig9_veg_cover_stand_age.png', height=16, width= 20, units = 'cm', dpi=900)
+

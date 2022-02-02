@@ -291,7 +291,7 @@ ggsave(filename = 'Fig12_NDMI_Chrono_Sequence_filtered_elevation.png', height=12
 
 #NDMI (Predict) Time Series
 p17 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(NDMI.predict) & fire.year <= 2010), mapping = aes(x = date, y = NDMI.predict)) + 
-  geom_bin2d(alpha = 0.8) +
+  geom_bin2d(alpha = 0.8, binwidth = c(365,0.02)) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(stand.age >= 0 & fire.year <= 2010 & !is.na(NDMI.predict)) %>%
@@ -299,7 +299,7 @@ p17 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(NDMI.predict) & 
               summarize(NDMI.predict.mean = mean(NDMI.predict)), mapping = aes(x = date, y = NDMI.predict.mean), 
             color = 'black', size = 1
   ) +
-  scale_fill_gradient2(limits = c(0,400), breaks = c(0,100,200,300), midpoint = 200, 
+  scale_fill_gradient2(limits = c(0,400), breaks = c(100,200,300), midpoint = 200,
                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('NDMI (Predicted)') + xlab('Year') + 
   theme_bw() #+ ylim(c(-0.3, 0.6)) 
@@ -309,7 +309,7 @@ ggsave(filename = 'Fig17_NDMI_predict_fire_year_time_series.png', height=12.5, w
 
 #NDMI Time Series
 p18 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(NDMI) & fire.year <= 2010), mapping = aes(x = date, y = NDMI)) + 
-  geom_bin2d(alpha = 0.8) +
+  geom_bin2d(alpha = 0.8, binwidth = c(365,0.02)) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(stand.age >= 0 & fire.year <= 2010 & !is.na(NDMI)) %>%
@@ -317,7 +317,7 @@ p18 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(NDMI) & fire.yea
               summarize(NDMI.mean = mean(NDMI)), mapping = aes(x = date, y = NDMI.mean), 
             color = 'black', size = 1
   ) +
-  scale_fill_gradient2(limits = c(10,300), breaks = c(10,100,200), midpoint = 150, 
+  scale_fill_gradient2(limits = c(0,80), breaks = c(20,40,60), midpoint = 40, 
                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('NDMI') + xlab('Year') + 
   theme_bw() + ylim(c(-0.3, 0.6)) 
@@ -327,7 +327,7 @@ ggsave(filename = 'Fig18_NDMI_fire_year_time_series.png', height=12.5, width= 20
 
 #Figure of dNDMI separated by fire years
 p19 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(dNDMI) & fire.year <= 2010), mapping = aes(x = date, y = dNDMI)) + 
-  geom_bin2d(alpha = 0.8) +
+  geom_bin2d(alpha = 0.8, binwidth = c(365,0.02)) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(stand.age >= 0 & fire.year <= 2010 & !is.na(dNDMI)) %>%
@@ -335,7 +335,7 @@ p19 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(dNDMI) & fire.ye
               summarize(dNDMI.mean = mean(dNDMI)), mapping = aes(x = date, y = dNDMI.mean), 
             color = 'black', size = 1
   ) +
-  scale_fill_gradient2(limits = c(10,200), breaks = c(10,100), midpoint = 100, 
+  scale_fill_gradient2(limits = c(0,90), breaks = c(30,60), midpoint = 45, 
                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('dNDMI') + xlab('Year') + 
   ylim(c(-0.4, 0.4)) + theme_bw()
@@ -430,7 +430,7 @@ ggsave(filename = 'Fig24_Biomass_fire_year_time_series.png', height=12.5, width=
 #Figure of Dead Trees per acre separated by fire years with time series
 p25 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(tpa_max) & fire.year >= 1911 & fire.year <= 2010), mapping = aes(x = date, y = tpa_max)) + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-  geom_bin2d(alpha = 0.8) +
+  # geom_bin2d(alpha = 0.8, binwidth = c(365,5)) +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(stand.age >= 0 & fire.year >= 1911 & fire.year <= 2010 & !is.na(tpa_max)) %>%
@@ -438,8 +438,8 @@ p25 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(tpa_max) & fire.
               summarize(tpa_max.mean = mean(tpa_max)), mapping = aes(x = date, y = tpa_max.mean), 
             color = 'black', size = 1
   ) +
-  scale_fill_gradient2(limits = c(0,1000), breaks = c(200,400,600,800), midpoint = 500,
-                       low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  # scale_fill_gradient2(limits = c(0,1000), breaks = c(200,400,600,800), midpoint = 500,
+                       # low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
   facet_wrap(~ stand.age.bin, ncol = 5) + ylab(expression('Die-off (trees ha'^-1*')')) + xlab('Year') + 
   theme_bw()
 p25

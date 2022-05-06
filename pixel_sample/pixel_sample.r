@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: June 23, 2021
-#Date Updated: November 22, 2021
+#Date Updated: May 5, 2022
 #Purpose: Explore pixel sampling data.
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -351,6 +351,31 @@ p20
 
 ggsave(filename = 'Fig20_fire_year_latitude.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
+#Pixel facets by elevation and latitude
+p20.facet <- ggplot(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = elevation, y = latitude)) + 
+  geom_bin2d(alpha = 0.8) + facet_wrap(~ stand.age.bin, ncol = 5)
+
+p20.facet
+
+ggsave(filename = 'Fig20_fire_year_latitude_faceted.png', height=12.5, width= 20, units = 'cm', dpi=900)
+
+#Pixel facets
+p20.biomass <- ggplot(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = emapr_biomass, y = latitude)) + 
+  geom_bin2d(alpha = 0.8) + facet_wrap(~ stand.age.bin, ncol = 5)
+
+p20.biomass
+
+ggsave(filename = 'Fig20_fire_year_latitude_biomass_facets.png', height=12.5, width= 20, units = 'cm', dpi=900)
+
+#Pixel facets
+p20.climate <- ggplot(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = clm_temp_mean, y = clm_precip_sum)) + 
+  geom_bin2d(alpha = 0.8) + facet_wrap(~ stand.age.bin, ncol = 5)
+
+p20.climate
+
+ggsave(filename = 'Fig20_fire_year_latitude_climate_facets.png', height=12.5, width= 20, units = 'cm', dpi=900)
+
+
 #Figure of dNDMI separated by fire years with time series
 #This one isn't working for some reason.
 p21 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(dNDMI) & fire.year >= 1911 & fire.year <= 2010), mapping = aes(x = date, y = dNDMI)) + 
@@ -471,22 +496,22 @@ p28 <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Shrub_Cover) & vi.year <= 2012) %>%
+              filter(stand.age >= -25 & stand.age <= 85 & fire.year >= 1911 & !is.na(Shrub_Cover) & vi.year <= 2012) %>%
               group_by(stand.age) %>%
               summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) + 
   #Create a Tree Cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Tree_Cover) & vi.year <= 2012) %>%
+              filter(stand.age >= -25 & stand.age <= 85 & fire.year >= 1911 & !is.na(Tree_Cover) & vi.year <= 2012) %>%
               group_by(stand.age) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = stand.age, y = Tree_Cover.mean, color = 'Tree'), size = 1) + 
   #Create an Herb cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Herb_Cover) & vi.year <= 2012) %>%
+              filter(stand.age >= -25 & stand.age <= 85 &  fire.year >= 1911 & !is.na(Herb_Cover) & vi.year <= 2012) %>%
               group_by(stand.age) %>%
               summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = stand.age, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
   #Create a Bare cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & fire.year >= 1911 & !is.na(Bare_Cover) & vi.year <= 2012) %>%
+              filter(stand.age >= -25 & stand.age <= 85 & fire.year >= 1911 & !is.na(Bare_Cover) & vi.year <= 2012) %>%
               group_by(stand.age) %>%
               summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = stand.age, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
   scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
@@ -495,3 +520,38 @@ p28
 
 #Save the data
 ggsave(filename = 'Fig28_veg_cover_stand_age.png', height=12.5, width= 20, units = 'cm', dpi=900)
+
+#Create the 
+p29 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(fire.year >= 1911 & !is.na(Shrub_Cover) & fire.year <= 2010 & latitude <= 38) %>%
+              group_by(date, stand.age.bin) %>%
+              summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = date, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) + 
+  #Create a Tree Cover line
+  geom_line(data = pixel.data %>%
+              filter(fire.year >= 1911 & !is.na(Tree_Cover) & fire.year <= 2010 & latitude <= 38) %>%
+              group_by(date, stand.age.bin) %>%
+              summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = date, y = Tree_Cover.mean, color = 'Tree'), size = 1) + 
+  #Create an Herb cover line
+  geom_line(data = pixel.data %>%
+              filter(fire.year >= 1911 & !is.na(Herb_Cover) & fire.year <= 2010 & latitude <= 38) %>%
+              group_by(date, stand.age.bin) %>%
+              summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = date, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
+  #Create a Bare cover line
+  geom_line(data = pixel.data %>%
+              filter(fire.year >= 1911 & !is.na(Bare_Cover) & fire.year <= 2010 & latitude <= 38) %>%
+              group_by(date, stand.age.bin) %>%
+              summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = date, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
+  scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') + facet_wrap(~ stand.age.bin, ncol = 5) +
+  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+  ylab(expression('Cover (%)')) + xlab('Year') + theme_bw()
+p29
+
+#Save the data
+ggsave(filename = 'Fig29_veg_cover_stand_age.png', height=12.5, width= 20, units = 'cm', dpi=900)
+
+ 

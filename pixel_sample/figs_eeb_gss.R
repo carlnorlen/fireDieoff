@@ -542,13 +542,14 @@ p2 <- ggplot() +
   scale_color_brewer(type = 'seq', palette = 'Greens', name = 'Years Since Fire') +
   scale_linetype(name = 'Years Since Fire') +
   guides(color = guide_legend(), linetype = guide_legend()) +
-  theme_bw() +
+  theme_dark() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = c(0.1, 0.6), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+  xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
   ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') 
 p2
 # atop()
@@ -585,7 +586,7 @@ p3 <- ggplot() +
 scale_color_brewer(type = 'seq', palette = 'Greens', name = 'Years Since Fire') +
   scale_linetype(name = 'Years Since Fire') +
   guides(color = guide_legend(), linetype = guide_legend()) +
-  theme_bw() +
+  theme_dark() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),

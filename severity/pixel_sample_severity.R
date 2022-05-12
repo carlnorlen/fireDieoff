@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 6, 2021
-#Date Updated: May, 5, 2022
+#Date Updated: May, 12, 2022
 #Purpose: Explore pixel sampling data.
 
 # cd /C/Users/Carl/mystuff/fireDieoff/severity
@@ -182,6 +182,17 @@ pixel.data <- pixel.data %>% mutate(year.bin = case_when(
 # summary(pixel.data)
 # 
 # pixel.data %>% filter(fire_sev_last == 1)
+# bin >= 1981 & bin <= 1995 ~ '20-34', 
+# # bin >= 1991 & bin <= 2000 ~ '15-24',
+# bin >= 1996 & bin <= 2010 ~ '5-19', 
+# bin >= 2011 & bin <= 2020 ~'0-4'))
+#Bin names will need to be updated
+pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
+  fire_year_last >= 1984 & fire_year_last <= 1990 ~ '25-31', #Calculated Relative to 2015, 
+  fire_year_last >= 1991 & fire_year_last <= 2000 ~ '15-24',
+  fire_year_last >= 2001 & fire_year_last <= 2010 ~ '5-14',
+  fire_year_last >= 2011 & fire_year_last <= 2020 ~ '0-4')) # end function
+
 
 #Fire Severity Bins
 pixel.data <- pixel.data %>% mutate(sev.bin = case_when(
@@ -363,30 +374,30 @@ p9 <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & stand.age <= 15 & !is.na(Shrub_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
+              filter(stand.age >= -10 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
               group_by(stand.age, sev.bin) %>%
               summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) + 
   #Create a Tree Cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & stand.age <= 15 & !is.na(Tree_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
+              filter(stand.age >= -10 & stand.age <= 20 & !is.na(Tree_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
               group_by(stand.age, sev.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = stand.age, y = Tree_Cover.mean, color = 'Tree'), size = 1) + 
   #Create an Herb cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & stand.age <= 15 & !is.na(Herb_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
+              filter(stand.age >= -10 & stand.age <= 20 & !is.na(Herb_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
               group_by(stand.age, sev.bin) %>%
               summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = stand.age, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
   #Create a Bare cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -15 & stand.age <= 15 & !is.na(Bare_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
+              filter(stand.age >= -10 & stand.age <= 20 & !is.na(Bare_Cover) & vi.year < 2012 & fire_sev_last != 255) %>%
               group_by(stand.age, sev.bin) %>%
               summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = stand.age, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
   scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
-  ylab(expression('Cover (%)')) + xlab('Years Since Fire') + facet_grid(. ~ factor(sev.bin, levels = c("Lowest", "Low", "Mid", "High"))) + theme_bw()
+  ylab(expression('Cover (%)')) + xlab('Years Since Fire') + facet_grid(factor(sev.bin, levels = c("Lowest", "Low", "Mid", "High"))~ .) + theme_bw()
 p9
 
 #Save the data
-ggsave(filename = 'Fig9_veg_cover_stand_age.png', height=14, width= 28, units = 'cm', dpi=900)
+ggsave(filename = 'Fig9_veg_cover_stand_age.png', height=14, width= 16, units = 'cm', dpi=900)
 
 #Stand age histogram
 # p10 <- ggplot() + geom_histogram(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = stand.age), binwidth = 1) #+ 
@@ -399,29 +410,29 @@ p10 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + 
   #Create a shrub cover line
-  geom_line(data = pixel.data %>%
-              filter(!is.na(Shrub_Cover) & fire.year <= 2010 & fire_sev_last != 255) %>%
-              group_by(date, sev.bin, year.bin) %>%
-              summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = date, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) + 
+  # geom_line(data = pixel.data %>%
+  #             filter(!is.na(Shrub_Cover) & fire.year <= 2010 & fire_sev_last != 255) %>%
+  #             group_by(date, sev.bin, year.bin) %>%
+  #             summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = date, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) + 
   #Create a Tree Cover line
   geom_line(data = pixel.data %>%
-              filter(!is.na(Tree_Cover) & fire.year <= 2010 & fire_sev_last != 255) %>%
-              group_by(date, sev.bin, year.bin) %>%
-              summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = date, y = Tree_Cover.mean, color = 'Tree'), size = 1) + 
+              filter(!is.na(Tree_Cover) & stand.age >= 5 & fire.year <= 2010 & fire_sev_last != 255) %>%
+              group_by(date, sev.bin, stand.age.bin) %>%
+              summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = date, y = Tree_Cover.mean, color = stand.age.bin), size = 1) + 
   #Create an Herb cover line
-  geom_line(data = pixel.data %>%
-              filter(!is.na(Herb_Cover) & fire.year <= 2010 & fire_sev_last != 255) %>%
-              group_by(date, sev.bin, year.bin) %>%
-              summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = date, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
-  #Create a Bare cover line
-  geom_line(data = pixel.data %>%
-              filter(!is.na(Bare_Cover) & fire.year <= 2010 & fire_sev_last != 255) %>%
-              group_by(date, sev.bin, year.bin) %>%
-              summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = date, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
-  scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
+  # geom_line(data = pixel.data %>%
+  #             filter(!is.na(Herb_Cover) & fire.year <= 2010 & fire_sev_last != 255) %>%
+  #             group_by(date, sev.bin, year.bin) %>%
+  #             summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = date, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
+  # #Create a Bare cover line
+  # geom_line(data = pixel.data %>%
+  #             filter(!is.na(Bare_Cover) & fire.year <= 2010 & fire_sev_last != 255) %>%
+  #             group_by(date, sev.bin, year.bin) %>%
+  #             summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = date, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
+  # scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  ylab(expression('Cover (%)')) + xlab('Year') + facet_grid(year.bin ~ factor(sev.bin, levels = c("Lowest", "Low", "Mid", "High"))) + theme_bw()
+  ylab(expression('Cover (%)')) + xlab('Year') + facet_grid(factor(sev.bin, levels = c("Lowest", "Low", "Mid", "High")) ~ .) + theme_bw()
 p10
 
 #Save the data

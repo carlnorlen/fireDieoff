@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: May 12, 2022
+#Date Updated: May 23, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -236,261 +236,6 @@ pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2018','
 pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('0-4','5-30','31-55','56-80',
                                                                              '81-95')))
 
-
-#Calculate dNDMI based on predictions
-# pixel.data$dNDMI <- pixel.data$NDMI - pixel.data$NDMI.predict
-
-#NDMI Time Series separated by temperature climatology
-# p5 <- ggplot(data = filter(pixel.data, stand.age > 0), mapping = aes(x = date, y = NDMI)) + geom_bin2d(alpha = 0.4) + 
-#       geom_smooth(se = TRUE, color = 'black') + facet_wrap(~ temp.control, ncol = 5)
-# p5
-# ggsave(filename = 'Fig5_NDMI_Time_Series_by_temp.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #NDMI Time Series separated by percip climatology
-# p6 <- ggplot(data = filter(pixel.data, stand.age > 0), mapping = aes(x = date, y = NDMI)) + geom_bin2d(alpha = 0.4) + 
-#       geom_smooth(se = TRUE, color = 'black') + facet_wrap(~ precip.control, ncol = 5)
-# p6
-# ggsave(filename = 'Fig6_NDMI_Time_Series_by_precip.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #NDMI Time Series separated by elevation 
-# p7 <- ggplot(data = filter(pixel.data, stand.age > 0), mapping = aes(x = date, y = NDMI)) + geom_bin2d(alpha = 0.4) + 
-#       geom_smooth(se = TRUE, color = 'black') + facet_wrap(~ elevation.control, ncol = 5)
-# p7
-# ggsave(filename = 'Fig7_NDMI_Time_Series_by_elevation.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Stand Age fire year test
-# p8 <- ggplot(data = filter(pixel.data, stand.age > 0), mapping = aes(x = date, y = stand.age)) +
-#   geom_bin2d(alpha = 0.4) + geom_smooth(method = 'lm', formula = y ~ x, se = TRUE, color = 'black') +  facet_wrap(~ year.bin, ncol = 5)
-# p8
-# 
-# ggsave(filename = 'Fig8_stand_age_test.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Exploratory figure of NDMI Time Series by stand age with a GAM fit
-# p9 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age >= -15), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d(binwidth = c(2, 0.015)) + #& clm_temp_mean != temp.q & elevation != elev.q & clm_precip_sum != precip.q
-#   geom_smooth(data = filter(pixel.data, vi.year <= 2012 & stand.age >= 0), method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), se = FALSE, color = 'black') + #, mapping = aes(color = precip.control)
-#   xlab('Years Since Fire') +
-#   geom_vline(xintercept = 0) + 
-#   scale_fill_gradient2(limits = c(5,250), breaks = c(5,100,200), midpoint = 125, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
-# # p9
-# 
-# ggsave(filename = 'Fig9_NDMI_Chrono_Sequence_filtered.png', height=12.5, width= 16, units = 'cm', dpi=900)
-# 
-# #Exploratory figure of NDMI Time Series by stand age with a GAM fit
-# p10 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age >= -15), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d() +
-#   geom_smooth(data = filter(pixel.data, vi.year <= 2012 & stand.age > 0), method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), se = FALSE, mapping = aes(color = precip.control)) + #, mapping = aes(color = precip.control)
-#   scale_color_grey(name = "Precip Normal \n(Quintiles)") + xlab('Years Since Fire') +
-#   geom_vline(xintercept = 0) +
-#   scale_fill_gradient2(limits = c(10,1200), breaks = c(10,300,600,900), midpoint = 600, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
-# p10
-# 
-# ggsave(filename = 'Fig10_NDMI_Chrono_Sequence_filtered.png', height=12.5, width= 16, units = 'cm', dpi=900)
-# 
-# #Exploratory figure of NDMI Time Series by stand age with a GAM fit
-# p11 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age >= -15), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d() +
-#   geom_smooth(data = filter(pixel.data, vi.year <= 2012 & stand.age > 0), method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), se = FALSE, mapping = aes(color = temp.control)) + #, mapping = aes(color = precip.control)
-#   scale_color_grey(name = "Temp Normal \n(Quintiles)") + xlab('Years Since Fire') +
-#   geom_vline(xintercept = 0) +
-#   scale_fill_gradient2(limits = c(10,1200), breaks = c(10,300,600,900), midpoint = 600, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
-# 
-# p11
-# 
-# ggsave(filename = 'Fig11_NDMI_Chrono_Sequence_filtered.png', height=12.5, width= 16, units = 'cm', dpi=900)
-# 
-# #Exploratory figure of NDMI Time Series by stand age with a GAM fit with elevation
-# p12 <- ggplot(data = filter(pixel.data, vi.year <= 2012 & stand.age >= -15), mapping = aes(x = stand.age, y = NDMI)) + geom_bin2d() +
-#   geom_smooth(data = filter(pixel.data, vi.year <= 2012 & stand.age > 0), method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), se = FALSE, mapping = aes(color = elevation.control)) + #, mapping = aes(color = precip.control)
-#   scale_color_grey(name = "Elevation \n(Quintiles)") + xlab('Years Since Fire') +
-#   geom_vline(xintercept = 0) +
-#   scale_fill_gradient2(limits = c(10,1200), breaks = c(10,300,600,900), midpoint = 600, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent')
-# 
-# p12
-# 
-# ggsave(filename = 'Fig12_NDMI_Chrono_Sequence_filtered_elevation.png', height=12.5, width= 16, units = 'cm', dpi=900)
-# 
-# #NDMI (Predict) Time Series
-# p17 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(NDMI.predict) & fire.year <= 2010), mapping = aes(x = date, y = NDMI.predict)) + 
-#   geom_bin2d(alpha = 0.8, binwidth = c(365,0.02)) +
-#   geom_hline(yintercept = 0) +
-#   geom_line(data = pixel.data %>%
-#               filter(stand.age >= 0 & fire.year <= 2010 & !is.na(NDMI.predict)) %>%
-#               group_by(date, stand.age.bin) %>%
-#               summarize(NDMI.predict.mean = mean(NDMI.predict)), mapping = aes(x = date, y = NDMI.predict.mean), 
-#             color = 'black', size = 1
-#   ) +
-#   scale_fill_gradient2(limits = c(0,400), breaks = c(100,200,300), midpoint = 200,
-#                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-#   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('NDMI (Predicted)') + xlab('Year') + 
-#   theme_bw() #+ ylim(c(-0.3, 0.6)) 
-# p17
-# 
-# ggsave(filename = 'Fig17_NDMI_predict_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #NDMI Time Series
-# p18 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(NDMI) & fire.year <= 2010), mapping = aes(x = date, y = NDMI)) + 
-#   geom_bin2d(alpha = 0.8, binwidth = c(365,0.02)) +
-#   geom_hline(yintercept = 0) +
-#   geom_line(data = pixel.data %>%
-#               filter(stand.age >= 0 & fire.year <= 2010 & !is.na(NDMI)) %>%
-#               group_by(date, stand.age.bin) %>%
-#               summarize(NDMI.mean = mean(NDMI)), mapping = aes(x = date, y = NDMI.mean), 
-#             color = 'black', size = 1
-#   ) +
-#   scale_fill_gradient2(limits = c(0,80), breaks = c(20,40,60), midpoint = 40, 
-#                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-#   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('NDMI') + xlab('Year') + 
-#   theme_bw() + ylim(c(-0.3, 0.6)) 
-# p18
-# 
-# ggsave(filename = 'Fig18_NDMI_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Figure of dNDMI separated by fire years
-# p19 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(dNDMI) & fire.year <= 2010), mapping = aes(x = date, y = dNDMI)) + 
-#   geom_bin2d(alpha = 0.8, binwidth = c(365,0.02)) +
-#   geom_hline(yintercept = 0) +
-#   geom_line(data = pixel.data %>%
-#               filter(stand.age >= 0 & fire.year <= 2010 & !is.na(dNDMI)) %>%
-#               group_by(date, stand.age.bin) %>%
-#               summarize(dNDMI.mean = mean(dNDMI)), mapping = aes(x = date, y = dNDMI.mean), 
-#             color = 'black', size = 1
-#   ) +
-#   scale_fill_gradient2(limits = c(0,90), breaks = c(30,60), midpoint = 45, 
-#                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-#   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('dNDMI') + xlab('Year') + 
-#   ylim(c(-0.4, 0.4)) + theme_bw()
-# p19
-# 
-# ggsave(filename = 'Fig19_dNDMI_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Fire year compared to latitude
-# p20 <- ggplot(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = fire.year, y = latitude)) + 
-#   geom_bin2d(alpha = 0.8)
-# 
-# p20
-# 
-# ggsave(filename = 'Fig20_fire_year_latitude.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Pixel facets by elevation and latitude
-# p20.facet <- ggplot(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = elevation, y = latitude)) + 
-#   geom_bin2d(alpha = 0.8) + facet_wrap(~ stand.age.bin, ncol = 5)
-# 
-# p20.facet
-# 
-# ggsave(filename = 'Fig20_fire_year_latitude_faceted.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Pixel facets
-# p20.biomass <- ggplot(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = emapr_biomass, y = latitude)) + 
-#   geom_bin2d(alpha = 0.8) + facet_wrap(~ stand.age.bin, ncol = 5)
-# 
-# p20.biomass
-# 
-# ggsave(filename = 'Fig20_fire_year_latitude_biomass_facets.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Pixel facets
-# p20.climate <- ggplot(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = clm_temp_mean, y = clm_precip_sum)) + 
-#   geom_bin2d(alpha = 0.8) + facet_wrap(~ stand.age.bin, ncol = 5)
-# 
-# p20.climate
-# 
-# ggsave(filename = 'Fig20_fire_year_latitude_climate_facets.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# 
-# #Figure of dNDMI separated by fire years with time series
-# #This one isn't working for some reason.
-# p21 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(dNDMI) & fire.year >= 1911 & fire.year <= 2010), mapping = aes(x = date, y = dNDMI)) + 
-#   geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-#   # geom_bin2d(alpha = 0.8) +
-#   geom_hline(yintercept = 0) +
-#   geom_line(data = pixel.data %>%
-#               filter(stand.age >= 0 & fire.year >= 1911 & fire.year <= 2010 & !is.na(dNDMI)) %>%
-#               group_by(date, stand.age.bin) %>%
-#               summarize(dNDMI.mean = mean(dNDMI)), mapping = aes(x = date, y = dNDMI.mean), 
-#             color = 'black', size = 1
-#   ) +
-#   scale_fill_gradient2(limits = c(10,200), breaks = c(10,100), midpoint = 100, 
-#                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-#   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('dNDMI') + xlab('Year') + 
-#   ylim(c(-0.4, 0.4)) + theme_bw()
-# p21
-# 
-# ggsave(filename = 'Fig21_dNDMI_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Figure of Water Stress separated by fire years
-# p22 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(Water_Stress) & fire.year >= 1911 & fire.year <= 2010), mapping = aes(x = date, y = Water_Stress)) + 
-#   geom_bin2d(alpha = 0.8) +
-#   geom_hline(yintercept = 0) +
-#   geom_line(data = pixel.data %>%
-#               filter(stand.age >= 0 & fire.year >= 1911 & fire.year <= 2010 & !is.na(Water_Stress)) %>%
-#               group_by(date, stand.age.bin) %>%
-#               summarize(Water_Stress.mean = mean(Water_Stress)), mapping = aes(x = date, y = Water_Stress.mean), 
-#             color = 'black', size = 1
-#   ) +
-#   scale_fill_gradient2(limits = c(0,2000), breaks = c(500,1000,1500), midpoint = 1000, 
-#                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-#   facet_wrap(~ stand.age.bin, ncol = 5) + ylab(expression('Water Stress (mm yr'^-1*')')) + xlab('Year') + 
-#   ylim(-650, 40) + theme_bw()
-# p22
-# 
-# ggsave(filename = 'Fig22_Water_Stress_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Figure of Soil Moisture separated by fire years
-# p23 <- ggplot(data = filter(pixel.data, stand.age >= 0 & !is.na(Soil_Moisture) & fire.year >= 1911 & fire.year <= 2010), mapping = aes(x = date, y = Soil_Moisture)) + 
-#   geom_bin2d(alpha = 0.8) +
-#   geom_hline(yintercept = 0) +
-#   geom_line(data = pixel.data %>%
-#               filter(stand.age >= 0 & fire.year >= 1911 & fire.year <= 2010 & !is.na(Soil_Moisture)) %>%
-#               group_by(date, stand.age.bin) %>%
-#               summarize(Soil_Moisture.mean = mean(Soil_Moisture)), mapping = aes(x = date, y = Soil_Moisture.mean), 
-#             color = 'black', size = 1
-#   ) +
-#   scale_fill_gradient2(limits = c(0,300), breaks = c(100,200), midpoint = 150, 
-#                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-#   facet_wrap(~ stand.age.bin, ncol = 5) + ylab('Soil Moisture (mm)') + xlab('Year') + 
-#   theme_bw()
-# p23
-# 
-# ggsave(filename = 'Fig23_Soil_Moisture_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# # summary(pixel.data)
-# 
-# #Figure of Biomass separated by fire years
-# p24 <- ggplot(data = filter(pixel.data, stand.age >= 0 & fire.year >= 1911 & fire.year <= 2010), mapping = aes(x = date, y = emapr_biomass)) + 
-#   geom_bin2d(alpha = 0.8) +
-#   geom_hline(yintercept = 0) +
-#   geom_line(data = pixel.data %>%
-#               filter(stand.age >= 0 & fire.year >= 1911 & fire.year <= 2010) %>%
-#               group_by(date, stand.age.bin) %>%
-#               summarize(emapr_biomass.mean = mean(emapr_biomass)), mapping = aes(x = date, y = emapr_biomass.mean), 
-#             color = 'black', size = 1
-#   ) +
-#   scale_fill_gradient2(limits = c(0,300), breaks = c(75,150,225), midpoint = 150, 
-#                        low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-#   facet_wrap(~ stand.age.bin, ncol = 5) + ylab(expression('Biomass (Mg ha'^-1*')')) + xlab('Year') + 
-#   theme_bw()
-# p24
-# 
-# ggsave(filename = 'Fig24_Biomass_fire_year_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
-
-
-
-#Fire year histogram
-# p26 <- ggplot() + geom_histogram(data = filter(pixel.data, fire.year >= 1911), mapping = aes(x = fire.year), binwidth = 1) #+ 
-#   #geom_bin2d(alpha = 0.8)
-# 
-# p26
-# 
-# ggsave(filename = 'Fig26_fire_year_histogram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Stand age histogram
-# p27 <- ggplot() + geom_histogram(data = filter(pixel.data, fire.year >= 1911, vi.year <= 2012 & stand.age >= -15), mapping = aes(x = stand.age), binwidth = 1) #+ 
-# #geom_bin2d(alpha = 0.8)
-# 
-# p27
-# 
-# ggsave(filename = 'Fig27_stand_age_histogram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-
-#Create a manual color scale
-cols <- c("Shrub"="green","Herb"="brown","Tree"="forest green", "Bare" = "gray")
-
 #Figure of mean Cover changes by stand age
 p1 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
@@ -561,28 +306,11 @@ p2
 p3 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
-  #Create a shrub cover line
-  # geom_line(data = pixel.data %>%
-  #             filter(fire.year >= 1911 & !is.na(Shrub_Cover) & fire.year <= 2010 & latitude <= 38) %>%
-  #             group_by(date, stand.age.bin) %>%
-  #             summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = date, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) + 
-  #Create a Tree Cover line
   geom_line(data = pixel.data %>%
               filter(stand.age >= 5 & fire.year >= 1921 & !is.na(Tree_Cover) & fire.year <= 2010) %>%
               group_by(date, stand.age.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = date, y = Tree_Cover.mean, color = stand.age.bin, linetype = stand.age.bin), 
               size = 1) + 
-  #Create an Herb cover line
-  # geom_line(data = pixel.data %>%
-  #             filter(fire.year >= 1911 & !is.na(Herb_Cover) & fire.year <= 2010 & latitude <= 38) %>%
-  #             group_by(date, stand.age.bin) %>%
-  #             summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = date, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
-  # #Create a Bare cover line
-  # geom_line(data = pixel.data %>%
-  #             filter(fire.year >= 1911 & !is.na(Bare_Cover) & fire.year <= 2010 & latitude <= 38) %>%
-  #             group_by(date, stand.age.bin) %>%
-  #             summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = date, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
-  # scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') + facet_wrap(~ stand.age.bin, ncol = 5) +
 scale_color_brewer(type = 'seq', palette = 'Greens', name = 'Years Since Fire') +
   scale_linetype(name = 'Years Since Fire') +
   guides(color = guide_legend(), linetype = guide_legend()) +
@@ -601,4 +329,75 @@ f1
 #Save the data
 ggsave(filename = 'Fig2_dieoff_tree_cover_stand_age_time_series.png', height=12, width= 14, units = 'cm', dpi=900)
 
+#Create a water stress time series figure
+p4 <- ggplot() + 
+  geom_hline(yintercept = 0) +
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= 5 & fire.year >= 1921 & fire.year <= 2010 & !is.na(AET)) %>%
+              group_by(date, stand.age.bin) %>%
+              summarize(AET.mean = mean(AET)), mapping = aes(x = date, y = AET.mean, color = stand.age.bin, linetype = stand.age.bin), 
+            size = 1
+  ) +
+  scale_color_brewer(type = 'seq', palette = 'Greens', name = 'Years Since Fire') +
+  scale_linetype(name = 'Years Since Fire') +
+  guides(color = guide_legend(), linetype = guide_legend()) +
+  theme_dark() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+  xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
+  ylab(expression('Water Use (AET; mm yr'^-1*')')) + xlab('Year') 
+p4
+
+#Create the Soil Moisture Panel
+p5 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= 5 & fire.year >= 1921 & !is.na(Soil_Moisture) & fire.year <= 2010) %>%
+              group_by(date, stand.age.bin) %>%
+              summarize(Soil_Moisture.mean = mean(Soil_Moisture)), mapping = aes(x = date, y = Soil_Moisture.mean, color = stand.age.bin, linetype = stand.age.bin), 
+            size = 1) + 
+  scale_color_brewer(type = 'seq', palette = 'Greens', name = 'Years Since Fire') +
+  scale_linetype(name = 'Years Since Fire') +
+  guides(color = guide_legend(), linetype = guide_legend()) +
+  theme_dark() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+  ylab(expression('Tree Cover (%)')) + xlab('Year')
+p5
+
+#Create the Water Stress Panel
+p6 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= 5 & fire.year >= 1921 & !is.na(Water_Stress) & fire.year <= 2010) %>%
+              group_by(date, stand.age.bin) %>%
+              summarize(Water_Stress.mean = mean(Water_Stress)), mapping = aes(x = date, y = Water_Stress.mean, color = stand.age.bin, linetype = stand.age.bin), 
+            size = 1) + 
+  scale_color_brewer(type = 'seq', palette = 'Greens', name = 'Years Since Fire') +
+  scale_linetype(name = 'Years Since Fire') +
+  guides(color = guide_legend(), linetype = guide_legend()) +
+  theme_dark() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.15, 0.35), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+  ylab(expression('Water Stress (mm)')) + xlab('Year')
+p6
+
+f2 <- ggarrange(p4, p5, p6, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 0.9, 1), align = "v")
+f2
+#Save the data
+ggsave(filename = 'Fig2_dieoff_tree_cover_stand_age_time_series.png', height=16, width= 16, units = 'cm', dpi=900)
  

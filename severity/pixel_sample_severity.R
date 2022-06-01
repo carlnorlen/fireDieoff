@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 6, 2021
-#Date Updated: May, 27, 2022
+#Date Updated: May, 31, 2022
 #Purpose: Explore pixel sampling data.
 
 # cd /C/Users/Carl/mystuff/fireDieoff/severity
@@ -207,7 +207,7 @@ pixel.data$temp.control = with(pixel.data, factor(temp.control, levels = c('0 to
 pixel.data$precip.control = with(pixel.data, factor(precip.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
 
 #Make the years bin lables in the correct order
-pixel.data$sev.bin = with(pixel.data, factor(sev.bin, levels = c('Masked', 'No Fire', 'Lowest', 'Low','Mid', 'High')))
+pixel.data$sev.bin = with(pixel.data, factor(sev.bin, levels = c('Masked', 'Unchanged', 'Lowest', 'Low','Mid', 'High')))
 
 #Burn Severity Bin
 pixel.data$age.bin = with(pixel.data, factor(age.bin, levels = c('-32 to -21', '-20 to -11', '-10 to -1','0 to 10', '11 to 20', '21 to 30', '31 to 34')))
@@ -394,12 +394,14 @@ p9 <- ggplot() +
         strip.text.x = element_blank()) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  ylab(expression('Tree Cover (%)')) + xlab('Year') +                  
+  ylab(expression('Tree Cover (%)')) + xlab('Year') +   
+  xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
   facet_grid(. ~ factor(sev.bin, levels = c("Unchanged", "Low", "Mid", "High"))) 
 p9
 
 #Combine the figures together
 f1 <- ggarrange(p8, p9, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(1, 1), align = "v")
+f1
 ggsave(filename = 'Fig8_Dieoff_fire_year_severity_time_series.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #Create a manual color scale
@@ -527,7 +529,7 @@ p13
 #Combine the figures together
 f2 <- ggarrange(p11, p12, p13, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 0.9, 1), align = "v")
 f2
-ggsave(filename = 'Fig8_Dieoff_fire_year_severity_time_series.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig9_Dieoff_fire_year_water_balance_time_series.png', height=18, width= 20, units = 'cm', dpi=900)
 
 
 

@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 6, 2021
-#Date Updated: May, 31, 2022
+#Date Updated: June 9, 2022
 #Purpose: Explore pixel sampling data.
 
 # cd /C/Users/Carl/mystuff/fireDieoff/severity
@@ -43,6 +43,8 @@ pixel.data$Shrub_Cover <- pixel.data$Shrub_Cover / 100
 pixel.data$Herb_Cover <- pixel.data$Herb_Cover / 100
 pixel.data$Bare_Cover <- pixel.data$Bare_Cover / 100
 
+#Try to fix scaling by dividing Soil Moisture by 10
+pixel.data$Soil_Moisture <- pixel.data$Soil_Moisture / 10
 # summary(pixel.data %>% filter(bin == 13))
 
 #Calculate the Quintiles of precip climate normals
@@ -186,10 +188,10 @@ pixel.data <- pixel.data %>% mutate(year.bin = case_when(
 # bin >= 2011 & bin <= 2020 ~'0-4'))
 #Bin names will need to be updated
 pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
-  fire_year_last >= 1984 & fire_year_last <= 1990 ~ '25-31', #Calculated Relative to 2015, 
-  fire_year_last >= 1991 & fire_year_last <= 2000 ~ '15-24',
-  fire_year_last >= 2001 & fire_year_last <= 2010 ~ '5-14',
-  fire_year_last >= 2011 & fire_year_last <= 2020 ~ '0-4')) # end function
+  fire_year_last >= 1984 & fire_year_last <= 1990 ~ '1984-1990', #Calculated Relative to 2015, 
+  fire_year_last >= 1991 & fire_year_last <= 2000 ~ '1991-2000',
+  fire_year_last >= 2001 & fire_year_last <= 2010 ~ '2001-2010',
+  fire_year_last >= 2011 & fire_year_last <= 2020 ~ '2011-2017')) # end function
 
 
 #Fire Severity Bins
@@ -213,10 +215,10 @@ pixel.data$sev.bin = with(pixel.data, factor(sev.bin, levels = c('Masked', 'Unch
 pixel.data$age.bin = with(pixel.data, factor(age.bin, levels = c('-32 to -21', '-20 to -11', '-10 to -1','0 to 10', '11 to 20', '21 to 30', '31 to 34')))
 
 #Fire Year Bins
-pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2017','2001-2010','1991-2000','1984-1990')))
+# pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2017','2001-2010','1991-2000','1984-1990')))
 
 #Stand Age Bins
-pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('0-4', '5-14', '15-24', '25-31')))
+pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('2011-2017','2001-2010','1991-2000','1984-1990'))) #c('0-4', '5-14', '15-24', '25-31')))
 
 #Calculate dNDMI based on predictions
 pixel.data$dNDMI <- pixel.data$NDMI - pixel.data$NDMI.predict
@@ -352,14 +354,14 @@ p8 <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(fire.year <= 2010 & !is.na(tpa_max) & fire_sev_last != 255 & stand.age >= 2) %>%
-              group_by(date, sev.bin) %>%
+              group_by(date, sev.bin, stand.age.bin) %>%
               summarize(tpa_max.mean = mean(tpa_max)), mapping = aes(x = as.Date(date), y = tpa_max.mean, color = sev.bin, linetype = sev.bin), 
             size = 1
   ) +
   #Dead Trees 95% CI
   geom_ribbon(data = pixel.data %>%
                 filter(stand.age >= 2 & fire.year <= 2010 & !is.na(tpa_max) & fire_sev_last != 255) %>%
-                group_by(date, sev.bin) %>%
+                group_by(date, sev.bin, stand.age.bin) %>%
                 summarize(tpa_max.mean = mean(tpa_max),
                           tpa_max.sd = sd(tpa_max), tpa_max.n = n()),
               mapping = aes(ymin=tpa_max.mean - 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
@@ -378,8 +380,8 @@ p8 <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
-  ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') #+                   
-  # facet_grid(. ~ factor(sev.bin, levels = c("Unchanged", "Low", "Mid", "High"))) 
+  ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') +                   
+  facet_grid(. ~ stand.age.bin) 
 p8
 
 #Do tree cover recovery
@@ -389,14 +391,14 @@ p9 <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(fire.year <= 2010 & !is.na(Tree_Cover) & fire_sev_last != 255 & stand.age >= 2) %>%
-              group_by(date, sev.bin) %>%
+              group_by(date, sev.bin, stand.age.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = as.Date(date), y = Tree_Cover.mean, color = sev.bin, linetype = sev.bin), 
             size = 1
   ) +
   #Tree Cover 95% CI
   geom_ribbon(data = pixel.data %>%
                 filter(stand.age >= 2 & fire.year <= 2010 & !is.na(Tree_Cover) & fire_sev_last != 255) %>%
-                group_by(date, sev.bin) %>%
+                group_by(date, sev.bin, stand.age.bin) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
@@ -417,8 +419,8 @@ p9 <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   ylab(expression('Tree Cover (%)')) + xlab('Year') +   
-  xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) #+
-  # facet_grid(. ~ factor(sev.bin, levels = c("Unchanged", "Low", "Mid", "High"))) 
+  xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
+  facet_grid(. ~ stand.age.bin)
 p9
 
 #Combine the figures together
@@ -513,14 +515,14 @@ p11 <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(fire.year <= 2010 & !is.na(AET) & fire_sev_last != 255 & stand.age >= 2) %>%
-              group_by(date, sev.bin) %>%
+              group_by(date, sev.bin, stand.age.bin) %>%
               summarize(AET.mean = mean(AET)), mapping = aes(x = as.Date(date), y = AET.mean, color = sev.bin, linetype = sev.bin), 
             size = 1
   ) +
   #AET 95% CI
   geom_ribbon(data = pixel.data %>%
                 filter(stand.age >= 2 & fire.year <= 2010 & !is.na(AET) & fire_sev_last != 255) %>%
-                group_by(date, sev.bin) %>%
+                group_by(date, sev.bin, stand.age.bin) %>%
                 summarize(AET.mean = mean(AET),
                           AET.sd = sd(AET), AET.n = n()),
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
@@ -539,8 +541,8 @@ p11 <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
-  ylab(expression('Water Use (AET; mm yr'^-1*')')) + xlab('Year') #+                   
-  # facet_grid(. ~ factor(sev.bin, levels = c("Unchanged", "Low", "Mid", "High"))) 
+  ylab(expression('Water Use (AET; mm yr'^-1*')')) + xlab('Year') +                   
+  facet_grid(. ~ stand.age.bin) 
 p11
 
 #Do tree cover recovery
@@ -550,14 +552,14 @@ p12 <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(fire.year <= 2010 & !is.na(Soil_Moisture) & fire_sev_last != 255 & stand.age >= 2) %>%
-              group_by(date, sev.bin) %>%
+              group_by(date, sev.bin, stand.age.bin) %>%
               summarize(Soil_Moisture.mean = mean(Soil_Moisture)), mapping = aes(x = as.Date(date), y = Soil_Moisture.mean, color = sev.bin, linetype = sev.bin), 
             size = 1
   ) +
   #Soil Moisture 95% CI
   geom_ribbon(data = pixel.data %>%
                 filter(stand.age >= 2 & fire.year <= 2010 & !is.na(Soil_Moisture) & fire_sev_last != 255) %>%
-                group_by(date, sev.bin) %>%
+                group_by(date, sev.bin, stand.age.bin) %>%
                 summarize(Soil_Moisture.mean = mean(Soil_Moisture),
                           Soil_Moisture.sd = sd(Soil_Moisture), Soil_Moisture.n = n()),
               mapping = aes(ymin=Soil_Moisture.mean - 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
@@ -578,8 +580,8 @@ p12 <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
-  ylab(expression('Soil Moisture (mm)')) + xlab('Year') #+                  
-  # facet_grid(. ~ factor(sev.bin, levels = c("Unchanged", "Low", "Mid", "High"))) 
+  ylab(expression('Soil Moisture (mm)')) + xlab('Year') +                  
+  facet_grid(. ~ stand.age.bin) 
 p12
 
 #Water Stress
@@ -589,14 +591,14 @@ p13 <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.data %>%
               filter(fire.year <= 2010 & !is.na(Water_Stress) & fire_sev_last != 255 & stand.age >= 2) %>%
-              group_by(date, sev.bin) %>%
+              group_by(date, sev.bin, stand.age.bin) %>%
               summarize(Water_Stress.mean = mean(Water_Stress)), mapping = aes(x = as.Date(date), y = Water_Stress.mean, color = sev.bin, linetype = sev.bin), 
             size = 1
   ) +
   #Water Stress 95% CI
   geom_ribbon(data = pixel.data %>%
                 filter(stand.age >= 2 & fire.year <= 2010 & !is.na(Water_Stress) & fire_sev_last != 255) %>%
-                group_by(date, sev.bin) %>%
+                group_by(date, sev.bin, stand.age.bin) %>%
                 summarize(Water_Stress.mean = mean(Water_Stress),
                           Water_Stress.sd = sd(Water_Stress), Water_Stress.n = n()),
               mapping = aes(ymin=Water_Stress.mean - 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
@@ -617,8 +619,8 @@ p13 <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) +
-  ylab(expression('Water Stress (mm)')) + xlab('Year') #+                  
-  # facet_grid(. ~ factor(sev.bin, levels = c("Unchanged", "Low", "Mid", "High"))) 
+  ylab(expression('Water Stress (mm)')) + xlab('Year') +                  
+  facet_grid(. ~ stand.age.bin) 
 p13
 
 

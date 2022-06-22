@@ -1,12 +1,12 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: June 2, 2022
+#Date Update: June 22, 2022
 #Purpose: Explore pixel sampling data with rgee.
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
-p <- c('reticulate', 'rgee', 'rgeeExtra','terra', 'sf', 'ggplot2', 'RStoolbox', 'viridis', 'tigris') 
+p <- c('reticulate', 'rgee', 'rgeeExtra','raster', 'sf', 'ggplot2', 'RStoolbox', 'viridis', 'tigris') 
 # # install.packages('terra',repo='https://cran.r-project.org/')
 # library(tigris)
 # library(ggplot2)
@@ -25,7 +25,7 @@ setwd('C:/Users/can02/mystuff/fireDieoff/pixel_sample')
 # ee_install_upgrade(version = '0.1.312')
 
 #Intialize RGEE
-ee_Initialize(user = 'cnorlen@uci.edu', drive = TRUE)
+# ee_Initialize(user = 'cnorlen@uci.edu', drive = TRUE)
 
 #Install a python package
 # py_install("jsbeautifier")
@@ -49,7 +49,7 @@ ee_Initialize(user = 'cnorlen@uci.edu', drive = TRUE)
 # LST$mean
 # Map$addLayer(LST$first, {}, 'LST')
 
-frap.year <- ee$Image('users/cnorlen/Fire_Dieoff/frap_year_bin')
+# frap.year <- ee$Image('users/cnorlen/Fire_Dieoff/frap_year_bin')
 
 # yearViz <- list(
 #   min = 1919,
@@ -60,7 +60,7 @@ frap.year <- ee$Image('users/cnorlen/Fire_Dieoff/frap_year_bin')
 # Map$addLayer(frap.year, yearViz, 'FRAP Year Data')
 
 #Setting variable for ESPG 5070, proj4 crs
-c <- crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
+c <- raster::crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
 
 #Add California Boundary shape file
 us_states_20m <- states(cb = TRUE, resolution = "20m", class = "sf")
@@ -78,22 +78,33 @@ usfs.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S == 'M261
 usfs.sierra.union <- usfs.sierra %>% st_union()
 
 #Export the FRAP raster
-frap.raster <- ee_as_raster(image = frap.year, via = 'drive', container = 'Fire_Dieoff')
+# frap.raster <- ee_as_raster(image = frap.year, via = 'drive', container = 'Fire_Dieoff')
 
 #Load in the exported data for my hard drive
 data_in <- 'D://Fire_Dieoff'
 files <- list.files(data_in)
+files
 # files[1]
 
 #Import as spatial rasters
-frap.year.1 <- raster(file.path(data_in, files[1]))
-frap.year.2 <- raster(file.path(data_in, files[3]))
-
+#Select FRAP fire rasters
+frap.year.1 <- raster::raster(file.path(data_in, files[4]))
+frap.year.2 <- raster::raster(file.path(data_in, files[5]))
 
 #Combine the two rasters
 frap.year <- merge(frap.year.1, frap.year.2)
 frap.year.m <- frap.year == 0
-frap.year.mask <-  mask(frap.year, mask = frap.year.m, maskvalue = 1)
+frap.year.mask <-  raster::mask(frap.year, mask = frap.year.m, maskvalue = 1)
+
+#Select FRAP 1990 raster
+frap.1990 <- raster::raster(file.path(data_in, files[3]))
+frap.1990.m <- frap.1990 == 0
+frap.1990.mask <-  raster::mask(frap.1990, mask = frap.1990.m, maskvalue = 1)
+
+#Select FRAP Count raster
+frap.count <- raster::raster(file.path(data_in, files[2]))
+frap.count.m <- frap.count == 0
+frap.count.mask <-  raster::mask(frap.count, mask = frap.count.m, maskvalue = 1)
 
 #Make a figure of the raster
 p1 <- ggplot() + 
@@ -112,3 +123,58 @@ scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + them
 p1
 
 ggsave(filename = 'Fig36_FRAP_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+#FRAP 1990
+p2 <- ggplot() + 
+  ggR(img = frap.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p2
+
+ggsave(filename = 'Fig37_FRAP_1990_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+#FRAP Count map
+p3 <- ggplot() + 
+  ggR(img = frap.count.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis_c(name = 'Fire #', option = 'inferno', na.value = NA) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p3
+
+ggsave(filename = 'Fig38_FRAP_count_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+frap.year.mask
+
+p4 <- ggplot() + 
+  ggR(img = frap.year.mask, layer = 2, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis_c(name = 'Fire Type', option = 'inferno', na.value = NA) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p4
+
+ggsave(filename = 'Fig39_FRAP_type_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)

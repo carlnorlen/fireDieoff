@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: June 22, 2022
+#Date Update: June 23, 2022
 #Purpose: Explore pixel sampling data with rgee.
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -88,16 +88,21 @@ files
 
 #Import as spatial rasters
 #Select FRAP fire rasters
-frap.year.1 <- raster::raster(file.path(data_in, files[4]))
-frap.year.2 <- raster::raster(file.path(data_in, files[5]))
+# frap.year.1 <- raster::raster(file.path(data_in, files[4]))
+# frap.year.2 <- raster::raster(file.path(data_in, files[5]))
 
-#Combine the two rasters
-frap.year <- merge(frap.year.1, frap.year.2)
+#Select the frap year layer
+frap.year <- raster::raster(file.path(data_in, files[5]))
 frap.year.m <- frap.year == 0
 frap.year.mask <-  raster::mask(frap.year, mask = frap.year.m, maskvalue = 1)
 
+#Select the FRAP type layer
+frap.type <- raster::raster(file.path(data_in, files[3]))
+frap.type.m <- frap.type == 0
+frap.type.mask <-  raster::mask(frap.type, mask = frap.year.m, maskvalue = 1)
+
 #Select FRAP 1990 raster
-frap.1990 <- raster::raster(file.path(data_in, files[3]))
+frap.1990 <- raster::raster(file.path(data_in, files[4]))
 frap.1990.m <- frap.1990 == 0
 frap.1990.mask <-  raster::mask(frap.1990, mask = frap.1990.m, maskvalue = 1)
 
@@ -144,14 +149,14 @@ ggsave(filename = 'Fig37_FRAP_1990_conifer_forest_map.png', height=16, width= 12
 
 #FRAP Count map
 p3 <- ggplot() + 
-  ggR(img = frap.count.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  ggR(img = frap.count.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
   geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis_c(name = 'Fire #', option = 'inferno', na.value = NA) + theme_bw() + 
+  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
   theme(
     legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
+    legend.position = c(0.89, 0.5),
     legend.text = element_text(size = 6),
     legend.title = element_text(size = 8),
     legend.direction = "vertical")
@@ -160,14 +165,15 @@ p3
 
 ggsave(filename = 'Fig38_FRAP_count_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
-frap.year.mask
-
+# frap.year.mask
+#Create map of prescirbed burn versus 
 p4 <- ggplot() + 
-  ggR(img = frap.year.mask, layer = 2, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  ggR(img = frap.type.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
   geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis_c(name = 'Fire Type', option = 'inferno', na.value = NA) + theme_bw() + 
+  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
+  theme_bw() + 
   theme(
     legend.justification = c(1, 0),
     legend.position = c(0.89, 0.6),

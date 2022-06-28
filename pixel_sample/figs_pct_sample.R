@@ -18,16 +18,29 @@ lapply(p,require,character.only=TRUE)
 setwd('C:/Users/can02/mystuff/fireDieoff/pixel_sample')
 
 #The data directory
-dir_in <- "D:\\Large_Files\\CECS\\Stand_Age"
+dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the data
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
-pixel.data <- read.csv(file.path(fire_in, "fraprx_stratified_sample_0pt5pct_30m_ts4_20220623"), header = TRUE, na.strings = "NaN")
+pixel.data <- read.csv(file.path(dir_in, "fraprx_stratified_sample_0pt5pct_30m_ts4_20220623.csv"), header = TRUE, na.strings = "NaN")
+# list.files(fire_in)
 summary(pixel.data)
 #Get a  of the data
 # summary(pixel.data)
 # pixel.data <- pixel.data %>% filter(fire.year >= 1919 & !is.na(stand.age) & !is.na(NDMI))
+
+#Convert data to long format
+pixel.data <- pixel.data %>% dplyr::select(-c('latitude', 'longitude')) %>% 
+               pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
+
+#Convert the band numbers to years
+# pixel.data$year <- pixel.data$year %>% recode('1' = '1985', '2' = '1994', '3' = '1995', '4' = '1996', '5' = '1997', '6' = '1998', '7' = '1999',
+#                                               '8' =  '2000', '9' = '2001', '10' = '2002', '11' = '2003', '12' = '1986', '13' = '2004', '14' = '2005',
+#                                               '15' = '2006', '16' = '2007', '17' = '2008', '18' = '2009', '19' = '2010', '20' = '2011', '21' = '2012',
+#                                               '22' = '2013', '23' = '1987', '24' = '2014', '25' = '2015', '26' = '2016', '27' = '2017', '28' = '2018',
+#                                               '29' = '2019', '30' = '1988', '31' = '1989', '32' = '1990', '33' = '1991', '34' = '1992', '35' = '1993')
+pixel.data$year <- as.numeric(pixel.data$year) + 1984 
 
 #Convert missing TPA data to NAs
 pixel.data[pixel.data$tpa_max == -9999,]$tpa_max <- NA
@@ -36,10 +49,11 @@ pixel.data[pixel.data$tpa_max == -9999,]$tpa_max <- NA
 pixel.data$tpa_max <- pixel.data$tpa_max * 2.47105
 
 #Make the dates into date time format for R
-pixel.data$date <- as.Date(pixel.data$date)
-pixel.data$vi.year <- format(pixel.data$date , '%Y')
-pixel.data$fire.year <- pixel.data$fire_year
-pixel.data$stand.age <- as.numeric(pixel.data$vi.year) - as.numeric(pixel.data$fire.year) 
+pixel.data$date <- as.Date(as.character(pixel.data$year), format = '%Y')
+# pixel.data$vi.year <- format(pixel.data$date , '%Y')
+pixel.data$vi.year <- pixel.data$year
+pixel.data$fire.year <- pixel.data$fire_year_last
+pixel.data$stand.age <- as.numeric(pixel.data$year) - as.numeric(pixel.data$fire.year) 
 
 #Update Cover data to 100% scale
 pixel.data$Tree_Cover <- pixel.data$Tree_Cover / 100
@@ -47,8 +61,12 @@ pixel.data$Shrub_Cover <- pixel.data$Shrub_Cover / 100
 pixel.data$Herb_Cover <- pixel.data$Herb_Cover / 100
 pixel.data$Bare_Cover <- pixel.data$Bare_Cover / 100
 
+#Convert the SPI48 scale back to decimal
+pixel.data$SPI48 <- pixel.data$SPI48 / 100
+
 #Try to fix soil moisture by dividing by 10
 pixel.data$Soil_Moisture <- pixel.data$Soil_Moisture / 10
+
 
 #Create a GAM to predict NDMI by stand.age
 # ndmi.gam <- gam(data = filter(pixel.data, vi.year <= 2012 & stand.age > 0), #fire.year >= 1919 & 
@@ -170,20 +188,20 @@ pixel.data <- pixel.data %>% mutate(elevation.control = case_when(
 
 #Create new name for data bins
 #Bin names will need to be updated
-pixel.data <- pixel.data %>% mutate(year.bin = case_when(
-														 # bin >= 1 ~ '1900',
-														 # bin == 2 ~ '1909-1910',
-														 bin >= 1911 & bin <= 1920 ~ '1911-1920',
-														 bin >= 1921 & bin <= 1930 ~ '1921-1930',
-														 bin >= 1931 & bin <= 1940 ~ '1931-1940',
-														 bin >= 1941 & bin <= 1950 ~ '1941-1950',
-														 bin >= 1951 & bin <= 1960 ~ '1951-1960',
-														 bin >= 1961 & bin <= 1970 ~ '1961-1970',
-														 bin >= 1971 & bin <= 1980 ~ '1971-1980',
-														 bin >= 1981 & bin <= 1990 ~ '1981-1990', 
-														 bin >= 1991 & bin <= 2000 ~ '1991-2000',
-														 bin >= 2001 & bin <= 2010 ~ '2001-2010', 
-														 bin >= 2011 & bin <= 2020 ~'2011-2018')) # end function
+# pixel.data <- pixel.data %>% mutate(year.bin = case_when(
+# 														 # bin >= 1 ~ '1900',
+# 														 # bin == 2 ~ '1909-1910',
+# 														 bin >= 1911 & bin <= 1920 ~ '1911-1920',
+# 														 bin >= 1921 & bin <= 1930 ~ '1921-1930',
+# 														 bin >= 1931 & bin <= 1940 ~ '1931-1940',
+# 														 bin >= 1941 & bin <= 1950 ~ '1941-1950',
+# 														 bin >= 1951 & bin <= 1960 ~ '1951-1960',
+# 														 bin >= 1961 & bin <= 1970 ~ '1961-1970',
+# 														 bin >= 1971 & bin <= 1980 ~ '1971-1980',
+# 														 bin >= 1981 & bin <= 1990 ~ '1981-1990', 
+# 														 bin >= 1991 & bin <= 2000 ~ '1991-2000',
+# 														 bin >= 2001 & bin <= 2010 ~ '2001-2010', 
+# 														 bin >= 2011 & bin <= 2020 ~'2011-2018')) # end function
 
 #Update this to be a stand age bin, calculated for fire year relative to 2015
 # pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
@@ -205,33 +223,33 @@ pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
   # bin >= 1 ~ '1900',
   # bin == 2 ~ '1909-1910',
   # bin >= 1911 & bin <= 1920 ~ '95-104', #Calculated relative to 2015
-  bin >= 1911 & bin <=  1934 ~ '1911-1934',#'81-95',
-  # bin >= 1936 & bin <= 1950 ~ '65-79',
-  # bin >= 1951 & bin <= 1965 ~ '50-64',
-  # bin >= 1951 & bin <= 1960 ~ '55-64',
-  bin >= 1935 & bin <= 1959 ~ '1935-1959',#'56-80',
-  # bin >= 1971 & bin <= 1980 ~ '35-44',
-  bin >= 1960 & bin <= 1984 ~ '1960-1984',#'31-55', 
-  # bin >= 1991 & bin <= 2000 ~ '15-24',
-  bin >= 1985 & bin <= 2010 ~ '1985-2010',#'5-30', 
-  bin >= 2011 & bin <= 2020 ~ '2011-2020'))#'0-4'))
+  fire.year >= 1911 & fire.year <=  1934 ~ '1911-1934',#'81-95',
+  # fire.year >= 1936 & fire.year <= 1950 ~ '65-79',
+  # fire.year >= 1951 & fire.year <= 1965 ~ '50-64',
+  # fire.year >= 1951 & fire.year <= 1960 ~ '55-64',
+  fire.year >= 1935 & fire.year <= 1959 ~ '1935-1959',#'56-80',
+  # fire.year >= 1971 & fire.year <= 1980 ~ '35-44',
+  fire.year >= 1960 & fire.year <= 1984 ~ '1960-1984',#'31-55', 
+  # fire.year >= 1991 & fire.year <= 2000 ~ '15-24',
+  fire.year >= 1985 & fire.year <= 2010 ~ '1985-2010',#'5-30', 
+  fire.year >= 2011 & fire.year <= 2020 ~ '2011-2020'))#'0-4'))
 
 
 summary(pixel.data)
 # pixel.data$dNDMI <- group_by
 # pixel.data
 #Make the bin lables in the correct order
-pixel.data$elevation.control = with(pixel.data, factor(elevation.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
-pixel.data$temp.control = with(pixel.data, factor(temp.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
-pixel.data$precip.control = with(pixel.data, factor(precip.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
+# pixel.data$elevation.control = with(pixel.data, factor(elevation.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
+# pixel.data$temp.control = with(pixel.data, factor(temp.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
+# pixel.data$precip.control = with(pixel.data, factor(precip.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
 
 #Make the years bin lables in the correct order
 # pixel.data$age.bin = with(pixel.data, factor(age.bin, levels = c('-33-0','1-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70','71-80', '81-90', '91+')))
 
 #Fire Year Bins
-pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2018','2001-2010','1991-2000','1981-1990','1971-1980',
-                                                                   '1961-1970','1951-1960','1941-1950','1931-1940','1921-1930', 
-                                                                   '1911-1920'))) #,'1909-1910','1900')))
+# pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2018','2001-2010','1991-2000','1981-1990','1971-1980',
+#                                                                    '1961-1970','1951-1960','1941-1950','1931-1940','1921-1930', 
+#                                                                    '1911-1920'))) #,'1909-1910','1900')))
 
 #Fire Year Bins
 # pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('0-4','5-14','15-24','25-34','35-44',
@@ -239,7 +257,7 @@ pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2018','
                                                                    # '1911-1920','1909-1910','1900')))
 pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('2011-2020', '1985-2010', '1960-1984', '1935-1959', '1911-1934')))#c('0-4','5-30','31-55','56-80',
                                                                              #'81-95')))
-
+summary(pixel.data)
 #Create a manual color scale
 cols <- c("Shrub"="green","Herb"="brown","Tree"="forest green", "Bare" = "gray")
 fills <- c("Shrub"="green","Herb"="brown","Tree"="forest green", "Bare" = "gray")
@@ -250,7 +268,7 @@ p1 <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
   geom_line(data = pixel.data %>%
-              filter(stand.age >= -25 & stand.age <= 94 & !is.na(Shrub_Cover) & vi.year <= 2012) %>%
+              filter(stand.age >= -25 & stand.age <= 94 & !is.na(Shrub_Cover) & year <= 2012) %>%
               group_by(stand.age) %>%
               summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) +
   #Shrub Cover 95% CI
@@ -316,7 +334,7 @@ p1 <- ggplot() +
 p1
 
 #Save the data
-ggsave(filename = 'Fig1_veg_cover_stand_age.png', height=12.5, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig40_veg_cover_stand_age_pct_sample.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #Figure of Dead Trees per acre separated by fire years with time series
 p2 <- ggplot() + 
@@ -393,7 +411,7 @@ p3
 f1 <- ggarrange(p2, p3, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f1
 #Save the data
-ggsave(filename = 'Fig2_dieoff_tree_cover_stand_age_time_series.png', height=12, width= 14, units = 'cm', dpi=900)
+ggsave(filename = 'Fig41_dieoff_tree_cover_stand_age_time_series_pct_sample.png', height=12, width= 14, units = 'cm', dpi=900)
 
 #Create a water stress time series figure
 p4 <- ggplot() + 
@@ -501,5 +519,5 @@ p6
 f2 <- ggarrange(p4, p5, p6, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
 f2
 #Save the data
-ggsave(filename = 'Fig3_water_stress_stand_age_time_series.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig42_water_stress_stand_age_time_series.png', height=16, width= 16, units = 'cm', dpi=900)
  

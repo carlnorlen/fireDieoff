@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: June 23, 2022
+#Date Update: June 29, 2022
 #Purpose: Explore pixel sampling data with rgee.
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -91,47 +91,83 @@ files
 # frap.year.1 <- raster::raster(file.path(data_in, files[4]))
 # frap.year.2 <- raster::raster(file.path(data_in, files[5]))
 
-#Select the frap year layer
-frap.year <- raster::raster(file.path(data_in, files[5]))
-frap.year.m <- frap.year == 0
-frap.year.mask <-  raster::mask(frap.year, mask = frap.year.m, maskvalue = 1)
+#Select the frap year layers
+frap.year.1990 <- raster::raster(file.path(data_in, files[16]))
+frap.year.1990.m <- frap.year.1990 == 0
+frap.year.1990.mask <-  raster::mask(frap.year.1990, mask = frap.year.1990.m, maskvalue = 1)
+
+frap.year.2000 <- raster::raster(file.path(data_in, files[17]))
+frap.year.2000.m <- frap.year.2000 == 0
+frap.year.2000.mask <-  raster::mask(frap.year.2000, mask = frap.year.2000.m, maskvalue = 1)
+
+frap.year.2010 <- raster::raster(file.path(data_in, files[18]))
+frap.year.2010.m <- frap.year.2010== 0
+frap.year.2010.mask <-  raster::mask(frap.year.2010, mask = frap.year.2010.m, maskvalue = 1)
+
+frap.year.2020 <- raster::raster(file.path(data_in, files[19]))
+frap.year.2020.m <- frap.year.2020== 0
+frap.year.2020.mask <-  raster::mask(frap.year.2020, mask = frap.year.2020.m, maskvalue = 1)
 
 #Select the FRAP type layer
-frap.type <- raster::raster(file.path(data_in, files[3]))
-frap.type.m <- frap.type == 0
-frap.type.mask <-  raster::mask(frap.type, mask = frap.year.m, maskvalue = 1)
+frap.type.1990 <- raster::raster(file.path(data_in, files[12]))
+frap.type.1990.m <- frap.type.1990 == 0
+frap.type.1990.mask <-  raster::mask(frap.type.1990, mask = frap.type.1990.m, maskvalue = 1)
+
+frap.type.2000 <- raster::raster(file.path(data_in, files[13]))
+frap.type.2000.m <- frap.type.2000 == 0
+frap.type.2000.mask <-  raster::mask(frap.type.2000, mask = frap.type.2000.m, maskvalue = 1)
+
+frap.type.2010 <- raster::raster(file.path(data_in, files[14]))
+frap.type.2010.m <- frap.type.2010== 0
+frap.type.2010.mask <-  raster::mask(frap.type.2010, mask = frap.type.2010.m, maskvalue = 1)
+
+frap.type.2020 <- raster::raster(file.path(data_in, files[15]))
+frap.type.2020.m <- frap.type.2020== 0
+frap.type.2020.mask <-  raster::mask(frap.type.2020, mask = frap.type.2020.m, maskvalue = 1)
 
 #Select FRAP 1990 raster
-frap.1990 <- raster::raster(file.path(data_in, files[4]))
-frap.1990.m <- frap.1990 == 0
-frap.1990.mask <-  raster::mask(frap.1990, mask = frap.1990.m, maskvalue = 1)
+frap.count.1990 <- raster::raster(file.path(data_in, files[8]))
+frap.count.1990.m <- frap.count.1990 == 0
+frap.count.1990.mask <-  raster::mask(frap.count.1990, mask = frap.count.1990.m, maskvalue = 1)
 
-#Select FRAP Count raster
-frap.count <- raster::raster(file.path(data_in, files[2]))
-frap.count.m <- frap.count == 0
-frap.count.mask <-  raster::mask(frap.count, mask = frap.count.m, maskvalue = 1)
+frap.count.2000 <- raster::raster(file.path(data_in, files[9]))
+frap.count.2000.m <- frap.count.2000 == 0
+frap.count.2000.mask <-  raster::mask(frap.count.2000, mask = frap.count.2000.m, maskvalue = 1)
 
-#Make a figure of the raster
-p1 <- ggplot() + 
-ggR(img = frap.year.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
-geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-coord_sf() + xlab('longitude') + ylab('latitude') +
-scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
+frap.count.2010 <- raster::raster(file.path(data_in, files[10]))
+frap.count.2010.m <- frap.count.2010== 0
+frap.count.2010.mask <-  raster::mask(frap.count.2010, mask = frap.count.2010.m, maskvalue = 1)
 
-p1
+frap.count.2020 <- raster::raster(file.path(data_in, files[11]))
+frap.count.2020.m <- frap.count.2020== 0
+frap.count.2020.mask <-  raster::mask(frap.count.2020, mask = frap.count.2020.m, maskvalue = 1)
 
-ggsave(filename = 'Fig36_FRAP_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
+#ADS Data
+#2007
+ads.2007.1 <- raster::raster(file.path(data_in, files [1]))
+ads.2007.2 <- raster::raster(file.path(data_in, files [2]))
+ads.2007 <- raster::merge(ads.2007.1, ads.2007.2)
+ads.2007.m <- ads.2007 == 0
+ads.2007.mask <-  raster::mask(ads.2007, mask = ads.2007.m, maskvalue = 1)
+
+#2011
+ads.2011.1 <- raster::raster(file.path(data_in, files [3]))
+ads.2011.2 <- raster::raster(file.path(data_in, files [4]))
+ads.2011 <- raster::merge(ads.2011.1, ads.2011.2)
+ads.2011.m <- ads.2011 == 0
+ads.2011.mask <-  raster::mask(ads.2011, mask = ads.2011.m, maskvalue = 1)
+
+#2018
+ads.2018.1 <- raster::raster(file.path(data_in, files [5]))
+ads.2018.2 <- raster::raster(file.path(data_in, files [6]))
+ads.2018 <- raster::merge(ads.2018.1, ads.2018.2)
+ads.2018.m <- ads.2018 == 0
+ads.2018.mask <-  raster::mask(ads.2018, mask = ads.2018.m, maskvalue = 1)
+
 
 #FRAP 1990
-p2 <- ggplot() + 
-  ggR(img = frap.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+p1 <- ggplot() + 
+  ggR(img = frap.year.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
   geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('longitude') + ylab('latitude') +
@@ -143,13 +179,65 @@ p2 <- ggplot() +
     legend.title = element_text(size = 8),
     legend.direction = "vertical")
 
+p1
+
+ggsave(filename = 'Fig36_FRAP_year_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+#Make a figure of the raster
+p2 <- ggplot() + 
+ggR(img = frap.year.2000.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+coord_sf() + xlab('longitude') + ylab('latitude') +
+scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
 p2
 
-ggsave(filename = 'Fig37_FRAP_1990_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig37_FRAP_year_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p3 <- ggplot() + 
+  ggR(img = frap.year.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p3
+
+ggsave(filename = 'Fig38_FRAP_year_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p4 <- ggplot() + 
+  ggR(img = frap.year.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p4
+
+ggsave(filename = 'Fig39_FRAP_year_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 #FRAP Count map
-p3 <- ggplot() + 
-  ggR(img = frap.count.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+p5 <- ggplot() + 
+  ggR(img = frap.count.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
   geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('longitude') + ylab('latitude') +
@@ -161,14 +249,65 @@ p3 <- ggplot() +
     legend.title = element_text(size = 8),
     legend.direction = "vertical")
 
-p3
+p5
 
-ggsave(filename = 'Fig38_FRAP_count_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig39_FRAP_count_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p6 <- ggplot() + 
+  ggR(img = frap.count.2000.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.5),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p6
+
+ggsave(filename = 'Fig40_FRAP_count_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p7 <- ggplot() + 
+  ggR(img = frap.count.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.5),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p7
+
+ggsave(filename = 'Fig41_FRAP_count_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p8 <- ggplot() + 
+  ggR(img = frap.count.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.5),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p8
+
+ggsave(filename = 'Fig42_FRAP_count_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 # frap.year.mask
 #Create map of prescirbed burn versus 
-p4 <- ggplot() + 
-  ggR(img = frap.type.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+p9 <- ggplot() + 
+  ggR(img = frap.type.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
   geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('longitude') + ylab('latitude') +
@@ -181,6 +320,60 @@ p4 <- ggplot() +
     legend.title = element_text(size = 8),
     legend.direction = "vertical")
 
-p4
+p9
 
-ggsave(filename = 'Fig39_FRAP_type_conifer_forest_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig43_FRAP_type_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p10 <- ggplot() + 
+  ggR(img = frap.type.2000.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
+  theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p10
+
+ggsave(filename = 'Fig44_FRAP_type_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p11 <- ggplot() + 
+  ggR(img = frap.type.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
+  theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p11
+
+ggsave(filename = 'Fig45_FRAP_type_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p12 <- ggplot() + 
+  ggR(img = frap.type.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
+  theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p12
+
+ggsave(filename = 'Fig46_FRAP_type_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)

@@ -251,7 +251,7 @@ p5 <- ggplot() +
 
 p5
 
-ggsave(filename = 'Fig39_FRAP_count_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig40_FRAP_count_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p6 <- ggplot() + 
   ggR(img = frap.count.2000.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
@@ -268,7 +268,7 @@ p6 <- ggplot() +
 
 p6
 
-ggsave(filename = 'Fig40_FRAP_count_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig41_FRAP_count_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p7 <- ggplot() + 
   ggR(img = frap.count.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
@@ -285,7 +285,7 @@ p7 <- ggplot() +
 
 p7
 
-ggsave(filename = 'Fig41_FRAP_count_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig42_FRAP_count_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p8 <- ggplot() + 
   ggR(img = frap.count.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
@@ -302,7 +302,7 @@ p8 <- ggplot() +
 
 p8
 
-ggsave(filename = 'Fig42_FRAP_count_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig43_FRAP_count_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 # frap.year.mask
 #Create map of prescirbed burn versus 
@@ -322,7 +322,7 @@ p9 <- ggplot() +
 
 p9
 
-ggsave(filename = 'Fig43_FRAP_type_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig44_FRAP_type_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p10 <- ggplot() + 
   ggR(img = frap.type.2000.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
@@ -340,7 +340,7 @@ p10 <- ggplot() +
 
 p10
 
-ggsave(filename = 'Fig44_FRAP_type_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig45_FRAP_type_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p11 <- ggplot() + 
   ggR(img = frap.type.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
@@ -358,7 +358,7 @@ p11 <- ggplot() +
 
 p11
 
-ggsave(filename = 'Fig45_FRAP_type_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig46_FRAP_type_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p12 <- ggplot() + 
   ggR(img = frap.type.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
@@ -376,4 +376,59 @@ p12 <- ggplot() +
 
 p12
 
-ggsave(filename = 'Fig46_FRAP_type_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig47_FRAP_type_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+#ADS Data
+p13 <- ggplot() + 
+  ggR(img = ads.2007.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Die-off (ADS)', option = 'magma', na.value = NA, limits = c(0,30)) + 
+  theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p13
+
+ggsave(filename = 'Fig48_ADS_2007_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p14 <- ggplot() + 
+  ggR(img = ads.2011.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Die-off (ADS)', option = 'magma', na.value = NA, limits = c(0,30)) + 
+  theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p14
+
+ggsave(filename = 'Fig49_ADS_2011_map.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p15 <- ggplot() + 
+  ggR(img = ads.2018.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('longitude') + ylab('latitude') +
+  scale_fill_viridis(name = 'Die-off (ADS)', option = 'magma', na.value = NA, limits = c(0,100)) + 
+  theme_bw() + 
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = c(0.89, 0.6),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+
+p15
+
+ggsave(filename = 'Fig50_ADS_2018_map.png', height=16, width= 12, units = 'cm', dpi=900)

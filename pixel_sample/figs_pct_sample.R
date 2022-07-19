@@ -382,6 +382,92 @@ p1
 #Save the data
 ggsave(filename = 'Fig40_veg_cover_stand_age_25pt_sample.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
+#TEsting for issues
+p1a <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()), mapping = aes(x = stand.age, y = Tree_Cover.n), size = 1) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+p1a
+
+p1b <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(elevation.mean = mean(elevation), elevation.sd = sd(elevation), elevation.n = n()), mapping = aes(x = stand.age, y = elevation.mean), size = 1) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('Elevation (m)')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+p1b
+summary(pixel.data)
+p1c <- ggplot() +
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(clm_precip_sum.mean = mean(clm_precip_sum), clm_precip_sum.sd = sd(clm_precip_sum), clm_precip_sum.n = n()), mapping = aes(x = stand.age, y = clm_precip_sum.mean), size = 1) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('Climate Precip')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+p1c
+
+p1d <- ggplot() +
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(clm_temp_mean.mean = mean(clm_temp_mean), clm_temp_mean.sd = sd(clm_temp_mean), clm_temp_mean.n = n()), mapping = aes(x = stand.age, y = clm_temp_mean.mean), size = 1) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('Climate Temp')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+p1d
+# 
+# p1d <- ggplot() + 
+#   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+#   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+#   #Create a shrub cover line
+#   geom_line(data = pixel.data %>%
+#               filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
+#               group_by(stand.age) %>%
+#               summarize(aspect.median = median(aspect), aspect.sd = sd(aspect), aspect.n = n()), mapping = aes(x = stand.age, y = aspect.median), size = 1) +
+#   theme_bw() +
+#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+#         axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+#   ylab(expression('Aspect')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+# p1d
+
+f1a <- ggarrange(p1a, p1b, p1c, p1d, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
+f1a
+#Save the data
+ggsave(filename = 'Fig40a_data_check_chronosequence.png', height=22, width= 16, units = 'cm', dpi=900)
+
 pixel.data %>% group_by(stand.age.bin) %>% count()
 
 pixel.data %>% filter(!is.na(tpa_max) & if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1 & stand.age >= 2 , is.na(fire_type_2010) & is.na(stand.age))) %>%

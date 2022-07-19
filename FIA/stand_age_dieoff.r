@@ -58,7 +58,7 @@ AND t.spcd = r.spcd
 AND t.dia >= 1.0 -- additional where_clause from ref_pop_attribute table
 AND rft.value = c.fldtypcd
 AND (P.ECOSUBCD = 'M261Ep' OR P.ECOSUBCD = 'M261Eq' OR P.ECOSUBCD = 'M261Eu' OR P.ECOSUBCD = 'M261Er' OR P.ECOSUBCD = 'M261Eo' OR P.ECOSUBCD = 'M261Es') --South Sierra Nevada P.ECOSUBCD = 'M262Bb' OR P.ECOSUBCD = 'M262Ba' OR 
-AND (c.dstrbcd1 = 0 OR c.dstrbcd1 = 10 OR c.dstrbcd1 = 11 OR c.dstrbcd1 = 12 OR c.dstrbcd1 = 54 OR c.dstrbcd1 = 70 OR c.dstrbcd1 = 30 OR c.dstrbcd1 = 31 OR c.dstrbcd1 = 32)
+AND (c.dstrbcd1 = 0 OR c.dstrbcd1 = 10 OR c.dstrbcd1 = 11 OR c.dstrbcd1 = 12 OR c.dstrbcd1 = 54 OR c.dstrbcd1 = 70) -- No Fires OR c.dstrbcd1 = 30 OR c.dstrbcd1 = 31 OR c.dstrbcd1 = 32)
 ")
 #DSTRBCD1 == 30, 31, 32 reference fires
 live <- dbFetch(q1, n = -1)
@@ -130,8 +130,8 @@ test <- live %>% select(PLOT, INVYR) %>% group_by(PLOT, INVYR) %>% summarize(cou
 total <- live %>% group_by(INVYR, PLOT) %>% summarize(count = n(), tpa.all = sum(count), basal_area.all = sum(basal_area), STDAGE = median(STDAGE))
 total
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
-dead <- live %>% filter(STATUSCD == 2) %>% group_by(MORTYR, PLOT) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
-dead <- dead %>% mutate(INVYR = MORTYR)
+dead <- live %>% filter(STATUSCD == 2) %>% group_by(INVYR, PLOT) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
+# dead <- dead %>% mutate(INVYR = MORTYR)
 dead
 join <- left_join(total, dead, by = c('PLOT', 'INVYR'))
 
@@ -179,20 +179,52 @@ join <- join %>% mutate(age.bin = case_when(
   STDAGE >= stdage.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() & 
     STDAGE < stdage.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '120-159',
   STDAGE < 120 & STDAGE >= 93 ~ '93-119',
-  STDAGE >= 50 & STDAGE < 93 ~ '50-92',
-  STDAGE < 50 ~ '0-49'))
+  STDAGE >= 30 & STDAGE < 93 ~ '30-92',
+  STDAGE < 29 ~ '0-29'))
 
 #Order the stand age bins
-join$age.bin = with(join, factor(age.bin, levels = c('0-49', '50-92', '93-119','120-159',
+join$age.bin = with(join, factor(age.bin, levels = c('0-29', '30-92', '93-119','120-159',
                                                            '160-209','210+')))
-
+summary(join)
 #Region white counts of dead and live trees
 f1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #Mean Die-off
   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead), color = 'black', size = 1) +
+  #95% CI Die-off
+  geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
+                group_by(INVYR) %>%
+                summarize(BA.dead = mean(basal_area.dead),
+                          BA.dead.sd = sd(basal_area.dead), BA.n = n()),
+              mapping = aes(ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+                            ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
+                            x = INVYR), alpha = 0.3) +
   xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) + theme_bw()
 f1
 
-ggsave(filename = 'Fig1_mortality_time_series_FIA.png', height=6, width= 10, units = 'cm', dpi=900)
+f1a <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR) %>% summarize(BA.dead = mean(basal_area.dead), BA.n = n()), mapping = aes(x = INVYR, y = BA.n), color = 'black', size = 1) +
+  xlab('Year') + ylab('# Plots') + ylim(0, 60) + theme_bw()
+f1a
+
+f1b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #The data mean
+  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% 
+  group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), mapping = aes(x = INVYR, y = BA.all), color = 'black', size = 1) +
+  #The error bars
+  geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
+                group_by(INVYR) %>%
+                summarize(BA.mean = mean(basal_area.all),
+                          BA.sd = sd(basal_area.all), BA.n = n()),
+              mapping = aes(ymin=BA.mean - 1.96*(BA.sd / sqrt(BA.n)),
+                            ymax=BA.mean + 1.96*(BA.sd / sqrt(BA.n)),
+                            x = INVYR), alpha = 0.3) +
+  xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) + theme_bw()
+f1b
+
+cf1 <- ggarrange(f1, f1a, f1b, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 1, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+cf1
+
+ggsave(filename = 'Fig1_mortality_time_series_FIA.png', height=18, width= 10, units = 'cm', dpi=900)
 
 #Stand Age Histogram with data binned by stand age
 f2 <- ggplot() + geom_histogram(data = (join %>% filter(!is.na(STDAGE)) %>% select(STDAGE)), mapping = aes(x =STDAGE), bins = 60) +
@@ -210,7 +242,7 @@ join %>% filter(is.na(stdage.bin))
 # live %>% filter(STATUSCD == 2 & !is.na(MORTYR) & !is.na(STDAGE)) %>% group_by(MORTYR, PLOT) %>% summarize(basal_area = sum(basal_area))
 #For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
 f3<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR, stdage.bin) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
+  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR, stdage.bin) %>% summarize(BA.dead = mean(basal_area.dead), BA.n = n()), mapping = aes(x = INVYR, y = BA.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
   xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
 # %>% filter(!is.na(stdage.bin)) 
 f3
@@ -218,7 +250,7 @@ ggsave(filename = 'Fig3_stand_age_mortality_time_series_FIA.png', height=6, widt
 
 #For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
 f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(year, stdage.bin) %>% summarize(Count.dead = mean(count.dead)), mapping = aes(x = year, y = Count.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
+  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR, stdage.bin) %>% summarize(tpa.dead = mean(tpa.dead)), mapping = aes(x = INVYR, y = tpa.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
   xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
 # %>% filter(!is.na(stdage.bin)) 
 f4
@@ -239,7 +271,7 @@ ggsave(filename = 'Fig4_stand_age_count_mortality_time_series_FIA.png', height=6
 # ggsave(filename = 'Fig6_stand_age_FIA_density_plot.png', height=6, width= 15, units = 'cm', dpi=900)
 
 f5<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-  geom_line(data = join %>% filter(!is.na(age.bin)) %>% group_by(year, age.bin) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = year, y = BA.dead, color = age.bin, linetype = age.bin), size = 1) +
+  geom_line(data = join %>% filter(!is.na(age.bin)) %>% group_by(INVYR, age.bin) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead, color = age.bin, linetype = age.bin), size = 1) +
   xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
 # %>% filter(!is.na(stdage.bin)) 
 f5

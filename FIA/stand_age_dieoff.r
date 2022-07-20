@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 10, 2021
-#Date Edited: June 22, 2022
+#Date Edited: July 19, 2022
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -198,12 +198,16 @@ f1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all 
               mapping = aes(ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
                             ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
                             x = INVYR), alpha = 0.3) +
-  xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) + theme_bw()
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) 
 f1
 
 f1a <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR) %>% summarize(BA.dead = mean(basal_area.dead), BA.n = n()), mapping = aes(x = INVYR, y = BA.n), color = 'black', size = 1) +
-  xlab('Year') + ylab('# Plots') + ylim(0, 60) + theme_bw()
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Year') + ylab('# Plots') + ylim(0, 60) 
 f1a
 
 f1b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
@@ -218,10 +222,11 @@ f1b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.al
               mapping = aes(ymin=BA.mean - 1.96*(BA.sd / sqrt(BA.n)),
                             ymax=BA.mean + 1.96*(BA.sd / sqrt(BA.n)),
                             x = INVYR), alpha = 0.3) +
+  
   xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) + theme_bw()
 f1b
 
-cf1 <- ggarrange(f1, f1a, f1b, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 1, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+cf1 <- ggarrange(f1, f1a, f1b, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
 cf1
 
 ggsave(filename = 'Fig1_mortality_time_series_FIA.png', height=18, width= 10, units = 'cm', dpi=900)
@@ -236,8 +241,8 @@ f2 <- ggplot() + geom_histogram(data = (join %>% filter(!is.na(STDAGE)) %>% sele
 f2
 ggsave(filename = 'Fig2_Stand_Age_Quintiles_historgram.png', height=6, width= 10, units = 'cm', dpi=900)
 
-join %>% group_by(stdage.bin) %>% summarize(count = n())
-join %>% filter(is.na(stdage.bin))
+# join %>% group_by(stdage.bin) %>% summarize(count = n())
+# join %>% filter(is.na(stdage.bin))
 
 # live %>% filter(STATUSCD == 2 & !is.na(MORTYR) & !is.na(STDAGE)) %>% group_by(MORTYR, PLOT) %>% summarize(basal_area = sum(basal_area))
 #For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
@@ -276,3 +281,24 @@ f5<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE
 # %>% filter(!is.na(stdage.bin)) 
 f5
 ggsave(filename = 'Fig5_stand_age_basal_area_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+
+p6 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE <= 250), mapping = aes(x = STDAGE, y = basal_area.all)) +
+      theme_bw()
+p6
+
+p7 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE <= 250), mapping = aes(x = STDAGE, y = tpa.all)) +
+      theme_bw()
+p7
+
+p8 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE <= 250), mapping = aes(x = STDAGE, y = basal_area.dead)) +
+  theme_bw() #+ geom_smooth(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019)), mapping = aes(x = STDAGE, y = basal_area.dead), method = 'lm')
+p8
+
+p9 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE <= 250), mapping = aes(x = basal_area.all, y = basal_area.dead)) +
+  theme_bw()
+p9
+
+fig2 <- ggarrange(p6, p7, p8, p9, ncol = 2, nrow = 2, common.legend = FALSE, align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
+fig2
+
+ggsave(filename = 'Fig6_mortality_standage_FIA.png', height=18, width= 18, units = 'cm', dpi=900)

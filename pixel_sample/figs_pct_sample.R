@@ -415,6 +415,8 @@ p1b <- ggplot() +
   ylab(expression('Elevation (m)')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1b
 summary(pixel.data)
+
+pixel.data %>% group_by(stand.age) %>% dplyr::select(fire_year_2010) %>% unique() %>% summarize(count = n())
 p1c <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
@@ -422,14 +424,22 @@ p1c <- ggplot() +
   geom_line(data = pixel.data %>%
               filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
               group_by(stand.age) %>%
-              summarize(clm_precip_sum.mean = mean(clm_precip_sum), clm_precip_sum.sd = sd(clm_precip_sum), clm_precip_sum.n = n()), mapping = aes(x = stand.age, y = clm_precip_sum.mean), size = 1) +
+              dplyr::select(fire_year_2010) %>% 
+              unique() %>%
+              summarize(fire_year.count = n()), mapping = aes(x = stand.age, y = fire_year.count), size = 1) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  ylab(expression('Climate Precip')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+  ylab(expression('# Fire Years')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1c
+
+find_mode <- function(x) {
+  u <- unique(x)
+  tab <- tabulate(match(x, u))
+  u[tab == max(tab)]
+}
 
 p1d <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
@@ -438,13 +448,13 @@ p1d <- ggplot() +
   geom_line(data = pixel.data %>%
               filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
               group_by(stand.age) %>%
-              summarize(clm_temp_mean.mean = mean(clm_temp_mean), clm_temp_mean.sd = sd(clm_temp_mean), clm_temp_mean.n = n()), mapping = aes(x = stand.age, y = clm_temp_mean.mean), size = 1) +
+              summarize(fire_year.mode = find_mode(fire_year_2010)), mapping = aes(x = stand.age, y = fire_year.mode), size = 1) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  ylab(expression('Climate Temp')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + ylim(1910, 2010) +
+  ylab(expression('Modal Fire Year')) + xlab('Years Since Fire') 
 p1d
 # 
 # p1d <- ggplot() + 
@@ -1210,9 +1220,30 @@ f6
 #Save the data
 ggsave(filename = 'Fig47_water_stress_stand_age_time_series_Rx_fire.png', height=22, width= 16, units = 'cm', dpi=900)
 
-# test <- pixel.data %>%
-#   filter(stand.age >= 0 & fire.year >= 1910 & fire.year <= 2010 & !is.na(tpa_max) & fire_type_last == 1) %>%
-#   group_by(date, stand.age.bin) %>%
-#   summarize(count = n())
+pixel.data$vi.year[pixel.data$vi.year == 2012]
 
+#Creating a fire year dTree plot
+p21 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], stand.age.bin = stand.age.bin)) +
+  geom_point(mapping = aes(x = Water_Stress, y = dTree, color = stand.age.bin), size = 1) + 
+  geom_smooth(method = 'lm', mapping = aes(x = Water_Stress, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
+  theme_bw()
+p21
+ggsave(filename = 'Fig48_water_stress_stand_age.png', height=16, width= 18, units = 'cm', dpi=900)
 
+pixel.data %>% summary()
+p22 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], stand.age.bin = stand.age.bin)) +
+  geom_point(mapping = aes(x = SPI48, y = dTree, color = stand.age.bin), size = 1) + 
+  geom_smooth(method = 'lm', mapping = aes(x = SPI48, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
+  theme_bw()
+p22
+
+ggsave(filename = 'Fig49_SPI48_stand_age.png', height=16, width= 18, units = 'cm', dpi=900)
+
+pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
+p23 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), stand.age.bin = stand.age.bin)) +
+  geom_point(mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin), size = 1) + 
+  geom_smooth(method = 'lm', mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
+  theme_bw()
+p23
+
+ggsave(filename = 'Fig50_PrET4yr_stand_age.png', height=16, width= 18, units = 'cm', dpi=900)

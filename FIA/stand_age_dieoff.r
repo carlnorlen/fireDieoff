@@ -42,7 +42,9 @@ t.ht, --Total live tree height in feet
 t.actualht, --The measure height in feet
 t.agentcd, --tree damage
 t.mortyr, --mortality year
-t.plot, t.statuscd, t.invyr, r.common_name, t.spcd, c.fortypcd, c.fldtypcd, rft.meaning, c.stdage, c.fldage, t.totage, t.bhage
+t.plot, t.statuscd, t.invyr, r.common_name, t.spcd, c.fortypcd, 
+c.fldtypcd, rft.meaning, c.stdage, c.fldage, t.totage, t.bhage,
+c.dstrbcd1, c.dstrbyr1
 FROM 
 cond c,
 plot p,
@@ -52,7 +54,7 @@ ref_forest_type rft
 WHERE p.cn = c.plt_cn
 AND t.plt_cn = c.plt_cn
 AND t.condid = c.condid
-AND c.cond_status_cd = 1 --2 means forest
+AND c.cond_status_cd = 1 --2 means non-forest
 --AND t.statuscd = 1 --1 means live trees, 2 means dead trees
 AND t.spcd = r.spcd
 AND t.dia >= 1.0 -- additional where_clause from ref_pop_attribute table
@@ -70,18 +72,11 @@ live$count <- live$count * 2.47105 # Convert to per hectare
 live$DIA <- live$DIA * (2.54) #Convert to centimeters
 live$basal_area <- (((live$DIA / 2)^2) * pi)*(1/10000) * live$count
 
-# live %>% filter(STDAGE > 0 & !is.na(STDAGE)) %>% select(STDAGE) %>% unique()
-# live %>% filter(INVYR == 2001) %>% select(PLOT) %>% unique() %>% count()
-# 
-# live %>% filter(STATUSCD == 1) %>% group_by(INVYR) %>% summarize(Live.count = sum(count))
-# 
-# live %>% filter(STATUSCD == 2 & !is.na(MORTYR)) %>% group_by(INVYR) %>% summarize(Dead.count = sum(count))
-
 #Calculate the Quintiles of stand age
 stdage.q <- as.data.frame(unname(quantile(live$STDAGE, prob = seq(0,1, 1/5), type = 3, na.rm = TRUE)))
 # precip.q
 colnames(stdage.q) <- 'STDAGE'
-stdage.q$'Quintile' <- c(0.0, 0.2,0.4, 0.6, 0.8, 1.0)
+stdage.q$'Quintile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
 # temp.q
 stdage.q
 
@@ -130,7 +125,7 @@ test <- live %>% select(PLOT, INVYR) %>% group_by(PLOT, INVYR) %>% summarize(cou
 total <- live %>% group_by(INVYR, PLOT) %>% summarize(count = n(), tpa.all = sum(count), basal_area.all = sum(basal_area), STDAGE = median(STDAGE))
 total
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
-dead <- live %>% filter(STATUSCD == 2) %>% group_by(INVYR, PLOT) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
+dead <- live %>% filter(STATUSCD == 2) %>% group_by(PLOT, INVYR) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
 # dead <- dead %>% mutate(INVYR = MORTYR)
 dead
 join <- left_join(total, dead, by = c('PLOT', 'INVYR'))
@@ -209,7 +204,7 @@ f1a <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.al
   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
   xlab('Year') + ylab('# Plots') + ylim(0, 60) 
 f1a
-
+join %>% filter(STDAGE <= 10) %>% count()
 f1b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #The data mean
   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% 
@@ -241,17 +236,39 @@ f2 <- ggplot() + geom_histogram(data = (join %>% filter(!is.na(STDAGE)) %>% sele
 f2
 ggsave(filename = 'Fig2_Stand_Age_Quintiles_historgram.png', height=6, width= 10, units = 'cm', dpi=900)
 
-# join %>% group_by(stdage.bin) %>% summarize(count = n())
-# join %>% filter(is.na(stdage.bin))
-
-# live %>% filter(STATUSCD == 2 & !is.na(MORTYR) & !is.na(STDAGE)) %>% group_by(MORTYR, PLOT) %>% summarize(basal_area = sum(basal_area))
 #For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
-f3<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR, stdage.bin) %>% summarize(BA.dead = mean(basal_area.dead), BA.n = n()), mapping = aes(x = INVYR, y = BA.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
-  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
-# %>% filter(!is.na(stdage.bin)) 
+f3<- ggplot() + 
+  #Do the mean line
+  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% 
+                            group_by(INVYR, stdage.bin) %>% 
+                            summarize(BA.dead = mean(basal_area.dead), BA.n = n()), 
+                            mapping = aes(x = INVYR, y = BA.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
+  #Do the 95% CI Ribbon
+  geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
+                group_by(INVYR, stdage.bin) %>% 
+                summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
+              mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+                            ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
+  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()
 f3
+
 ggsave(filename = 'Fig3_stand_age_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+summary(join)
+f3a<- ggplot() + 
+  #Do the mean line
+  geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% 
+              group_by(INVYR, stdage.bin) %>% 
+              summarize(BA.dead = mean(basal_area.dead), BA.n = n()), 
+            mapping = aes(x = INVYR, y = BA.n, color = stdage.bin, linetype = stdage.bin), size = 1) +
+  #Do the 95% CI Ribbon
+  # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
+  #               group_by(INVYR, stdage.bin) %>% 
+  #               summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
+  #             mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+  #                           ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
+  xlab('Year') + ylab('Count') + theme_bw()
+f3a
+ggsave(filename = 'Fig3a_stand_age_count_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
 
 #For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
 f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
@@ -261,19 +278,6 @@ f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE
 f4
 ggsave(filename = 'Fig4_stand_age_count_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
 
-#Mortality binned by tree age
-# f5<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, bhage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-#   geom_line(data = live %>% filter(STATUSCD == 2 & !is.na(MORTYR) & !is.na(STDAGE)) %>% group_by(MORTYR, bhage.bin) %>% summarize(Dead.count = sum(count)), mapping = aes(x = MORTYR, y = Dead.count), color = 'red') +
-#   xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw() + facet_wrap(~bhage.bin, ncol = 5)
-# 
-# f5
-# ggsave(filename = 'Fig5_tree_age_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
-# 
-# #Stand Age density plot
-# f6 <- ggplot() + geom_density(data = join %>% filter(!is.na(stdage.bin)) %>% filter(!is.na(STDAGE)), mapping = aes(x = STDAGE))
-# 
-# f6
-# ggsave(filename = 'Fig6_stand_age_FIA_density_plot.png', height=6, width= 15, units = 'cm', dpi=900)
 
 f5<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
   geom_line(data = join %>% filter(!is.na(age.bin)) %>% group_by(INVYR, age.bin) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead, color = age.bin, linetype = age.bin), size = 1) +
@@ -302,3 +306,47 @@ fig2 <- ggarrange(p6, p7, p8, p9, ncol = 2, nrow = 2, common.legend = FALSE, ali
 fig2
 
 ggsave(filename = 'Fig6_mortality_standage_FIA.png', height=18, width= 18, units = 'cm', dpi=900)
+
+join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & !is.na(STDAGE))
+join$stdage.bin <- as.factor(join$stdage.bin)
+
+#Calculate the Quintiles of stand age
+std.q <- as.data.frame(unname(quantile((join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE)))$STDAGE, prob = seq(0,1, 1/10), type = 3, na.rm = TRUE)))
+# precip.q
+colnames(std.q) <- 'STDAGE'
+std.q$'Quintile' <- c(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+# temp.q
+std.q
+
+#Bin data by Stand Age. Bins are quintiles.
+join <- join %>% mutate(std.bin = case_when(
+  STDAGE >= std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '265+',
+  STDAGE >= std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() &
+  STDAGE < std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '215-264',
+  STDAGE >= std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '190-214',
+  STDAGE >= std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '165-189',
+  STDAGE >= std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '155-164',
+  STDAGE >= std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '130-154',
+  STDAGE >= std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '114-129',
+  STDAGE >= std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '105-113',
+  STDAGE >= std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+    STDAGE < std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '85-104',
+  STDAGE < std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-84'))
+
+#Order the stand age bins
+join$std.bin = with(join, factor(std.bin, levels = c('0-84', '85-104', '105-113', '114-129', '130-154',  '155-164', '165-189','190-214', '215-264','265+')))
+# summary(live)
+
+p10 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE)), mapping = aes(x = std.bin, y = basal_area.dead)) +
+       geom_point(stat = 'summary', mapping = aes(color = std.bin)) + geom_errorbar(stat = 'summary', mapping = aes(color = std.bin)) + theme_bw()
+p10
+
+ggsave(filename = 'Fig7_mortality_standage_pointrange_FIA.png', height=14, width= 22, units = 'cm', dpi=900)
+
+

@@ -23,8 +23,8 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the data
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
-pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
-# pixel.data <- read.csv(file.path(fire_in, "fraprx_ecoregion_stratified_sample_4categories_1pct_30m_ts8_20220714.csv"), header = TRUE, na.strings = "NaN")
+# pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
+pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_4categories_1pct_30m_ts8_20220714.csv"), header = TRUE, na.strings = "NaN")
 # list.files(fire_in)
 summary(pixel.data)
 #Get a  of the data
@@ -170,74 +170,6 @@ pixel.data <- pixel.data %>% mutate(elevation.control = case_when(
   elevation >= elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric()  & 
     elevation < elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric() ~ '20 to 40 %',
   elevation < elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric() ~ '0 to 20%'))
-# pixel.data
-#Bin data by elevation
-# pixel.data <- pixel.data %>% mutate(year.control = case_when(fire.year > 2000 ~ '2001-2020',
-# 															 fire.year > 1980 & fire.year <= 2000 ~ '1981-2000',
-# 															 fire.year > 1960 & fire.year <= 1980 ~ '1961-1980',
-# 															 fire.year > 1940 & fire.year <= 1960 ~ '1941-1960',
-# 															 fire.year > 1920 & fire.year <= 1940 ~ '1921-1940',
-# 															 fire.year >= 1900 & fire.year <= 1920 ~ '1900-1920')) # end function
-
-#New bins based on stand age
-# pixel.data <- pixel.data %>% mutate(age.bin = case_when(
-#   stand.age <= 0 ~ '-33-0',
-#   stand.age > 0 & stand.age <= 10 ~ '1-10',
-#   stand.age > 10 & stand.age <= 20 ~ '11-20',
-#   stand.age > 20 & stand.age <= 30 ~ '21-30',
-#   stand.age > 30 & stand.age <= 40 ~ '31-40',
-#   stand.age > 40 & stand.age <= 50 ~ '41-50',
-#   stand.age > 50 & stand.age <= 60 ~ '51-60',
-#   stand.age > 60 & stand.age <= 70 ~ '61-70',
-#   stand.age > 70 & stand.age <= 80 ~ '71-80',
-#   stand.age > 80 & stand.age <= 90 ~ '81-90',
-#   stand.age > 90  ~ '91+'))
-# 
-# ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = date)) + facet_wrap(~age.bin)
-
-#Create new name for data bins
-#Bin names will need to be updated
-# pixel.data <- pixel.data %>% mutate(year.bin = case_when(
-# 														 # bin >= 1 ~ '1900',
-# 														 # bin == 2 ~ '1909-1910',
-# 														 bin >= 1911 & bin <= 1920 ~ '1911-1920',
-# 														 bin >= 1921 & bin <= 1930 ~ '1921-1930',
-# 														 bin >= 1931 & bin <= 1940 ~ '1931-1940',
-# 														 bin >= 1941 & bin <= 1950 ~ '1941-1950',
-# 														 bin >= 1951 & bin <= 1960 ~ '1951-1960',
-# 														 bin >= 1961 & bin <= 1970 ~ '1961-1970',
-# 														 bin >= 1971 & bin <= 1980 ~ '1971-1980',
-# 														 bin >= 1981 & bin <= 1990 ~ '1981-1990', 
-# 														 bin >= 1991 & bin <= 2000 ~ '1991-2000',
-# 														 bin >= 2001 & bin <= 2010 ~ '2001-2010', 
-# 														 bin >= 2011 & bin <= 2020 ~'2011-2018')) # end function
-
-#Update this to be a stand age bin, calculated for fire year relative to 2015
-# pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
-#   # bin >= 1 ~ '1900',
-#   # bin == 2 ~ '1909-1910',
-#   bin >= 1911 & bin <= 1920 ~ '95-104', #Calculated relative to 2015
-#   bin >= 1921 & bin <= 1930 ~ '85-94',
-#   bin >= 1931 & bin <= 1940 ~ '75-84',
-#   bin >= 1941 & bin <= 1950 ~ '65-74',
-#   bin >= 1951 & bin <= 1960 ~ '55-64',
-#   bin >= 1961 & bin <= 1970 ~ '45-54',
-#   bin >= 1971 & bin <= 1980 ~ '35-44',
-#   bin >= 1981 & bin <= 1990 ~ '25-34', 
-#   bin >= 1991 & bin <= 2000 ~ '15-24',
-#   bin >= 2001 & bin <= 2010 ~ '5-14', 
-#   bin >= 2011 & bin <= 2020 ~'0-4'))
-
-#Calculate the Quintiles of Fire Year
-# pixel.2010 <- pixel.data %>% dplyr::filter(fire.year <= 2010)
-
-# pixel.data %>% dplyr::filter(!is.na(fire.year)) %>% dplyr::select(fire.year) %>% data.frame()
-# fire.year.q <- pixel.data %>% dplyr::filter(!is.na(fire.year)) %>% quantile(fire.year, prob = seq(0,1, 1/5)) %>% unname() %>% as.data.frame()
-# # precip.q
-# colnames(fire.year.q) <- 'Fire Year'
-# fire.year.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-# # temp.q
-# fire.year.q
 
 pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
   # bin >= 1 ~ '1900',
@@ -276,25 +208,7 @@ pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
 
 summary(pixel.data)
-# pixel.data$dNDMI <- group_by
-# pixel.data
-#Make the bin lables in the correct order
-# pixel.data$elevation.control = with(pixel.data, factor(elevation.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
-# pixel.data$temp.control = with(pixel.data, factor(temp.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
-# pixel.data$precip.control = with(pixel.data, factor(precip.control, levels = c('0 to 20%', '20 to 40 %', '40 to 60 %', '60 to 80 %', '> 80 %')))
 
-#Make the years bin lables in the correct order
-# pixel.data$age.bin = with(pixel.data, factor(age.bin, levels = c('-33-0','1-10', '11-20', '21-30', '31-40', '41-50', '51-60', '61-70','71-80', '81-90', '91+')))
-
-#Fire Year Bins
-# pixel.data$year.bin = with(pixel.data, factor(year.bin, levels = c('2011-2018','2001-2010','1991-2000','1981-1990','1971-1980',
-#                                                                    '1961-1970','1951-1960','1941-1950','1931-1940','1921-1930', 
-#                                                                    '1911-1920'))) #,'1909-1910','1900')))
-
-#Fire Year Bins
-# pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('0-4','5-14','15-24','25-34','35-44',
-#                                                                         '45-54','55-64','65-74','75-84','85-94','95-104')))
-                                                                   # '1911-1920','1909-1910','1900')))
 pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('2019-2020', '2011-2018', '1985-2010', '1960-1984', '1935-1959', '1910-1934', 'No Fire')))#c('0-4','5-30','31-55','56-80',
                                                                              #'81-95')))
 
@@ -376,11 +290,11 @@ p1 <- ggplot() +
   scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
   scale_fill_manual(values = fills) + 
   guides(fill = "none") +
-  ylab(expression('Cover (%)')) + xlab('Years Since Fire') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+  ylab(expression('Cover (%)')) + xlab('Years Since Fire') 
 p1
 
 #Save the data
-ggsave(filename = 'Fig40_veg_cover_stand_age_25pt_sample.png', height=12.5, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig40_veg_cover_stand_age_1pt_4group_sample.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #TEsting for issues
 p1a <- ggplot() + 
@@ -476,7 +390,7 @@ p1d
 f1a <- ggarrange(p1a, p1b, p1c, p1d, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
 f1a
 #Save the data
-ggsave(filename = 'Fig40a_data_check_chronosequence.png', height=22, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig40a_data_check_1pct_4group_sample_chronosequence.png', height=22, width= 16, units = 'cm', dpi=900)
 
 pixel.data %>% group_by(stand.age.bin) %>% count()
 
@@ -1223,12 +1137,12 @@ ggsave(filename = 'Fig47_water_stress_stand_age_time_series_Rx_fire.png', height
 pixel.data$vi.year[pixel.data$vi.year == 2012]
 
 #Creating a fire year dTree plot
-p21 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], stand.age.bin = stand.age.bin)) +
-  geom_point(mapping = aes(x = Water_Stress, y = dTree, color = stand.age.bin), size = 1) + 
-  geom_smooth(method = 'lm', mapping = aes(x = Water_Stress, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
+p21 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress.4yr = sum(Water_Stress[vi.year %in% c(2012, 2013, 2014, 2015)]), stand.age.bin = stand.age.bin)) +
+  geom_point(mapping = aes(x = Water_Stress.4yr, y = dTree, color = stand.age.bin), size = 1) + 
+  geom_smooth(method = 'lm', mapping = aes(x = Water_Stress.4yr, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
   theme_bw()
 p21
-ggsave(filename = 'Fig48_water_stress_stand_age.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig48_water_stress_stand_age_1pct_4group.png', height=16, width= 18, units = 'cm', dpi=900)
 
 pixel.data %>% summary()
 p22 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], stand.age.bin = stand.age.bin)) +
@@ -1237,13 +1151,23 @@ p22 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No F
   theme_bw()
 p22
 
-ggsave(filename = 'Fig49_SPI48_stand_age.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig49_SPI48_stand_age_1pc_4group.png', height=16, width= 18, units = 'cm', dpi=900)
 
 pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
 p23 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), stand.age.bin = stand.age.bin)) +
   geom_point(mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin), size = 1) + 
   geom_smooth(method = 'lm', mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
+  stat_cor(mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin) ) +
   theme_bw()
 p23
 
 ggsave(filename = 'Fig50_PrET4yr_stand_age.png', height=16, width= 18, units = 'cm', dpi=900)
+
+p24 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & fire_type_2010 == 1) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015])) +
+  geom_point(mapping = aes(x = stand.age, y = dTree), size = 1) + 
+  geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), linetype = 'dotdash', size = 2) + 
+  stat_cor(mapping = aes(x = stand.age, y = dTree)) +
+  theme_bw()
+p24
+
+ggsave(filename = 'Fig51_dTree_stand_age_1ct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)

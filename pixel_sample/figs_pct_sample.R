@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 14, 2022
+#Date Updated: July 22, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -1210,3 +1210,215 @@ p27 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & fire_type_
 p27
 
 ggsave(filename = 'Fig54_tpa_max_stand_age_wildfire_1ct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
+
+#Create a GPP stand age curve for Wildfires
+p28 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year) & GPP >= 0) %>%
+              group_by(stand.age) %>%
+              summarize(GPP.mean = mean(GPP)), mapping = aes(x = stand.age, y = GPP.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year) & GPP >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(GPP.mean = mean(GPP),
+                          GPP.sd = sd(GPP), GPP.n = n()),
+              mapping = aes(ymin= GPP.mean - 1.96*(GPP.sd / sqrt(GPP.n)),
+                            ymax=GPP.mean + 1.96*(GPP.sd / sqrt(GPP.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('GPP (g/m^2/yr)')) + xlab('Years Since Fire') 
+p28
+
+p29 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year) & AET >= 0) %>%
+              group_by(stand.age) %>%
+              summarize(AET.mean = mean(AET)), mapping = aes(x = stand.age, y = AET.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year) & AET >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(AET.mean = mean(AET),
+                          AET.sd = sd(AET), AET.n = n()),
+              mapping = aes(ymin= AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
+                            ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('AET (mm/yr)')) + xlab('Years Since Fire') 
+p29
+
+p30 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(ppt.mean = mean(ppt)), mapping = aes(x = stand.age, y = ppt.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year) & ppt >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(ppt.mean = mean(ppt),
+                          ppt.sd = sd(ppt), ppt.n = n()),
+              mapping = aes(ymin= ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
+                            ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('Precip (mm/yr)')) + xlab('Years Since Fire') 
+p30
+
+p31 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(Water_Stress.mean = mean(Water_Stress)), mapping = aes(x = stand.age, y = Water_Stress.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -20 & stand.age <= 90 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 1 & !is.na(fire.year) & Water_Stress >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(Water_Stress.mean = mean(Water_Stress),
+                          Water_Stress.sd = sd(Water_Stress), Water_Stress.n = n()),
+              mapping = aes(ymin= Water_Stress.mean - 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
+                            ymax=Water_Stress.mean + 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('Water Stress (mm)')) + xlab('Years Since Fire') 
+p31
+
+f7 <- ggarrange(p28, p29, p30, p31, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
+f7
+#Save the data
+ggsave(filename = 'Fig55_wildfire_recovery_ecosystem properties.png', height=18, width= 14, units = 'cm', dpi=900)
+
+#GPP, AET recovery for Rx Fire
+p32 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year) & GPP >= 0) %>%
+              group_by(stand.age) %>%
+              summarize(GPP.mean = mean(GPP)), mapping = aes(x = stand.age, y = GPP.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year) & GPP >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(GPP.mean = mean(GPP),
+                          GPP.sd = sd(GPP), GPP.n = n()),
+              mapping = aes(ymin= GPP.mean - 1.96*(GPP.sd / sqrt(GPP.n)),
+                            ymax=GPP.mean + 1.96*(GPP.sd / sqrt(GPP.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('GPP (g/m^2/yr)')) + xlab('Years Since Fire') 
+p32
+
+p33 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year) & AET >= 0) %>%
+              group_by(stand.age) %>%
+              summarize(AET.mean = mean(AET)), mapping = aes(x = stand.age, y = AET.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year) & AET >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(AET.mean = mean(AET),
+                          AET.sd = sd(AET), AET.n = n()),
+              mapping = aes(ymin= AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
+                            ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('AET (mm/yr)')) + xlab('Years Since Fire') 
+p33
+
+p34 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(ppt.mean = mean(ppt)), mapping = aes(x = stand.age, y = ppt.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year) & ppt >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(ppt.mean = mean(ppt),
+                          ppt.sd = sd(ppt), ppt.n = n()),
+              mapping = aes(ymin= ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
+                            ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('Precip (mm/yr)')) + xlab('Years Since Fire') 
+p34
+
+p35 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
+  #Create a shrub cover line
+  geom_line(data = pixel.data %>%
+              filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year)) %>%
+              group_by(stand.age) %>%
+              summarize(Water_Stress.mean = mean(Water_Stress)), mapping = aes(x = stand.age, y = Water_Stress.mean), size = 1) +
+  #Shrub Cover 95% CI
+  geom_ribbon(data = pixel.data %>% 
+                filter(stand.age >= -10 & stand.age <= 25 & !is.na(Shrub_Cover) & vi.year <= 2010 & fire_type_2010 == 2 & !is.na(fire.year) & Water_Stress >= 0) %>%
+                group_by(stand.age) %>%
+                summarize(Water_Stress.mean = mean(Water_Stress),
+                          Water_Stress.sd = sd(Water_Stress), Water_Stress.n = n()),
+              mapping = aes(ymin= Water_Stress.mean - 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
+                            ymax=Water_Stress.mean + 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
+                            x = stand.age), alpha = 0.3) +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab(expression('Water Stress (mm)')) + xlab('Years Since Fire') 
+p35
+
+f8 <- ggarrange(p32, p33, p34, p35, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
+f8
+#Save the data
+ggsave(filename = 'Fig56_Rx_fire_recovery_ecosystem_properties.png', height=18, width= 14, units = 'cm', dpi=900)

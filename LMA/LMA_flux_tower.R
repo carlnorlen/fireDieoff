@@ -14,12 +14,12 @@ lapply(p,require,character.only=TRUE)
 setwd('C:/Users/can02/mystuff/fireDieoff/LMA')
 
 #Data directory 
-dir_in <- "D:\\Large_Files\\Fire_Dieoff"
+dir_in <- "D:\\Fire_Dieoff"
 
 #Add the data
 data <- read.csv(file.path(dir_in, "Flux_tower_veg_indices_30m_11212021_v2.csv"), header = TRUE, na.strings = "NaN")
 
-annual.data <- read.csv(file.path(dir_in, "Flux_tower_annual_indices_30m_01242022.csv"), header = TRUE, na.strings = "NaN")
+annual.data <- read.csv(file.path(dir_in, "Flux_tower_annual_indices_30m_06132022.csv"), header = TRUE, na.strings = "NaN")
 
 #Rename the flux tower sites
 data$site.name <- recode(.x=data$Site, 'US-SCg' ='Grassland US-SCg', 'US-SCf' = 'Oak Pine US-SCf', 'US-SCd' = 'Desert US-SCd', 'US-CZ3' = 'Mixed Conifer US-CZ3', 'US-SCw' = 'Pinyon US-SCw', 'US-CZ1' = 'Oak Pine US-CZ1', 'US-SCs' = 'Coastal Sage US-SCs',
@@ -51,11 +51,28 @@ annual.data$year <- format(annual.data$date, '%Y')
 annual.data$month <- format(annual.data$date, '%m')
 annual.data$yday <- yday(annual.data$date)
 
+# annual.data %>% summary()
+
 #Update Cover data to 100% scale
-annual.data$Tree_Cover <- annual.data$Tree_Cover / 100
-annual.data$Shrub_Cover <- annual.data$Shrub_Cover / 100
-annual.data$Herb_Cover <- annual.data$Herb_Cover / 100
-annual.data$Bare_Cover <- annual.data$Bare_Cover / 100
+annual.data$Tree_Cover <- annual.data$Tree_Cover_mean / 100
+annual.data$Shrub_Cover <- annual.data$Shrub_Cover_mean / 100
+annual.data$Herb_Cover <- annual.data$Herb_Cover_mean / 100
+annual.data$Bare_Cover <- annual.data$Bare_Cover_mean / 100
+
+#Convert the SPI48 scale back to decimal
+annual.data$SPI48 <- annual.data$SPI48_mean / 100
+
+#Try to fix soil moisture by dividing by 10
+annual.data$Soil_Moisture <- annual.data$Soil_Moisture_mean / 10
+annual.data$GPP <- annual.data$GPP_mean
+annual.data$AET <- annual.data$AET_mean
+annual.data$Water_Stress <- annual.data$Water_Stress_mean
+annual.data$ppt <- annual.data$ppt_mean
+annual.data$tmax <- annual.data$tmax_mean
+
+#Assign no data to TPAmax
+annual.data[annual.data$tpa_max_mean == -9999,]$tpa_max_mean <- NA
+annual.data$tpa_max <- annual.data$tpa_max_mean
 
 #Add a decade bin column to the data
 annual.data <- annual.data %>% mutate(decade.bin = case_when(
@@ -215,3 +232,12 @@ p11 <- ggplot() +
 p11
 
 ggsave(filename = 'Fig11_Landsat_LMA_flux_tower_subset_time_series.png', height=12.5, width=16, units = 'cm', dpi=900)
+
+p12<- ggplot() + 
+  geom_line(data = annual.data %>% filter(!is.na(tpa_max)) %>% 
+              group_by(site.name, year) %>% 
+              mutate(tpa_max.mean = mean(tpa_max)), mapping = aes(x = date, y = tpa_max.mean), size = 1) +
+              theme_bw()  + facet_wrap(~ site.name)
+p12
+
+ggsave(filename = 'Fig12_flux_tower_ads_dieoff_time_series.png', height=12.5, width=16, units = 'cm', dpi=900)

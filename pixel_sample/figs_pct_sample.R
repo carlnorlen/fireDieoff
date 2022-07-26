@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 22, 2022
+#Date Updated: July 26, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -24,7 +24,7 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
-pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_4categories_1pct_30m_ts8_20220714.csv"), header = TRUE, na.strings = "NaN")
+pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_4categories_0pt5pct_300m_ts16_20220722.csv"), header = TRUE, na.strings = "NaN")
 # list.files(fire_in)
 summary(pixel.data)
 #Get a  of the data
@@ -37,12 +37,6 @@ summary(pixel.data)
 pixel.data <- pixel.data %>% #dplyr::select(-c('latitude', 'longitude')) %>% 
                pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
 
-#Convert the band numbers to years
-# pixel.data$year <- pixel.data$year %>% recode('1' = '1985', '2' = '1994', '3' = '1995', '4' = '1996', '5' = '1997', '6' = '1998', '7' = '1999',
-#                                               '8' =  '2000', '9' = '2001', '10' = '2002', '11' = '2003', '12' = '1986', '13' = '2004', '14' = '2005',
-#                                               '15' = '2006', '16' = '2007', '17' = '2008', '18' = '2009', '19' = '2010', '20' = '2011', '21' = '2012',
-#                                               '22' = '2013', '23' = '1987', '24' = '2014', '25' = '2015', '26' = '2016', '27' = '2017', '28' = '2018',
-#                                               '29' = '2019', '30' = '1988', '31' = '1989', '32' = '1990', '33' = '1991', '34' = '1992', '35' = '1993')
 pixel.data$year <- as.numeric(pixel.data$year) + 1984 
 
 #Convert missing TPA data to NAs
@@ -87,89 +81,89 @@ pixel.data$Soil_Moisture <- pixel.data$Soil_Moisture / 10
 # pixel.data$NDMI.predict[pixel.data$stand.age > 0] <- predict(newdata = filter(pixel.data, stand.age > 0), object = ndmi.gam) #, header = TRUE, na.strings = "NaN")
 
 #Calculate the Quintiles of precip climate normals
-precip.q <- as.data.frame(unname(quantile(pixel.data$clm_precip_sum, prob = seq(0,1, 1/5))))
+# precip.q <- as.data.frame(unname(quantile(pixel.data$clm_precip_sum, prob = seq(0,1, 1/5))))
+# # precip.q
+# colnames(precip.q) <- 'Precip'
+# precip.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
 # precip.q
-colnames(precip.q) <- 'Precip'
-precip.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-precip.q
-
-# precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric()
-
-#Plot a histogram with precip quartiles.
-# ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = clm_precip_sum)) +  
-#   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') + 
-#   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black')
 # 
-# ggsave(filename = 'Fig1_Precip_Quartiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-
-
-#Bin data by precip climatology
-pixel.data <- pixel.data %>% mutate(precip.control = case_when(
-  clm_precip_sum >= precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric() ~ '> 80 %',
-  clm_precip_sum >= precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric() & 
-  clm_precip_sum < precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric() ~ '60 to 80 %',
-  clm_precip_sum >= precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric() & 
-  clm_precip_sum < precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric() ~ '40 to 60 %',
-  clm_precip_sum >= precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric()  & 
-  clm_precip_sum < precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric() ~ '20 to 40 %',
-	clm_precip_sum < precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric() ~ '0 to 20%'))
-
-
-#Calculate the Quintiles of temperature climate normals
-temp.q <- as.data.frame(unname(quantile(pixel.data$clm_temp_mean, prob = seq(0,1, 1/5))))
-# precip.q
-colnames(temp.q) <- 'Temp'
-temp.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-# temp.q
-
-#Histogram Plot of temperature quantiles
-# ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = clm_temp_mean)) +
-#   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') + 
-#   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black')
+# # precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric()
 # 
-# ggsave(filename = 'Fig2_Temp_Quartiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-						
-#Create temperature bins for analysis with quantiles
-pixel.data <- pixel.data %>% mutate(temp.control = case_when(
-  clm_temp_mean >= temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric() ~ '> 80 %',
-  clm_temp_mean >= temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric() & 
-    clm_temp_mean < temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric() ~ '60 to 80 %',
-  clm_temp_mean >= temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric() & 
-    clm_temp_mean < temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric() ~ '40 to 60 %',
-  clm_temp_mean >= temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric()  & 
-    clm_temp_mean < temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric() ~ '20 to 40 %',
-  clm_temp_mean < temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric() ~ '0 to 20%'))
-
-#Calculate the Quintiles of elevation
-elev.q <- as.data.frame(unname(quantile(pixel.data$elevation, prob = seq(0,1, 1/5))))
-# precip.q
-colnames(elev.q) <- 'elevation'
-elev.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-# temp.q
-elev.q
-#Histogram Plot of temperature quantiles
-# ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = elevation)) +
-#   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') + 
-#   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black')
+# #Plot a histogram with precip quartiles.
+# # ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = clm_precip_sum)) +  
+# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') + 
+# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') +
+# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') +
+# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black')
+# # 
+# # ggsave(filename = 'Fig1_Precip_Quartiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
 # 
-# ggsave(filename = 'Fig3_Elevation_Quintiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-
-#Bin data by elevation. Bins are quintiles.
-pixel.data <- pixel.data %>% mutate(elevation.control = case_when(
-  elevation >= elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric() ~ '> 80 %',
-  elevation >= elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric() & 
-    elevation < elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric() ~ '60 to 80 %',
-  elevation >= elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric() & 
-    elevation < elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric() ~ '40 to 60 %',
-  elevation >= elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric()  & 
-    elevation < elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric() ~ '20 to 40 %',
-  elevation < elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric() ~ '0 to 20%'))
+# 
+# #Bin data by precip climatology
+# pixel.data <- pixel.data %>% mutate(precip.control = case_when(
+#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric() ~ '> 80 %',
+#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric() & 
+#   clm_precip_sum < precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric() ~ '60 to 80 %',
+#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric() & 
+#   clm_precip_sum < precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric() ~ '40 to 60 %',
+#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric()  & 
+#   clm_precip_sum < precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric() ~ '20 to 40 %',
+# 	clm_precip_sum < precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric() ~ '0 to 20%'))
+# 
+# 
+# #Calculate the Quintiles of temperature climate normals
+# temp.q <- as.data.frame(unname(quantile(pixel.data$clm_temp_mean, prob = seq(0,1, 1/5))))
+# # precip.q
+# colnames(temp.q) <- 'Temp'
+# temp.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+# # temp.q
+# 
+# #Histogram Plot of temperature quantiles
+# # ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = clm_temp_mean)) +
+# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') + 
+# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') +
+# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') +
+# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black')
+# # 
+# # ggsave(filename = 'Fig2_Temp_Quartiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
+# 						
+# #Create temperature bins for analysis with quantiles
+# pixel.data <- pixel.data %>% mutate(temp.control = case_when(
+#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric() ~ '> 80 %',
+#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric() & 
+#     clm_temp_mean < temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric() ~ '60 to 80 %',
+#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric() & 
+#     clm_temp_mean < temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric() ~ '40 to 60 %',
+#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric()  & 
+#     clm_temp_mean < temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric() ~ '20 to 40 %',
+#   clm_temp_mean < temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric() ~ '0 to 20%'))
+# 
+# #Calculate the Quintiles of elevation
+# elev.q <- as.data.frame(unname(quantile(pixel.data$elevation, prob = seq(0,1, 1/5))))
+# # precip.q
+# colnames(elev.q) <- 'elevation'
+# elev.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
+# # temp.q
+# elev.q
+# #Histogram Plot of temperature quantiles
+# # ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = elevation)) +
+# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') + 
+# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') +
+# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') +
+# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black')
+# # 
+# # ggsave(filename = 'Fig3_Elevation_Quintiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
+# 
+# #Bin data by elevation. Bins are quintiles.
+# pixel.data <- pixel.data %>% mutate(elevation.control = case_when(
+#   elevation >= elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric() ~ '> 80 %',
+#   elevation >= elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric() & 
+#     elevation < elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric() ~ '60 to 80 %',
+#   elevation >= elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric() & 
+#     elevation < elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric() ~ '40 to 60 %',
+#   elevation >= elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric()  & 
+#     elevation < elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric() ~ '20 to 40 %',
+#   elevation < elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric() ~ '0 to 20%'))
 
 pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
   # bin >= 1 ~ '1900',
@@ -294,7 +288,7 @@ p1 <- ggplot() +
 p1
 
 #Save the data
-ggsave(filename = 'Fig40_veg_cover_stand_age_1pt_4group_sample.png', height=12.5, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig40_veg_cover_stand_age_0pt5pct_4group_sample.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #TEsting for issues
 p1a <- ggplot() + 
@@ -390,12 +384,12 @@ p1d
 f1a <- ggarrange(p1a, p1b, p1c, p1d, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
 f1a
 #Save the data
-ggsave(filename = 'Fig40a_data_check_1pct_4group_sample_chronosequence.png', height=22, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig40a_data_check_0pt5pct_4group_sample_chronosequence.png', height=22, width= 16, units = 'cm', dpi=900)
 
-pixel.data %>% group_by(stand.age.bin) %>% count()
-
-pixel.data %>% filter(!is.na(tpa_max) & if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1 & stand.age >= 2 , is.na(fire_type_2010) & is.na(stand.age))) %>%
-  group_by(stand.age.bin) %>% count()
+# pixel.data %>% group_by(stand.age.bin) %>% count()
+# 
+# pixel.data %>% filter(!is.na(tpa_max) & if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1 & stand.age >= 2 , is.na(fire_type_2010) & is.na(stand.age))) %>%
+#   group_by(stand.age.bin) %>% count()
 
 #Figure of Dead Trees per acre separated by fire years with time series
 p2 <- ggplot() + 
@@ -489,7 +483,7 @@ p3
 f1 <- ggarrange(p2, p3, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f1
 #Save the data
-ggsave(filename = 'Fig41_dieoff_tree_cover_stand_age_time_series_pct_sample.png', height=12, width= 14, units = 'cm', dpi=900)
+ggsave(filename = 'Fig41_dieoff_tree_cover_stand_age_time_series_4groups_0p5pct_sample.png', height=12, width= 14, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
 p4 <- ggplot() + 
@@ -723,8 +717,9 @@ p9
 f3 <- ggarrange(p8, p9, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f3
 
-ggsave(filename = 'Fig43_data_check_time_series.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig43_data_check_time_series_4group_0pt5pct.png', height=16, width= 16, units = 'cm', dpi=900)
 
+#Checking what's up with the weird jumps in the data
 p10 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
@@ -836,7 +831,7 @@ p12 <- ggplot() +
 p12
 
 #Save the data
-ggsave(filename = 'Fig44_veg_cover_stand_age_Rx_fire_pct_4group.png', height=12.5, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig44_veg_cover_stand_age_Rx_fire_0pt5pct_4group.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #Checking why there is a dip around 2002
 p13 <- ggplot() + 
@@ -892,7 +887,7 @@ p14
 f4 <- ggarrange(p13, p14, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f4
 
-ggsave(filename = 'Fig45_data_check_time_series_Rx_fire_pct_4group.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig45_data_check_time_series_Rx_fire_0pt5_pct_4group.png', height=16, width= 16, units = 'cm', dpi=900)
 
 # pixel.data %>% group_by(stand.age.bin) %>% count()
 # 
@@ -906,7 +901,7 @@ p15 <- ggplot() +
               filter(!is.na(tpa_max) & if_else(stand.age.bin != 'No Fire', fire_type_2010 == 2 & stand.age >= 2 & fire_year_2020 <= 2010 & fire.year >= 1960, is.na(fire_type_2010) & is.na(stand.age))) %>% # & vi.year >= 2003) %>%
               group_by(date, stand.age.bin) %>%
               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()) %>%
-              filter(if_else(stand.age.bin == '1985-2010', tpa_max.n >= 4000, tpa_max.n >= 0)), 
+              filter(if_else(stand.age.bin == '1985-2010', tpa_max.n >= 500, tpa_max.n >= 0)), 
             mapping = aes(x = date, y = tpa_max.mean, color = stand.age.bin, linetype = stand.age.bin), 
             size = 1
   ) +
@@ -916,7 +911,7 @@ p15 <- ggplot() +
                 group_by(date, stand.age.bin) %>%
                 summarize(tpa_max.mean = mean(tpa_max),
                           tpa_max.sd = sd(tpa_max), tpa_max.n = n()) %>%
-                filter(if_else(stand.age.bin == '1985-2010', tpa_max.n >= 4000, tpa_max.n >= 0)),
+                filter(if_else(stand.age.bin == '1985-2010', tpa_max.n >= 500, tpa_max.n >= 0)),
               mapping = aes(ymin=tpa_max.mean - 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             x = date, fill = stand.age.bin), alpha = 0.3) +
@@ -944,7 +939,7 @@ p16 <- ggplot() +
               filter(!is.na(Tree_Cover) & if_else(stand.age.bin != 'No Fire', fire_type_2010 == 2 & stand.age >= 2 & fire_year_2020 <= 2010 & fire.year >= 1960, is.na(fire_type_2010) & is.na(stand.age))) %>%
               group_by(date, stand.age.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()) %>%  
-              filter(if_else(stand.age.bin == '1985-2010', Tree_Cover.n >= 4000 , Tree_Cover.n >= 0)),
+              filter(if_else(stand.age.bin == '1985-2010', Tree_Cover.n >= 500 , Tree_Cover.n >= 0)),
             mapping = aes(x = date, y = Tree_Cover.mean, color = stand.age.bin, linetype = stand.age.bin), 
             size = 1) + 
   #Tree Cover 95% CI
@@ -953,7 +948,7 @@ p16 <- ggplot() +
                 group_by(date, stand.age.bin) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()) %>%  
-                filter(if_else(stand.age.bin == '1985-2010', Tree_Cover.n >= 4000, Tree_Cover.n >= 0)),
+                filter(if_else(stand.age.bin == '1985-2010', Tree_Cover.n >= 500, Tree_Cover.n >= 0)),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             x = date, fill = stand.age.bin), alpha = 0.3) +
@@ -976,7 +971,7 @@ p16
 f5 <- ggarrange(p15, p16, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f5
 #Save the data
-ggsave(filename = 'Fig46_dieoff_tree_cover_stand_age_time_series_Rx_fire.png', height=12, width= 14, units = 'cm', dpi=900)
+ggsave(filename = 'Fig46_dieoff_tree_cover_stand_age_time_series_Rx_fire_0pt5pct_4groups.png', height=12, width= 14, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
 p17 <- ggplot() + 
@@ -986,7 +981,7 @@ p17 <- ggplot() +
               # fire.year %notin% c(1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003)) %>%
               group_by(date, stand.age.bin) %>%
               summarize(ppt.mean = mean(ppt), count = n()) %>%  
-              filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)), 
+              filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)), 
             mapping = aes(x = date, y = ppt.mean, color = stand.age.bin, linetype = stand.age.bin), 
             size = 1) +
   #AET 95% CI
@@ -996,7 +991,7 @@ p17 <- ggplot() +
                 group_by(date, stand.age.bin) %>%
                 summarize(ppt.mean = mean(ppt),
                           ppt.sd = sd(ppt), ppt.n = n(), count = n()) %>%  
-                filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)),
+                filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)),
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
                             x = date, fill = stand.age.bin), alpha = 0.3) +
@@ -1024,7 +1019,7 @@ p18 <- ggplot() +
               # fire.year %notin% c(1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003)) %>%
               group_by(date, stand.age.bin) %>%
               summarize(AET.mean = mean(AET), count = n()) %>%  
-              filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)), 
+              filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)), 
             mapping = aes(x = date, y = AET.mean, color = stand.age.bin, linetype = stand.age.bin), 
             size = 1) +
   #AET 95% CI
@@ -1034,7 +1029,7 @@ p18 <- ggplot() +
                 group_by(date, stand.age.bin) %>%
                 summarize(AET.mean = mean(AET),
                           AET.sd = sd(AET), AET.n = n(), count = n()) %>%  
-                filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)),
+                filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)),
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
                             ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date, fill = stand.age.bin), alpha = 0.3) +
@@ -1062,7 +1057,7 @@ p19 <- ggplot() +
               filter(!is.na(Soil_Moisture) & if_else(stand.age.bin != 'No Fire', fire_type_2010 == 2 & stand.age >= 2 & fire_year_2020 <= 2010 & fire.year >= 1960, is.na(fire_type_2010) & is.na(stand.age))) %>%
               group_by(date, stand.age.bin) %>%
               summarize(Soil_Moisture.mean = mean(Soil_Moisture), count = n()) %>%  
-              filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)), 
+              filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)), 
             mapping = aes(x = date, y = Soil_Moisture.mean, color = stand.age.bin, linetype = stand.age.bin), 
             size = 1) + 
   #Soil Moisture 95% CI
@@ -1071,7 +1066,7 @@ p19 <- ggplot() +
                 group_by(date, stand.age.bin) %>%
                 summarize(Soil_Moisture.mean = mean(Soil_Moisture),
                           Soil_Moisture.sd = sd(Soil_Moisture), Soil_Moisture.n = n(), count = n()) %>%  
-                filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)),
+                filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)),
               mapping = aes(ymin=Soil_Moisture.mean - 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
                             ymax=Soil_Moisture.mean + 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
                             x = date, fill = stand.age.bin), alpha = 0.3) +
@@ -1100,7 +1095,7 @@ p20 <- ggplot() +
               filter(!is.na(Water_Stress) & if_else(stand.age.bin != 'No Fire', fire_type_2010 == 2 & stand.age >= 2 & fire_year_2020 <= 2010 & fire.year >= 1960, is.na(fire_type_2010) & is.na(stand.age))) %>%
               group_by(date, stand.age.bin) %>%
               summarize(Water_Stress.mean = mean(Water_Stress), count = n()) %>%  
-              filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)), 
+              filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)), 
             mapping = aes(x = date, y = Water_Stress.mean, color = stand.age.bin, linetype = stand.age.bin), 
             size = 1) + 
   #Water Stress 95% CI
@@ -1109,7 +1104,7 @@ p20 <- ggplot() +
                 group_by(date, stand.age.bin) %>%
                 summarize(Water_Stress.mean = mean(Water_Stress),
                           Water_Stress.sd = sd(Water_Stress), Water_Stress.n = n(), count = n()) %>%  
-                filter(if_else(stand.age.bin == '1985-2010', count >= 4000, count >= 0)),
+                filter(if_else(stand.age.bin == '1985-2010', count >= 500, count >= 0)),
               mapping = aes(ymin=Water_Stress.mean - 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
                             ymax=Water_Stress.mean + 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
                             x = date, fill = stand.age.bin), alpha = 0.3) +
@@ -1132,17 +1127,17 @@ p20
 f6 <- ggarrange(p17, p18, p19, p20, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
 f6
 #Save the data
-ggsave(filename = 'Fig47_water_stress_stand_age_time_series_Rx_fire.png', height=22, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig47_water_stress_stand_age_time_series_Rx_fire_0pt5pct_4group.png', height=22, width= 16, units = 'cm', dpi=900)
 
 pixel.data$vi.year[pixel.data$vi.year == 2012]
 
 #Creating a fire year dTree plot
-p21 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress.4yr = sum(Water_Stress[vi.year %in% c(2012, 2013, 2014, 2015)]), stand.age.bin = stand.age.bin)) +
+p21 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress.4yr = Water_Stress[vi.year == 2015], stand.age.bin = stand.age.bin)) +
   geom_point(mapping = aes(x = Water_Stress.4yr, y = dTree, color = stand.age.bin), size = 1) + 
   geom_smooth(method = 'lm', mapping = aes(x = Water_Stress.4yr, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
   theme_bw()
 p21
-ggsave(filename = 'Fig48_water_stress_stand_age_1pct_4group.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig48_water_stress_stand_age_0pt5pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
 
 pixel.data %>% summary()
 p22 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], stand.age.bin = stand.age.bin)) +
@@ -1151,33 +1146,34 @@ p22 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No F
   theme_bw()
 p22
 
-ggsave(filename = 'Fig49_SPI48_stand_age_1pc_4group.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig49_SPI48_stand_age_0pt5pct_4group.png', height=16, width= 18, units = 'cm', dpi=900)
 
-getmode <- function(v) {
-  uniqv <- unique(v)
-  uniqv[which.max(tabulate(match(v, uniqv)))]
-}
-pixel.data %>% summary()
-pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), stand.age.bin = getmode(stand.age.bin)) %>% dplyr::select(stand.age.bin) %>% unique()
+# getmode <- function(v) {
+#   uniqv <- unique(v)
+#   uniqv[which.max(tabulate(match(v, uniqv)))]
+# }
+# pixel.data %>% summary()
+# pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), stand.age.bin = getmode(stand.age.bin)) %>% dplyr::select(stand.age.bin) %>% unique()
 
 pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
-p23 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), stand.age.bin = getmode(stand.age.bin))) +
+p23 <- ggplot(data = pixel.data %>% dplyr::filter(if_else(stand.age.bin != 'No Fire', fire_type_2010 == 1, is.na(fire_type_2010))) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), stand.age.bin = find_mode(stand.age.bin))) +
   geom_point(mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin), size = 1) + 
   geom_smooth(method = 'lm', mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin , linetype = stand.age.bin)) +
   stat_cor(mapping = aes(x = PrET.4yr, y = dTree, color = stand.age.bin) ) +
   theme_bw()
 p23
 
-ggsave(filename = 'Fig50_PrET4yr_stand_age_1pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig50_PrET4yr_stand_age_0pt5pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
 
-p24 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire_type_2010 == 1) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015])) +
-  geom_point(mapping = aes(x = stand.age, y = dTree), size = 1) + 
-  geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), linetype = 'dotdash', size = 2) + 
-  stat_cor(mapping = aes(x = stand.age, y = dTree)) +
-  theme_bw()
+p24 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire_type_2010 == 1 & lf_evt_2001 %in% c(2027, 2028, 2029, 2030, 2031, 2032)) %>% dplyr::group_by(system.index, lf_evt_2001) %>% 
+       summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015])) +
+       geom_point(mapping = aes(x = stand.age, y = dTree), size = 1) + 
+       geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), linetype = 'dotdash', size = 2) + 
+       stat_cor(mapping = aes(x = stand.age, y = dTree)) +
+       theme_bw() + facet_grid(. ~ lf_evt_2001)
 p24
 
-ggsave(filename = 'Fig51_dTree_stand_age_1ct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig51_dTree_stand_age_wildfire_0pt5pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
 
 #Rx Fire example
 p25 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age <= 25 & stand.age >= 0 & fire_type_2010 == 2) %>% dplyr::group_by(system.index) %>% 
@@ -1188,7 +1184,7 @@ p25 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age 
   theme_bw()
 p25
 
-ggsave(filename = 'Fig52_dTree_stand_age_1ct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig52_dTree_stand_age_Rx_fire_0pt5pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
 
 p26 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & stand.age <= 25 & fire_type_2010 == 2) %>% dplyr::group_by(system.index) %>% 
                 summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017)], na.rm = TRUE), stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015])) +
@@ -1198,18 +1194,18 @@ p26 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age 
   theme_bw()
 p26
 
-ggsave(filename = 'Fig53_tpa_max_stand_age_Rx_burn_1ct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig53_tpa_max_stand_age_Rx_burn_0pt5pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
 
 
-p27 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & fire_type_2010 ==1 & stand.age >= 0) %>% dplyr::group_by(system.index) %>% 
+p27 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & fire_type_2010 ==1 & stand.age >= 0 & lf_evt_2001 %in% c(2027, 2028, 2029, 2030, 2031, 2032)) %>% dplyr::group_by(system.index, lf_evt_2001) %>% 
                 summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017)], na.rm = TRUE), stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015])) +
   geom_point(mapping = aes(x = stand.age, y = tpa_max), size = 1) + 
   geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = tpa_max), linetype = 'dotdash', size = 2) + 
   stat_cor(mapping = aes(x = stand.age, y = tpa_max)) +
-  theme_bw()
+  theme_bw() + facet_grid(. ~ lf_evt_2001)
 p27
 
-ggsave(filename = 'Fig54_tpa_max_stand_age_wildfire_1ct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig54_tpa_max_stand_age_wildfire_0pt5pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)
 
 #Create a GPP stand age curve for Wildfires
 p28 <- ggplot() + 
@@ -1315,7 +1311,7 @@ p31
 f7 <- ggarrange(p28, p29, p30, p31, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
 f7
 #Save the data
-ggsave(filename = 'Fig55_wildfire_recovery_ecosystem properties.png', height=18, width= 14, units = 'cm', dpi=900)
+ggsave(filename = 'Fig55_wildfire_recovery_ecosystem_properties_0pt5pct_4groups.png', height=18, width= 14, units = 'cm', dpi=900)
 
 #GPP, AET recovery for Rx Fire
 p32 <- ggplot() + 
@@ -1421,4 +1417,4 @@ p35
 f8 <- ggarrange(p32, p33, p34, p35, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
 f8
 #Save the data
-ggsave(filename = 'Fig56_Rx_fire_recovery_ecosystem_properties.png', height=18, width= 14, units = 'cm', dpi=900)
+ggsave(filename = 'Fig56_Rx_fire_recovery_ecosystem_properties_0pt5pct_4groups.png', height=18, width= 14, units = 'cm', dpi=900)

@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 26, 2022
+#Date Updated: July 27, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -69,101 +69,6 @@ pixel.data$SPI48 <- pixel.data$SPI48 / 100
 
 #Try to fix soil moisture by dividing by 10
 pixel.data$Soil_Moisture <- pixel.data$Soil_Moisture / 10
-
-
-#Create a GAM to predict NDMI by stand.age
-# ndmi.gam <- gam(data = filter(pixel.data, vi.year <= 2012 & stand.age > 0), #fire.year >= 1919 & 
-#                 formula = NDMI ~ s(stand.age, bs = "cs", k = 5) + s(clm_precip_sum, k = 3) + s(clm_temp_mean, k = 3) + s(latitude, k = 3))
-# summary(ndmi.gam)
-# #Add a new column
-# pixel.data$NDMI.predict <- NA
-# pixel.data$NDMI.predict[pixel.data$stand.age <= 0] <- filter(pixel.data, stand.age <= 0)$NDMI
-# pixel.data$NDMI.predict[pixel.data$stand.age > 0] <- predict(newdata = filter(pixel.data, stand.age > 0), object = ndmi.gam) #, header = TRUE, na.strings = "NaN")
-
-#Calculate the Quintiles of precip climate normals
-# precip.q <- as.data.frame(unname(quantile(pixel.data$clm_precip_sum, prob = seq(0,1, 1/5))))
-# # precip.q
-# colnames(precip.q) <- 'Precip'
-# precip.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-# precip.q
-# 
-# # precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric()
-# 
-# #Plot a histogram with precip quartiles.
-# # ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = clm_precip_sum)) +  
-# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') + 
-# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') +
-# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black') +
-# #   geom_vline(xintercept = (precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric()), color = 'black')
-# # 
-# # ggsave(filename = 'Fig1_Precip_Quartiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# 
-# #Bin data by precip climatology
-# pixel.data <- pixel.data %>% mutate(precip.control = case_when(
-#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric() ~ '> 80 %',
-#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric() & 
-#   clm_precip_sum < precip.q %>% filter(Quartile == 0.8) %>% dplyr::select(Precip) %>% as.numeric() ~ '60 to 80 %',
-#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric() & 
-#   clm_precip_sum < precip.q %>% filter(Quartile == 0.6) %>% dplyr::select(Precip) %>% as.numeric() ~ '40 to 60 %',
-#   clm_precip_sum >= precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric()  & 
-#   clm_precip_sum < precip.q %>% filter(Quartile == 0.4) %>% dplyr::select(Precip) %>% as.numeric() ~ '20 to 40 %',
-# 	clm_precip_sum < precip.q %>% filter(Quartile == 0.2) %>% dplyr::select(Precip) %>% as.numeric() ~ '0 to 20%'))
-# 
-# 
-# #Calculate the Quintiles of temperature climate normals
-# temp.q <- as.data.frame(unname(quantile(pixel.data$clm_temp_mean, prob = seq(0,1, 1/5))))
-# # precip.q
-# colnames(temp.q) <- 'Temp'
-# temp.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-# # temp.q
-# 
-# #Histogram Plot of temperature quantiles
-# # ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = clm_temp_mean)) +
-# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') + 
-# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') +
-# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black') +
-# #   geom_vline(xintercept = (temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric()), color = 'black')
-# # 
-# # ggsave(filename = 'Fig2_Temp_Quartiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 						
-# #Create temperature bins for analysis with quantiles
-# pixel.data <- pixel.data %>% mutate(temp.control = case_when(
-#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric() ~ '> 80 %',
-#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric() & 
-#     clm_temp_mean < temp.q %>% filter(Quartile == 0.8) %>% dplyr::select(Temp) %>% as.numeric() ~ '60 to 80 %',
-#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric() & 
-#     clm_temp_mean < temp.q %>% filter(Quartile == 0.6) %>% dplyr::select(Temp) %>% as.numeric() ~ '40 to 60 %',
-#   clm_temp_mean >= temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric()  & 
-#     clm_temp_mean < temp.q %>% filter(Quartile == 0.4) %>% dplyr::select(Temp) %>% as.numeric() ~ '20 to 40 %',
-#   clm_temp_mean < temp.q %>% filter(Quartile == 0.2) %>% dplyr::select(Temp) %>% as.numeric() ~ '0 to 20%'))
-# 
-# #Calculate the Quintiles of elevation
-# elev.q <- as.data.frame(unname(quantile(pixel.data$elevation, prob = seq(0,1, 1/5))))
-# # precip.q
-# colnames(elev.q) <- 'elevation'
-# elev.q$'Quartile' <- c(0.0, 0.2, 0.4, 0.6, 0.8, 1.0)
-# # temp.q
-# elev.q
-# #Histogram Plot of temperature quantiles
-# # ggplot(data = pixel.data) + geom_histogram(mapping = aes( x = elevation)) +
-# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') + 
-# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') +
-# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black') +
-# #   geom_vline(xintercept = (elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric()), color = 'black')
-# # 
-# # ggsave(filename = 'Fig3_Elevation_Quintiles_historgram.png', height=12.5, width= 20, units = 'cm', dpi=900)
-# 
-# #Bin data by elevation. Bins are quintiles.
-# pixel.data <- pixel.data %>% mutate(elevation.control = case_when(
-#   elevation >= elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric() ~ '> 80 %',
-#   elevation >= elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric() & 
-#     elevation < elev.q %>% filter(Quartile == 0.8) %>% dplyr::select(elevation) %>% as.numeric() ~ '60 to 80 %',
-#   elevation >= elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric() & 
-#     elevation < elev.q %>% filter(Quartile == 0.6) %>% dplyr::select(elevation) %>% as.numeric() ~ '40 to 60 %',
-#   elevation >= elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric()  & 
-#     elevation < elev.q %>% filter(Quartile == 0.4) %>% dplyr::select(elevation) %>% as.numeric() ~ '20 to 40 %',
-#   elevation < elev.q %>% filter(Quartile == 0.2) %>% dplyr::select(elevation) %>% as.numeric() ~ '0 to 20%'))
 
 pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
   # bin >= 1 ~ '1900',
@@ -1418,3 +1323,37 @@ f8 <- ggarrange(p32, p33, p34, p35, ncol = 1, nrow = 4, common.legend = FALSE, h
 f8
 #Save the data
 ggsave(filename = 'Fig56_Rx_fire_recovery_ecosystem_properties_0pt5pct_4groups.png', height=18, width= 14, units = 'cm', dpi=900)
+
+#Trying different ways of visualizing the stand age die-off relationship.
+p36 <- ggplot() +
+       geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire_type_2010 == 1) %>% 
+                    dplyr::group_by(system.index) %>% 
+                summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
+       mapping = aes(x = stand.age, y = dTree), size = 0.5, alpha = 0.3, color = 'gray') +
+       geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire_type_2010 == 1) %>% 
+                    dplyr::group_by(system.index) %>% 
+                    summarize(dTree = Tree_Cover[vi.year == 2016] - Tree_Cover[vi.year == 2012], stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]) %>%
+                    group_by(stand.age) %>%
+                    summarize(dTree = mean(dTree), dTree.n = n(), dTree.sd = sd(dTree)),
+                  mapping = aes(x = stand.age, y = dTree), size = 2) +
+  # geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), linetype = 'dotdash', size = 2) + 
+  # stat_cor(mapping = aes(x = stand.age, y = dTree)) +
+  theme_bw() #+ facet_grid(. ~ lf_evt_2001)
+p36
+
+p37 <- ggplot() +
+  geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire_type_2010 == 1) %>% 
+               dplyr::group_by(system.index) %>% 
+               summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017)], na.rm = TRUE), stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
+             mapping = aes(x = stand.age, y = tpa_max), size = 0.5, alpha = 0.3, color = 'gray') +
+  geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire_type_2010 == 1) %>% 
+               dplyr::group_by(system.index) %>% 
+               summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017)], na.rm = TRUE), stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]) %>%
+               group_by(stand.age) %>%
+               summarize(tpa_max = mean(tpa_max), tpa_max.n = n(), tpa_max.sd = sd(tpa_max)),
+             mapping = aes(x = stand.age, y = tpa_max), size = 2) +
+  # geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), linetype = 'dotdash', size = 2) + 
+  # stat_cor(mapping = aes(x = stand.age, y = dTree)) +
+  theme_bw() #+ facet_grid(. ~ lf_evt_2001)
+p37
+ggsave(filename = 'Fig57_dTree_stand_age_wildfire_0pt5pct_4groups.png', height=16, width= 18, units = 'cm', dpi=900)

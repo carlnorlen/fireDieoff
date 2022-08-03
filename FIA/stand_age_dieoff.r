@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 10, 2021
-#Date Edited: July 19, 2022
+#Date Edited: August 2, 2022
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -311,10 +311,10 @@ join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & !is.na(STDAGE
 join$stdage.bin <- as.factor(join$stdage.bin)
 
 #Calculate the Quintiles of stand age
-std.q <- as.data.frame(unname(quantile((join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE)))$STDAGE, prob = seq(0,1, 1/10), type = 3, na.rm = TRUE)))
+std.q <- as.data.frame(unname(quantile((join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE)))$STDAGE, prob = seq(0,1, 1/20), type = 3, na.rm = TRUE)))
 # precip.q
 colnames(std.q) <- 'STDAGE'
-std.q$'Quintile' <- c(0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+std.q$'Quintile' <- c(0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0)
 # temp.q
 std.q
 
@@ -337,10 +337,12 @@ join <- join %>% mutate(std.bin = case_when(
     STDAGE < std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '105-113',
   STDAGE >= std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() & 
     STDAGE < std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '85-104',
-  STDAGE < std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-84'))
+  STDAGE >= std.q %>% filter(Quintile == 0.05) %>% dplyr::select(STDAGE) %>% as.numeric() &
+    STDAGE < std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '65-84',
+  STDAGE < std.q %>% filter(Quintile == 0.05) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-64'))
 
 #Order the stand age bins
-join$std.bin = with(join, factor(std.bin, levels = c('0-84', '85-104', '105-113', '114-129', '130-154',  '155-164', '165-189','190-214', '215-264','265+')))
+join$std.bin = with(join, factor(std.bin, levels = c('0-64', '65-84', '85-104', '105-113', '114-129', '130-154',  '155-164', '165-189','190-214', '215-264','265+')))
 # summary(live)
 
 p10 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE)), mapping = aes(x = std.bin, y = basal_area.dead)) +

@@ -738,7 +738,7 @@ p14 <- ggplot() +
                summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]) %>%
                group_by(stand.age.grp) %>%
                summarize(dTree = mean(dTree), dTree.n = n(), dTree.sd = sd(dTree)),
-             mapping = aes(x = stand.age.grp * 10, ymin = dTree - ((dTree.sd /sqrt(dTree.n))*1.96), ymax = dTree + ((dTree.sd /sqrt(dTree.n))*1.96)), width = 3) + 
+             mapping = aes(x = stand.age.grp * 10, ymin = dTree - 1.96*(dTree.sd /sqrt(dTree.n)), ymax = dTree + 1.96*(dTree.sd /sqrt(dTree.n)), width = 3)) + 
        ylim(-10, 5) + 
        xlab('Stand Age (10-year Bins') + ylab('Change in Tree Cover (%)') +
        # geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), linetype = 'dotdash', size = 2) + 

@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: August 4, 2021
-#Date Edited: August 4, 2022
+#Date Edited: August 17, 2022
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -183,12 +183,20 @@ join
 #                                                            '160-209','210+')))
 # summary(join)
 
-join$years.fire <- join$INVYR - join$DSTRBYR1
-join %>% filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999)
+join$years.disturb <- join$INVYR - join$DSTRBYR1
+
+join <- join %>% mutate(disturb.bin = case_when(
+  DSTRBCD1 == 0 | (DSTRBCD1 %in% c(10, 11, 12, 54, 70) & DSTRBYR1 >= 2012) ~ 'No Disturbance',
+  DSTRBCD1 %in% c(10, 11, 12, 54, 70) & DSTRBYR1 <= 2010 ~ 'Die-off', 
+  DSTRBCD1 %in% c(30,31,32) & DSTRBYR1 <= 2010 ~ 'Fire'))
+# summary(join %>% filter(disturb.bin == 'Die-off'))
+# join %>% filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999)
 #Region white counts of dead and live trees
 f1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
-  geom_line(data = join %>% filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999) %>% group_by(years.fire) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), mapping = aes(x = years.fire, y = BA.all), color = 'black', size = 1) +
+  geom_point(data = join %>% 
+               # filter(is.na(DSTRBYR1) | DSTRBYR1 <= 2010) %>%  
+              group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), mapping = aes(x = disturb.bin, y = BA.all), color = 'black', size = 1) +
   #95% CI Die-off
   # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
   #               group_by(INVYR) %>%
@@ -199,13 +207,15 @@ f1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all 
   #                           x = INVYR), alpha = 0.3) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Years Since Fire') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) 
+  xlab('Disturbance Type') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) 
 f1
 
 f2<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
-  geom_line(data = join %>% filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999) %>% group_by(years.fire) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), count = n()), 
-            mapping = aes(x = years.fire, y = count), color = 'black', size = 1) +
+  geom_point(data = join %>% 
+              filter(is.na(DSTRBYR1) | DSTRBYR1 <= 2010) %>% 
+              group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), count = n()), 
+            mapping = aes(x = disturb.bin, y = count, group = 1), color = 'black', size = 1) +
   #95% CI Die-off
   # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
   #               group_by(INVYR) %>%
@@ -216,13 +226,15 @@ f2<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all 
   #                           x = INVYR), alpha = 0.3) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Years Since Fire') + ylab('# Plots') 
+  xlab('Disturbance Type') + ylab('# Plots') 
 f2
 
 f3<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
-  geom_point(data = join %>% filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999) %>% group_by(years.fire) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), 
-             mapping = aes(x = years.fire, y = BA.dead), color = 'black', size = 1) +
+  geom_point(data = join %>% 
+               filter(is.na(DSTRBYR1) | DSTRBYR1 <= 2010) %>% 
+               group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), 
+             mapping = aes(x = disturb.bin, y = BA.dead), color = 'black', size = 1) +
   #95% CI Die-off
   # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
   #               group_by(INVYR) %>%
@@ -233,13 +245,21 @@ f3<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all 
   #                           x = INVYR), alpha = 0.3) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Years Since Fire') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
+  xlab('Disturbance Type') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
 f3
+
+join %>% 
+  filter((!is.na(STDAGE) & STDAGE != 9999) ) %>% 
+  # filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999 & STDAGE != 9999) %>% 
+  group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), STDAGE.mean = mean(STDAGE), count = n())
 
 f4<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
-  geom_line(data = join %>% filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999 & STDAGE != 9999) %>% group_by(years.fire) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), STDAGE = mean(STDAGE)), 
-             mapping = aes(x = years.fire, y = STDAGE), color = 'black', size = 1) +
+  geom_point(data = join %>% 
+              filter((is.na(DSTRBYR1) | DSTRBYR1 <= 2010) & (!is.na(STDAGE) & STDAGE != 9999) ) %>% 
+              # filter((DSTRBCD1 == 30 | DSTRBCD1 == 31 | DSTRBCD1 == 32) & !is.na(DSTRBYR1) & DSTRBYR1 != 9999 & STDAGE != 9999) %>% 
+              group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), STDAGE.mean = mean(STDAGE)), 
+             mapping = aes(x = disturb.bin, y = STDAGE.mean), color = 'black', size = 1) +
   #95% CI Die-off
   # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
   #               group_by(INVYR) %>%
@@ -250,7 +270,7 @@ f4<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all 
   #                           x = INVYR), alpha = 0.3) +
   theme_bw() +
   # theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Years Since Fire') + ylab('Average Tree Age') 
+  xlab('Disturbance Type') + ylab('Average Tree Age') 
 f4
 
 f1 <- ggarrange(f1, f2, f3, f4, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))

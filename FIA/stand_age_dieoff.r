@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 10, 2021
-#Date Edited: August 18, 2022
+#Date Edited: August 22, 2022
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -59,9 +59,9 @@ AND c.cond_status_cd = 1 --2 means non-forest
 AND t.spcd = r.spcd
 AND t.dia >= 1.0 -- additional where_clause from ref_pop_attribute table
 AND rft.value = c.fldtypcd
---AND (P.ECOSUBCD = 'M261Ep' OR P.ECOSUBCD = 'M261Eq' OR P.ECOSUBCD = 'M261Eu' OR P.ECOSUBCD = 'M261Er' OR P.ECOSUBCD = 'M261Eo' OR P.ECOSUBCD = 'M261Es') --South Sierra Nevada P.ECOSUBCD = 'M262Bb' OR P.ECOSUBCD = 'M262Ba' OR 
+AND (P.ECOSUBCD = 'M261Ep' OR P.ECOSUBCD = 'M261Eq' OR P.ECOSUBCD = 'M261Eu' OR P.ECOSUBCD = 'M261Er' OR P.ECOSUBCD = 'M261Eo' OR P.ECOSUBCD = 'M261Es') --South Sierra Nevada P.ECOSUBCD = 'M262Bb' OR P.ECOSUBCD = 'M262Ba' OR 
 --Combined Sierra and SoCal Stand Age
-AND (P.ECOSUBCD = 'M261Ep' OR P.ECOSUBCD = 'M261Eq' OR P.ECOSUBCD = 'M261Eu' OR P.ECOSUBCD = 'M261Er' OR P.ECOSUBCD = 'M261Eo' OR P.ECOSUBCD = 'M261Es' OR P.ECOSUBCD = 'M262Bd' OR P.ECOSUBCD = 'M262Be' OR P.ECOSUBCD = 'M262Bg' OR P.ECOSUBCD = 'M262Bh' OR P.ECOSUBCD = 'M262Bf' OR P.ECOSUBCD = 'M262Bo' OR P.ECOSUBCD = 'M262Bi' OR P.ECOSUBCD = 'M262Bm' OR P.ECOSUBCD = 'M262Bl' OR P.ECOSUBCD = 'M262Bc' OR P.ECOSUBCD = 'M262Bp' OR P.ECOSUBCD = 'M262Bb' OR P.ECOSUBCD = 'M262Ba')
+--AND (P.ECOSUBCD = 'M261Ep' OR P.ECOSUBCD = 'M261Eq' OR P.ECOSUBCD = 'M261Eu' OR P.ECOSUBCD = 'M261Er' OR P.ECOSUBCD = 'M261Eo' OR P.ECOSUBCD = 'M261Es' OR P.ECOSUBCD = 'M262Bd' OR P.ECOSUBCD = 'M262Be' OR P.ECOSUBCD = 'M262Bg' OR P.ECOSUBCD = 'M262Bh' OR P.ECOSUBCD = 'M262Bf' OR P.ECOSUBCD = 'M262Bo' OR P.ECOSUBCD = 'M262Bi' OR P.ECOSUBCD = 'M262Bm' OR P.ECOSUBCD = 'M262Bl' OR P.ECOSUBCD = 'M262Bc' OR P.ECOSUBCD = 'M262Bp' OR P.ECOSUBCD = 'M262Bb' OR P.ECOSUBCD = 'M262Ba')
 AND (c.dstrbcd1 = 0 OR c.dstrbcd1 = 10 OR c.dstrbcd1 = 11 OR c.dstrbcd1 = 12 OR c.dstrbcd1 = 54 OR c.dstrbcd1 = 70) -- No Fires OR c.dstrbcd1 = 30 OR c.dstrbcd1 = 31 OR c.dstrbcd1 = 32)
 ")
 #DSTRBCD1 == 30, 31, 32 reference fires
@@ -370,5 +370,25 @@ fig3 <- ggarrange(p10, p11, ncol = 1, nrow = 2, common.legend = FALSE, heights =
 fig3
 
 ggsave(filename = 'Fig7_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
+
+#Tree Density Version
+p12 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = tpa.dead)) +
+  geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
+  # scale_color_brewer(name = 'Average Tree Age Bins')
+  theme_bw() + 
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Average Tree Age Bins') + ylab(expression('Mortality (trees ha'^-1*')'))
+p12
+
+p13 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = tpa.all)) +
+  geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
+  # scale_color_brewer(name = 'Average Tree Age Bins')
+  theme_bw() + xlab('Average Tree Age Bins') + ylab(expression('Tree Density (tress ha'^-1*')'))
+p13
+
+fig4 <- ggarrange(p12, p13, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
+fig4
+
+ggsave(filename = 'Fig8_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
 
 

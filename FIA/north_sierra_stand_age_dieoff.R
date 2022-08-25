@@ -277,7 +277,7 @@ p11
 fig3 <- ggarrange(p10, p11, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 fig3
 
-ggsave(filename = 'Fig7_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
+ggsave(filename = 'Fig23_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
 
 #Tree Density Version
 p12 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = tpa.dead)) +
@@ -297,6 +297,6 @@ p13
 fig4 <- ggarrange(p12, p13, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 fig4
 
-ggsave(filename = 'Fig8_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
+ggsave(filename = 'Fig24_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
 
 

@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: August 16, 2022
+#Date Updated: September 2, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -712,85 +712,121 @@ ggsave(filename = 'Fig8_PrET4yr_stand_age_frap_10pt_sample_300m.png', height=16,
 #Years since fire versus dTree
 pixel.data$stand.age.grp <- findInterval(pixel.data$stand.age, c(10,20,30,40,50,60,70,80,90))
 
+#Tree Cover Die-off
 p14 <- ggplot() +
-       #The full data
-       # geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>%
-       #              dplyr::group_by(system.index) %>%
-       # summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age = stand.age[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-       # mapping = aes(x = stand.age, y = dTree), size = 0.5, alpha = 0.3, color = 'gray') +
-       # #The summarized data
-       # geom_smooth(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>%
-       #               dplyr::group_by(system.index) %>%
-       #               summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age = stand.age[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-       #               method = 'lm', mapping = aes(x = stand.age, y = dTree)) +
-       # stat_cor(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>%
-       #            dplyr::group_by(system.index) %>%
-       #            summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age = stand.age[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-       #          mapping = aes(x = stand.age, y = dTree) ) +
+       #Data Summary
        geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
                dplyr::group_by(system.index) %>% 
-               summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]) %>%
-               group_by(stand.age.grp) %>%
-               summarize(dTree = mean(dTree), dTree.n = n(), dTree.sd = sd(dTree)),
-             mapping = aes(x = stand.age.grp * 10, y = dTree), size = 2) + 
+               summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+             mapping = aes(x = stand.age.grp * 10, y = dTree), stat = 'summary', size = 2) + 
        geom_errorbar(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
                dplyr::group_by(system.index) %>% 
-               summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]) %>%
-               group_by(stand.age.grp) %>%
-               summarize(dTree = mean(dTree), dTree.n = n(), dTree.sd = sd(dTree)),
-             mapping = aes(x = stand.age.grp * 10, ymin = dTree - 1.96*(dTree.sd /sqrt(dTree.n)), ymax = dTree + 1.96*(dTree.sd /sqrt(dTree.n)), width = 3)) + 
-       ylim(-10, 5) + 
-       xlab('Stand Age (10-year Bins') + ylab('Change in Tree Cover (%)') +
-       # geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), linetype = 'dotdash', size = 2) + 
-       # stat_cor(mapping = aes(x = stand.age, y = dTree)) +
-       theme_bw() #+ facet_grid(. ~ lf_evt_2001)
+               summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+             mapping = aes(x = stand.age.grp * 10, y = dTree), stat = 'summary') + theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+       xlab('Stand Age (10-year Bins)') + ylab('Change in Tree Cover (%)')
 p14
 
-ggsave(filename = 'Fig9_dTree_stand_age_wildfire_frap_10pt_sample_300m.png', height=16, width= 18, units = 'cm', dpi=900)
+# ggsave(filename = 'Fig9_dTree_stand_age_wildfire_frap_10pt_sample_300m.png', height=16, width= 18, units = 'cm', dpi=900)
 
+#ADS die-off
 p15 <- ggplot() +
-  # geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire.year <= 2010 & fire.year >= 1920) %>% 
-  #              dplyr::group_by(system.index) %>%
-  #              summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)], na.rm = TRUE), stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
-  #            mapping = aes(x = stand.age, y = tpa_max), size = 0.5, alpha = 0.3, color = 'gray') +
-  # geom_smooth(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire.year <= 2010 & fire.year >= 1920) %>% 
-  #              dplyr::group_by(system.index) %>%
-  #              summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)], na.rm = TRUE), stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
-  #            method = 'lm', mapping = aes(x = stand.age, y = tpa_max)) +
-  # stat_cor(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age >= 0 & fire.year <= 2010 & fire.year >= 1920) %>% 
-  #              dplyr::group_by(system.index) %>%
-  #              summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)], na.rm = TRUE), stand.age = stand.age[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
-  #            mapping = aes(x = stand.age, y = tpa_max), color = 'blue') +
   geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
                dplyr::group_by(system.index) %>%
-               summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), stand.age.grp = stand.age.grp[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]) %>%
-               group_by(stand.age.grp) %>%
-               summarize(tpa_max = mean(tpa_max), tpa_max.n = n(), tpa_max.sd = sd(tpa_max)),
-             mapping = aes(x = stand.age.grp * 10, y = tpa_max), size = 2) + 
-  xlab('Stand Age (10-year Bins)') + ylab('Mortality (trees/ha)') + theme_bw()
+               summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), stand.age.grp = stand.age.grp[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
+             mapping = aes(x = stand.age.grp * 10, y = tpa_max), stat = 'summary', size = 2) + 
+  geom_errorbar(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+               dplyr::group_by(system.index) %>%
+               summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), stand.age.grp = stand.age.grp[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
+             mapping = aes(x = stand.age.grp * 10, y = tpa_max), stat = 'summary') + theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab('Mortality (trees/ha)') 
 p15
-ggsave(filename = 'Fig10_ADS_mortality_stand_age_wildfire_10pt_300m.png', height=16, width= 18, units = 'cm', dpi=900)
 
+# ggsave(filename = 'Fig10_ADS_mortality_stand_age_wildfire_10pt_300m.png', height=16, width= 18, units = 'cm', dpi=900)
 
-p16 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>%
+#Pre-Die-off Tree Cover
+p16 <- ggplot() +
+  geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+               dplyr::group_by(system.index) %>%
+               summarize(stand.age.grp = stand.age.grp[vi.year == 2010], Tree_Cover = Tree_Cover[vi.year == 2014]),
+             mapping = aes(x = stand.age.grp * 10, y = Tree_Cover), stat = 'summary', size = 2) + 
+  geom_errorbar(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+                  dplyr::group_by(system.index) %>%
+                  summarize(stand.age.grp = stand.age.grp[vi.year == 2010], Tree_Cover = Tree_Cover[vi.year == 2014]),
+                mapping = aes(x = stand.age.grp * 10, y = Tree_Cover), stat = 'summary') + theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab('Tree Cover (%)')
+p16
+
+#Water Stress
+p17 <- ggplot() +
+  geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+               dplyr::group_by(system.index) %>%
+               summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+             mapping = aes(x = stand.age.grp * 10, y = Water_Stress), stat = 'summary', size = 2) + 
+  geom_errorbar(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+                  dplyr::group_by(system.index) %>%
+                  summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+                mapping = aes(x = stand.age.grp * 10, y = Water_Stress), stat = 'summary') + theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab('Water Stress (mm)') 
+p17
+
+#Pr-ET 4yr
+p18 <- ggplot() +
+  geom_point(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+               dplyr::group_by(system.index) %>%
+               summarize(PrET.4yr = sum(PrET[vi.year %in% c(2012, 2013, 2014, 2015)], na.rm = TRUE), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+             mapping = aes(x = stand.age.grp * 10, y = PrET.4yr), stat = 'summary', size = 2) + 
+  geom_errorbar(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+                  dplyr::group_by(system.index) %>%
+                  summarize(PrET.4yr = sum(PrET[vi.year %in% c(2012, 2013, 2014, 2015)], na.rm = TRUE), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+                mapping = aes(x = stand.age.grp * 10, y = PrET.4yr), stat = 'summary') + theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 8), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 10),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  xlab('Years Since Fire (10-year Bins)') + ylab('Pr-ET four-year (mm/4yr)')
+p18
+
+#Combine the Panels
+f5 <- ggarrange(p14, p15, p16, p17, p18, ncol = 1, nrow = 5, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)', 'e)'))
+f5
+
+ggsave(filename = 'Fig10_stand_age_bins_dieoff_treecover_water_stress_10pt_300m.png', height=24, width= 18, units = 'cm', dpi=900)
+
+p19 <- ggplot(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>%
                dplyr::group_by(system.index, fire.year.bin) %>%
                summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age = stand.age[vi.year == 2010], Tree = Tree_Cover[vi.year == 2015])) +
        geom_point(mapping = aes(x = Tree, y = dTree), size = 0.5, alpha = 0.3, color = 'black') +
   xlab('Tree Cover (%)') + ylab('dTree Cover (%)') +
   theme_bw() + facet_grid(. ~ fire.year.bin)
-p16
+p19
 ggsave(filename = 'Fig11_dTree_Tree_frap_10pts_300m.png', height=16, width= 18, units = 'cm', dpi=900)
 
-p17 <- ggplot(data = pixel.data %>% dplyr::filter(fire.year <= 2010 & fire.year >= 1920 & stand.age > 0) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2017] - Tree_Cover[vi.year == 2015], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), fire.year.bin = fire.year.bin[vi.year == 2010])) +
+p20 <- ggplot(data = pixel.data %>% dplyr::filter(fire.year <= 2010 & fire.year >= 1920 & stand.age > 0) %>% dplyr::group_by(system.index) %>% summarize(dTree = Tree_Cover[vi.year == 2017] - Tree_Cover[vi.year == 2015], Water_Stress = Water_Stress[vi.year == 2015], SPI48 = SPI48[vi.year == 2015], PrET.4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), fire.year.bin = fire.year.bin[vi.year == 2010])) +
   geom_point(mapping = aes(x = PrET.4yr, y =  Water_Stress), size = 1) + 
   geom_smooth(method = 'lm', mapping = aes(x = PrET.4yr, y = Water_Stress)) +
   stat_cor(mapping = aes(x = PrET.4yr, y =  Water_Stress) ) + facet_wrap(. ~ fire.year.bin) +
   theme_bw()
-p17
+p20
 
 ggsave(filename = 'Fig24_Water_Stress_PrET_correlation_10pt_frap_sample.png', height=16, width= 18, units = 'cm', dpi=900)
 
-p18 <- ggplot() + 
+p21 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
@@ -817,9 +853,9 @@ p18 <- ggplot() +
   scale_fill_manual(values = fills) + 
   guides(fill = "none") +
   ylab(expression('GPP (g/m^2/yr)')) + xlab('Years Since Fire') 
-p18
+p21
 
-p19 <- ggplot() + 
+p22 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
@@ -846,10 +882,10 @@ p19 <- ggplot() +
   scale_fill_manual(values = fills) + 
   guides(fill = "none") +
   ylab(expression('AET (mm/yr)')) + xlab('Years Since Fire') 
-p19
+p22
 
-f5 <- ggarrange(p18, p19, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
-f5
+f6 <- ggarrange(p21, p22, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
+f6
 
 #Save the data
 ggsave(filename = 'Fig25_veg_cover_stand_age_10pt_300m_frap_perimeter.png', height=18, width= 20, units = 'cm', dpi=900)

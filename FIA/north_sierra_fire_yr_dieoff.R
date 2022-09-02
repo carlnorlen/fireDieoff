@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: August 4, 2021
-#Date Edited: August 25, 2022
+#Date Edited: september 1, 2022
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -120,10 +120,11 @@ join$years.disturb <- join$INVYR - join$DSTRBYR1
 
 #Disturbance Bins
 join <- join %>% mutate(disturb.bin = case_when(
-  DSTRBCD1 == 0 | (DSTRBCD1 %in% c(10, 11, 12, 54, 70) & DSTRBYR1 > 2012) ~ 'No Disturbance',
-  DSTRBCD1 %in% c(10, 11, 12, 54, 70) & DSTRBYR1 <= 2012 ~ 'Die-off', 
-  DSTRBCD1 %in% c(30,31,32) & DSTRBYR1 <= 2012 ~ 'Fire',
-  TRTCD1 == 10 & TRTYR1 <= 2012 ~ 'Harvest'))
+  DSTRBCD1 %in% c(10, 11, 12, 54, 70) & DSTRBYR1 > 2012 ~ 'Die-off',
+  DSTRBCD1 %in% c(10, 11, 12, 54, 70) & DSTRBYR1 <= 2012 ~ 'Past Die-off', 
+  DSTRBCD1 %in% c(30,31,32) & DSTRBYR1 > 2012 ~ 'Fire',
+  DSTRBCD1 %in% c(30,31,32) & DSTRBYR1 <= 2012 ~ 'Past Fire',
+  DSTRBCD1 == 0 ~'No Disturbance'))
 
 #Ownership Bins
 join <- join %>% mutate(owncd.bin = case_when(
@@ -139,11 +140,11 @@ join <- join %>% mutate(owncd.bin = case_when(
 p1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
   geom_point(data = join %>% 
-               filter(!is.na(disturb.bin) & disturb.bin != 'Die-off'  & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%  
+               filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%  
               group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), mapping = aes(x = disturb.bin, y = BA.all), color = 'black', size = 1) +
   #95% CI Die-off
   geom_errorbar(data = join %>%
-                  filter(!is.na(disturb.bin) & disturb.bin != 'Die-off' & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+                  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
                   group_by(disturb.bin) %>%
                   summarize(BA.all = mean(basal_area.all),
                             BA.all.sd = sd(basal_area.all), BA.n = n()),
@@ -156,13 +157,13 @@ p1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all 
 p1
 
 join %>%
-  filter(!is.na(disturb.bin) & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
   group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), count = n())
 
 p2<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
   geom_point(data = join %>% 
-               filter(!is.na(disturb.bin) & disturb.bin != 'Die-off'  & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
+               filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
               group_by(disturb.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), count = n()), 
             mapping = aes(x = disturb.bin, y = count), color = 'black', size = 1) +
   #95% CI Die-off
@@ -181,13 +182,13 @@ p2
 p3<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
   geom_point(data = join %>% 
-               filter(!is.na(disturb.bin) & disturb.bin != 'Die-off'  & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
+               filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
                group_by(disturb.bin) %>% 
                summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), 
              mapping = aes(x = disturb.bin, y = BA.dead), color = 'black', size = 1) +
   #95% CI Die-off
   geom_errorbar(data = join %>%
-                filter(!is.na(disturb.bin) & disturb.bin != 'Die-off' & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+                filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
   group_by(disturb.bin) %>%
                 summarize(BA.dead = mean(basal_area.dead),
                           BA.dead.sd = sd(basal_area.dead), BA.n = n()),
@@ -207,13 +208,13 @@ p3
 p4<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
   geom_point(data = join %>% 
-               filter(!is.na(disturb.bin) & disturb.bin != 'Die-off' & (!is.na(STDAGE) & STDAGE != 9999) & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
+               filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance')  & (!is.na(STDAGE) & STDAGE != 9999) & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
               group_by(disturb.bin) %>% 
                summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), STDAGE.mean = mean(STDAGE)), 
              mapping = aes(x = disturb.bin, y = STDAGE.mean), color = 'black', size = 1) +
   #95% CI Error bar
   geom_errorbar(data = join %>%
-                  filter(!is.na(disturb.bin) & disturb.bin != 'Die-off' & (!is.na(STDAGE) & STDAGE != 9999) & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+                  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & (!is.na(STDAGE) & STDAGE != 9999) & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
                   group_by(disturb.bin) %>%
                   summarize(STDAGE.mean = mean(STDAGE),
                             STDAGE.mean.sd = sd(STDAGE), BA.n = n()),
@@ -324,3 +325,78 @@ f2 <- ggarrange(p5, p6, p7, ncol = 1, nrow = 3, common.legend = FALSE, heights =
 f2
 
 ggsave(filename = 'Fig25_FIA_ownership_exploration_north_sierra.png', height=15, width= 10, units = 'cm', dpi=900)
+
+#Disturbance Type and Ownership
+#Count the Groups
+join %>%
+  filter(disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & owncd.bin %in% c('USFS', 'Private') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+  group_by(disturb.bin, owncd.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), count = n())
+
+#Basal ARea
+p8 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #Mean Die-off
+  geom_point(data = join %>% 
+               filter(disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & owncd.bin %in% c('USFS', 'Private') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%  
+               group_by(disturb.bin, owncd.bin) %>% summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), mapping = aes(x = disturb.bin, y = BA.all), color = 'black', size = 1) +
+  #95% CI Die-off
+  geom_errorbar(data = join %>%
+                  filter(disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & owncd.bin %in% c('USFS', 'Private') & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+                  group_by(disturb.bin, owncd.bin) %>%
+                  summarize(BA.all = mean(basal_area.all),
+                            BA.all.sd = sd(basal_area.all), BA.n = n()),
+                mapping = aes(y = BA.all, ymin=BA.all - 1.96*(BA.all.sd / sqrt(BA.n)),
+                              ymax=BA.all + 1.96*(BA.all.sd / sqrt(BA.n)),
+                              x = disturb.bin)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) + facet_wrap(. ~ owncd.bin) +
+  xlab('Disturbance Type') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) 
+p8
+
+#Mortality
+p9<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #Mean Die-off
+  geom_point(data = join %>% 
+               filter(disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & owncd.bin %in% c('USFS', 'Private') &  INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
+               group_by(disturb.bin, owncd.bin) %>% 
+               summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead)), 
+             mapping = aes(x = disturb.bin, y = BA.dead), color = 'black', size = 1) +
+  #95% CI Die-off
+  geom_errorbar(data = join %>%
+                  filter(disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & owncd.bin %in% c('USFS', 'Private') &  INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+                  group_by(disturb.bin, owncd.bin) %>%
+                  summarize(BA.dead = mean(basal_area.dead),
+                            BA.dead.sd = sd(basal_area.dead), BA.n = n()),
+                mapping = aes(y = BA.dead, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+                              ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
+                              x = disturb.bin)) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) + facet_wrap(. ~ owncd.bin) +
+  xlab('Disturbance Type') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
+p9
+
+#Stand Age
+p10 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #Mean Die-off
+  geom_point(data = join %>% 
+               filter(disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & owncd.bin %in% c('USFS', 'Private') &  (!is.na(STDAGE) & STDAGE != 9999) & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>% 
+               group_by(disturb.bin, owncd.bin) %>% 
+               summarize(BA.all = mean(basal_area.all), BA.dead = mean(basal_area.dead), STDAGE.mean = mean(STDAGE)), 
+             mapping = aes(x = disturb.bin, y = STDAGE.mean), color = 'black', size = 1) +
+  #95% CI Error bar
+  geom_errorbar(data = join %>%
+                  filter(disturb.bin %in% c('Die-off', 'Fire', 'No Disturbance') & owncd.bin %in% c('USFS', 'Private') &  (!is.na(STDAGE) & STDAGE != 9999) & INVYR %in% c("2015", "2016", "2017", "2018", "2019") ) %>%
+                  group_by(disturb.bin, owncd.bin) %>%
+                  summarize(STDAGE.mean = mean(STDAGE),
+                            STDAGE.mean.sd = sd(STDAGE), BA.n = n()),
+                mapping = aes(y = STDAGE.mean, ymin=STDAGE.mean - 1.96*(STDAGE.mean.sd / sqrt(BA.n)),
+                              ymax=STDAGE.mean + 1.96*(STDAGE.mean.sd / sqrt(BA.n)),
+                              x = disturb.bin)) +
+  theme_bw() + facet_wrap(. ~ owncd.bin) +
+  # theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Past Disturbance Type') + ylab('Average Tree Age') 
+p10
+
+f3 <- ggarrange(p8, p9, p10, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'c)', 'd)'))
+f3
+
+ggsave(filename = 'Fig26_FIA_ownership_disturbance_north_sierra.png', height=15, width= 10, units = 'cm', dpi=900)

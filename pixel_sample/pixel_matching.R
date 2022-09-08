@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: September 2, 2022
+#Date Updated: September 7, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -8,10 +8,10 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'MatchIt')
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'MatchIt', 'optmatch', 'Matching', 'rgenoud')
 # install.packages(p,repo='https://cran.r-project.org/')
 
-# install.packages(c('MatchIt'),repo='https://cran.r-project.org/')
+# install.packages(c('Matching', 'rgenoud'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 # require('MatchIt')
 #Set the working directory
@@ -35,15 +35,15 @@ summary(sample.data)
 #Convert data to long format
 sample.data <- sample.data %>% #dplyr::select(-c('latitude', 'longitude')) %>% 
                pivot_longer(cols = X10_AET_mean:X9_tpa_max_mode, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
-#add some columns
-sample.data$treat <- 0
+#add some columns (Treatment = 1, and Control = 0)
+sample.data$treat <- 1
 sample.data$fire.year <- sample.data$perimeter_year
 summary(sample.data)
 #Control data
 control.data <- control.data %>% #dplyr::select(-c('latitude', 'longitude')) %>% 
   pivot_longer(cols = X10_AET_mean:X9_tpa_max_mode, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
 #Add some columns
-control.data$treat <- 1
+control.data$treat <- 0
 control.data$perimeter_year <- NA
 control.data$fire.year <- control.data$perimeter_year
 control.data$FIRE_NAME <- NA
@@ -136,19 +136,68 @@ all.data <- all.data %>% mutate(fire.year.bin = case_when(
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
 
-summary(pixel.data)
+summary(all.data)
 
-pixel.data$stand.age.bin = with(pixel.data, factor(stand.age.bin, levels = c('2019-2020', '2011-2018', '1985-2010', '1960-1984', '1935-1959', '1910-1934', 'No Fire')))#c('0-4','5-30','31-55','56-80',
+all.data$stand.age.bin = with(all.data, factor(stand.age.bin, levels = c('2019-2020', '2011-2018', '1985-2010', '1960-1984', '1935-1959', '1910-1934', 'No Fire')))#c('0-4','5-30','31-55','56-80',
                                                                              #'81-95')))
 
-pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', '2001-2010', '1986-2000', '1970-1985', '1950-1969', '1920-1949', '1900-1919', 'No Fire')))#c('0-4','5-30','31-55','56-80',
+all.data$fire.year.bin = with(all.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', '2001-2010', '1986-2000', '1970-1985', '1950-1969', '1920-1949', '1900-1919', 'No Fire')))#c('0-4','5-30','31-55','56-80',
 
-summary(pixel.data)
+summary(all.data %>% select(lf_evt_2001_mode))
 
 #Match the control (2) and sample (1) pixels
+#Nearest neighbor doesn't work well
 nn.match <- matchit(treat ~ clm_precip_sum_mean + clm_temp_mean_mean + elevation, data = all.data,
-        method = "nearest", distance = "glm")
-
+        method = "nearest", distance = "glm", replacement = FALSE)
+nn.match
 #Test out the matches
+plot(summary(nn.match))
 plot(nn.match, type = "jitter", interactive = FALSE)
 plot(nn.match, type = "qq", interactive = FALSE)
+
+nn.mdata <- match.data(nn.match)
+summary(nn.mdata)
+nn.mdata$stand.age.bin = with(nn.mdata, factor(stand.age.bin, levels = c('2019-2020', '2011-2018', '1985-2010', '1960-1984', '1935-1959', '1910-1934', 'No Fire')))#c('0-4','5-30','31-55','56-80',
+#'81-95')))
+
+nn.mdata$fire.year.bin = with(nn.mdata, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', '2001-2010', '1986-2000', '1970-1985', '1950-1969', '1920-1949', '1900-1919', 'No Fire')))#c('0-4','5-30','31-55','56-80',
+
+# p14 <- ggplot() +
+#   #Data Summary
+#   geom_point(data = nn.mdata %>% dplyr::filter() %>% 
+#                dplyr::group_by(system.index) %>% 
+#                summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), Water_Stress = Water_Stress[vi.year == 2015], subclass = subclass[vi.year == 2015]),
+#               mapping = aes(x = Water_Stress, y = dTree, color = subclass), size = 2) + 
+#   # geom_errorbar(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+#   #                 dplyr::group_by(system.index) %>% 
+#   #                 summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+#   #               mapping = aes(x = stand.age.grp * 10, y = dTree), stat = 'summary') + theme_bw() +
+#   geom_smooth(data = nn.mdata %>% dplyr::filter() %>% 
+#                dplyr::group_by(system.index) %>% 
+#                summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), Water_Stress = Water_Stress[vi.year == 2015], subclass = subclass[vi.year == 2015]),
+#              mapping = aes(x = Water_Stress, y = dTree, color = subclass), size = 2, method = 'lm') + 
+#   # geom_errorbar(data = pixel.data %>% dplyr::filter(!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1920) %>% 
+#   #                 dplyr::group_by(system.index) %>% 
+#   #                 summarize(dTree = (Tree_Cover[vi.year == 2019] - Tree_Cover[vi.year == 2015]), stand.age.grp = stand.age.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+#   #               mapping = aes(x = stand.age.grp * 10, y = dTree), stat = 'summary') + theme_bw() +
+#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+#         axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+#   xlab('Water_Stress (mm)') + ylab('Change in Tree Cover (%)')
+# p14
+# #Try optimal match
+# gen.match <- matchit(treat ~ clm_precip_sum_mean + clm_temp_mean_mean + elevation, data = all.data,
+#                     method = "genetic", distance = "glm", replacement = FALSE, pop.size = )
+# 
+# #Test out the matches
+# plot(summary(gen.match))
+# plot(gen.match, type = "jitter", interactive = FALSE)
+# plot(gen.match, type = "qq", interactive = FALSE)
+# 
+# summary(opt.match)
+?matchit()
+all.data %>% dplyr::select(lft_evt_2001_mode)
+#Try full match
+full.match <- matchit(treat ~ clm_precip_sum_mean + clm_temp_mean_mean + elevation + lf_evt_2001_mode, data = all.data,
+                     method = "full", distance = "glm", replacement = FALSE, exact = ~ lf_evt_2001_mode, link = "probit" )

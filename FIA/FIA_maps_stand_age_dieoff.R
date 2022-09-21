@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: August 23, 2022
-#Date Edited: August 23, 2022
+#Date Edited: September 20, 2022
 #Purpose: Create maps of FIA data for the Sierra Nevada (and SoCal Mountains?) with average StandAge total Basal Area and Dead Basal Area?
 
 # Specify necessary packages
@@ -63,7 +63,7 @@ t.agentcd, --tree damage
 t.mortyr, --mortality year
 t.plot, t.statuscd, t.invyr, r.common_name, t.spcd, c.fortypcd, 
 c.fldtypcd, rft.meaning, c.stdage, c.fldage, t.totage, t.bhage,
-c.dstrbcd1, c.dstrbyr1, p.ecosubcd
+c.dstrbcd1, c.dstrbyr1, p.ecosubcd, p.lat, p.lon
 FROM 
 cond c,
 plot p,
@@ -97,7 +97,7 @@ all$count <- all$count * 2.47105 # Convert to per hectare
 all$DIA <- all$DIA * (2.54) #Convert to centimeters
 all$basal_area <- (((all$DIA / 2)^2) * pi)*(1/10000) * all$count
 
-live <- all %>% filter(STATUSCD == 1) %>% group_by(INVYR, PLOT) %>% summarize(count.live = n(), tpa.live = sum(count), basal_area.live = sum(basal_area), STDAGE = median(STDAGE), ECOSUBCD = first(ECOSUBCD))
+live <- all %>% filter(STATUSCD == 1) %>% group_by(INVYR, PLOT) %>% summarize(count.live = n(), tpa.live = sum(count), basal_area.live = sum(basal_area), STDAGE = median(STDAGE), ECOSUBCD = first(ECOSUBCD), latitude = median(LAT), longitude = median(LON))
 live
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
 dead <- all %>% filter(STATUSCD == 2 & MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019")) %>% group_by(PLOT, INVYR) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
@@ -117,7 +117,16 @@ join$basal_area.all <- join$basal_area.live + join$basal_area.dead
 
 summary(join)
 
-ecosubcd.summary <- join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & (!is.na(STDAGE) & STDAGE != 9999)) %>% group_by(ECOSUBCD) %>% summarize(BAA.all = mean(basal_area.all), BAA.dead = mean(basal_area.dead), stdage.mean = mean(STDAGE), tpa.all = mean(tpa.all), tpa.dead = mean(tpa.dead))
+spat.join <- join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & (!is.na(STDAGE) & STDAGE != 9999) & STDAGE > 0)
+# summary(spat.join)
+#Make the FIA data into spatila points
+# coordinates(spat.join) <- ~ longitude + latitude
+spat.join <- st_as_sf(spat.join, coords=c("longitude", "latitude"), crs="EPSG:4326")
+# spat.join <- spat.join %>% st_as_sf()
+# crs(spat.join) <- 
+# plot(spat.join)
+#Create the ecoregion summaries
+ecosubcd.summary <- join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & (!is.na(STDAGE) & STDAGE != 9999) & STDAGE > 0) %>% group_by(ECOSUBCD) %>% summarize(BAA.all = mean(basal_area.all), BAA.dead = mean(basal_area.dead), stdage.mean = mean(STDAGE), tpa.all = mean(tpa.all), tpa.dead = mean(tpa.dead))
 
 #REname the ECOSUBCD Column
 ecos.sum <- ecosubcd.summary %>% rename(MAP_UNIT_S = ECOSUBCD)
@@ -130,28 +139,47 @@ p1 <- ggplot() +
   geom_sf(data=ecosubcd.join, mapping = aes(fill=stdage.mean), lwd=0.8, alpha=0.6) +
   geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
   geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
+  geom_sf(data = spat.join, mapping = aes(color = STDAGE), size = 1.5) +
   theme_bw()+
-  scale_fill_viridis_c("Average Tree Age")
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  scale_fill_viridis_c("Region \nTree Age") +
+  scale_color_viridis_c("Plot \nTree Age", option = 'B')
 p1
 
-ggsave(filename = 'Fig20_FIA_average_tree_age.png', height=16, width= 12, units = 'cm', dpi=900)
+# ggsave(filename = 'Fig20_FIA_average_tree_age.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p2 <- ggplot() +
   geom_sf(data=ecosubcd.join, mapping = aes(fill=BAA.all), lwd=0.8, alpha=0.6) +
   geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
   geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
+  geom_sf(data = spat.join, mapping = aes(color = basal_area.all), size = 1.5) +
   theme_bw()+
-  scale_fill_viridis_c("Mean Basal Area (m^2/ha")
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  scale_fill_viridis_c("Region \nBasal Area \n(m^2/ha)") +
+  scale_color_viridis_c("Plot \nBasal Area \n(m^2/ha)", option = 'B')
 p2
 
-ggsave(filename = 'Fig21_FIA_average_basal_area.png', height=16, width= 12, units = 'cm', dpi=900)
+# ggsave(filename = 'Fig21_FIA_average_basal_area.png', height=16, width= 12, units = 'cm', dpi=900)
 
 p3 <- ggplot() +
   geom_sf(data=ecosubcd.join, mapping = aes(fill=BAA.dead), lwd=0.8, alpha=0.6) +
   geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
   geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
+  geom_sf(data = spat.join, mapping = aes(color = basal_area.dead), size = 1.5) +
   theme_bw()+
-  scale_fill_viridis_c("Mean Mortality (m^2/ha")
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  scale_fill_viridis_c("Region \nMortality \n(m^2/ha)") +
+  scale_color_viridis_c("Plot \nMortality \n(m^2/ha)", option = 'B')
 p3
 
-ggsave(filename = 'Fig22_FIA_average_mortality.png', height=16, width= 12, units = 'cm', dpi=900)
+f1 <- ggarrange(p1, p2, p3, ncol = 3, nrow = 1, common.legend = FALSE, align = "h", labels = c('a)', 'b)', 'c)'))
+ggsave(filename = 'Fig22_FIA_average_mortality.png', height=16, width= 36, units = 'cm', dpi=900)

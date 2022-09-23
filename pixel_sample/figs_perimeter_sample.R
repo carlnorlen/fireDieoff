@@ -1,7 +1,7 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: September 20, 2022
-#Purpose: Create figures for EEB GSS presentation
+#Date Updated: September 23, 2022
+#Purpose: Perimeter samples versus non-burned samples
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -26,11 +26,11 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
 fire.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by_wildfire_10pt_300m_ts4_20220915.csv"), header = TRUE, na.strings = "NaN")
 fire.data$fire.year <- fire.data$perimeter_year
-fire.data$MAP_UNIT_S <- NA
-fire.data$USFS_Ecoregion <- NA
+# fire.data$MAP_UNIT_S <- NA
+# fire.data$USFS_Ecoregion <- NA
 # list.files(fire_in)
 # list.files(fire_in)
-control.data <- read.csv(file.path(dir_in, "Sierra_ecoregion_simple_sample_1pct_300m_ts16_20220915.csv"), header = TRUE, na.strings = "NaN")
+control.data <- read.csv(file.path(dir_in, "Sierra_ecoregion_simple_sample_1pct_300m_ts16_20220922.csv"), header = TRUE, na.strings = "NaN")
 summary(control.data)
 #Get a  of the data
 # summary(pixel.data)

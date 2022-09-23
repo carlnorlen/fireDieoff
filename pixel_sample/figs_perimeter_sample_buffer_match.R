@@ -251,7 +251,7 @@ p1e
 f1a <- ggarrange(p1a, p1b, p1c, p1d, p1e, ncol = 1, nrow = 5, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)', 'e)'))
 f1a
 #Save the data
-ggsave(filename = 'Fig1_data_check_10pt_frap_perimeter_chronosequence.png', height=22, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig59_data_check_10pt_frap_perimeter_chronosequence.png', height=22, width= 16, units = 'cm', dpi=900)
 
 #Figure of mean Cover changes by stand age
 p2 <- ggplot() + 
@@ -325,7 +325,7 @@ p2 <- ggplot() +
 p2
 
 #Save the data
-ggsave(filename = 'Fig2_veg_cover_stand_age_10pt_300m_frap_perimeter.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig60_veg_cover_stand_age_10pt_300m_frap_perimeter.png', height=18, width= 20, units = 'cm', dpi=900)
 
 #Create a manual color scale
 cols.1 <- c("Shrub"="green","Tree"="forest green", "Woody" = "brown")
@@ -390,7 +390,7 @@ p2a <- ggplot() +
 p2a
 
 #Save the data
-ggsave(filename = 'Fig2a_veg_cover_stand_age_10pt_300m_frap_perimeter.png', height=12.5, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig60_veg_cover_stand_age_10pt_300m_frap_perimeter.png', height=12.5, width= 20, units = 'cm', dpi=900)
 
 #Checking why there is a dip around 2002
 p9 <- ggplot() + 
@@ -444,7 +444,7 @@ p10
 f4 <- ggarrange(p9, p10, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f4
 
-ggsave(filename = 'Fig5_data_check_time_series_perimeter_10pt_300m.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig61_data_check_time_series_perimeter_10pt_300m.png', height=16, width= 16, units = 'cm', dpi=900)
 
 # summary(pixel.data)
 #Figure of Dead Trees per acre separated by fire years with time series
@@ -524,7 +524,7 @@ p4
 f2 <- ggarrange(p3, p4, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f2
 #Save the data
-ggsave(filename = 'Fig3_dieoff_tree_cover_stand_age_time_series_frap_perimeter_10pt_sample_300m.png', height=12, width= 14, units = 'cm', dpi=900)
+ggsave(filename = 'Fig62_dieoff_tree_cover_stand_age_time_series_frap_perimeter_10pt_sample_300m.png', height=12, width= 14, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
 p5 <- ggplot() + 
@@ -756,13 +756,14 @@ p14 <- ggplot() +
                dplyr::group_by(system.index, treatment) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-             mapping = aes(x = fire.year.grp, y = dTree, color = treatment), stat = 'summary', size = 2) + 
+             mapping = aes(x = fire.year.grp, y = dTree, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
        geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
                        dplyr::group_by(system.index, treatment) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-             mapping = aes(x = fire.year.grp, y = dTree, color = treatment), stat = 'summary') + theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+             mapping = aes(x = fire.year.grp, y = dTree, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), legend.position = c(0.15, 0.2), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
@@ -775,11 +776,12 @@ p15 <- ggplot() +
   geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2)) %>% 
                dplyr::group_by(system.index, treatment) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-             mapping = aes(x = fire.year.grp, y = RdTree * 100), stat = 'summary', size = 2) + 
+             mapping = aes(x = fire.year.grp, y = RdTree * 100, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
   geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-                  dplyr::group_by(system.index) %>% 
+                  dplyr::group_by(system.index, treatment) %>% 
                   summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-                mapping = aes(x = fire.year.grp, y = RdTree * 100), stat = 'summary') + theme_bw() +
+                mapping = aes(x = fire.year.grp, y = RdTree * 100, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -789,14 +791,15 @@ p15
 
 #ADS die-off
 p16 <- ggplot() +
-  geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-               dplyr::group_by(system.index) %>%
+  geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2)) %>% 
+               dplyr::group_by(system.index, treatment) %>%
                summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.grp = fire.year.grp[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
-             mapping = aes(x = fire.year.grp, y = tpa_max), stat = 'summary', size = 2) + 
-  geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-               dplyr::group_by(system.index) %>%
+             mapping = aes(x = fire.year.grp, y = tpa_max, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
+  geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2)) %>% 
+               dplyr::group_by(system.index, treatment) %>%
                summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.grp = fire.year.grp[vi.year == 2010], SPI48 = SPI48[vi.year == 2015]),
-             mapping = aes(x = fire.year.grp, y = tpa_max), stat = 'summary') + theme_bw() +
+             mapping = aes(x = fire.year.grp, y = tpa_max, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -809,13 +812,14 @@ p16
 #Pre-Die-off Tree Cover
 p17 <- ggplot() +
   geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-               dplyr::group_by(system.index) %>%
+               dplyr::group_by(system.index, treatment) %>%
                summarize(fire.year.grp = fire.year.grp[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014, 2015)])),
-             mapping = aes(x = fire.year.grp, y = Tree_Cover), stat = 'summary', size = 2) + 
+             mapping = aes(x = fire.year.grp, y = Tree_Cover, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
   geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-                  dplyr::group_by(system.index) %>%
+                  dplyr::group_by(system.index, treatment) %>%
                   summarize(fire.year.grp = fire.year.grp[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014, 2015)])),
-                mapping = aes(x = fire.year.grp, y = Tree_Cover), stat = 'summary') + theme_bw() +
+                mapping = aes(x = fire.year.grp, y = Tree_Cover, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -826,13 +830,14 @@ p17
 #Water Stress
 p18 <- ggplot() +
   geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-               dplyr::group_by(system.index) %>%
+               dplyr::group_by(system.index, treatment) %>%
                summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-             mapping = aes(x = fire.year.grp, y = Water_Stress), stat = 'summary', size = 2) + 
+             mapping = aes(x = fire.year.grp, y = Water_Stress, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
   geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-                  dplyr::group_by(system.index) %>%
+                  dplyr::group_by(system.index, treatment) %>%
                   summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-                mapping = aes(x = fire.year.grp, y = Water_Stress), stat = 'summary') + theme_bw() +
+                mapping = aes(x = fire.year.grp, y = Water_Stress, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -843,13 +848,14 @@ p18
 #Pr-ET 4yr
 p19 <- ggplot() +
   geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-               dplyr::group_by(system.index) %>%
+               dplyr::group_by(system.index, treatment) %>%
                summarize(PrET.4yr = sum(PrET[vi.year %in% c(2012, 2013, 2014, 2015)], na.rm = TRUE), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-             mapping = aes(x = fire.year.grp, y = PrET.4yr), stat = 'summary', size = 2) + 
+             mapping = aes(x = fire.year.grp, y = PrET.4yr, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
   geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-                  dplyr::group_by(system.index) %>%
+                  dplyr::group_by(system.index, treatment) %>%
                   summarize(PrET.4yr = sum(PrET[vi.year %in% c(2012, 2013, 2014, 2015)], na.rm = TRUE), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-                mapping = aes(x = fire.year.grp, y = PrET.4yr), stat = 'summary') + theme_bw() +
+                mapping = aes(x = fire.year.grp, y = PrET.4yr, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
@@ -861,7 +867,7 @@ p19
 f5 <- ggarrange(p14, p15, p16, p17, p18, p19, ncol = 1, nrow = 6, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)', 'e)', 'f)'))
 f5
 
-ggsave(filename = 'Fig10_stand_age_bins_dieoff_treecover_water_stress_10pt_300m.png', height=28, width = 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig58_stand_age_bins_dieoff_treecover_water_stress_10pt_300m.png', height=28, width = 18, units = 'cm', dpi=900)
 
 p20 <- ggplot(data = pixel.data %>% dplyr::filter((!is.na(stand.age) & stand.age > 2 & fire.year <= 2010 & fire.year >= 1921) | is.na(fire.year)) %>%
                dplyr::group_by(system.index, fire.year.bin) %>%

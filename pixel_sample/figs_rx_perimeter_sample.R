@@ -113,21 +113,21 @@ pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
 summary(pixel.data)
-pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
+pixel.data <- pixel.data %>% mutate(stand.age.bin = case_when(
   # bin >= 1 ~ '1900',
   # bin == 2 ~ '1909-1910',
   # bin >= 1911 & bin <= 1920 ~ '95-104', #Calculated relative to 2015
   is.na(fire.year) ~ 'No Fire',
-  fire.year <=  1950 ~ '1900-1949',#'81-95',
+  fire.year >= 1910 & fire.year <=  1970 ~ '1910-1970',#'81-95',
   # fire.year >= 1936 & fire.year <= 1950 ~ '65-79',
   # fire.year >= 1951 & fire.year <= 1965 ~ '50-64',
   # fire.year >= 1951 & fire.year <= 1960 ~ '55-64',
-  fire.year >= 1951 & fire.year <= 1970 ~ '1951-1970',#'56-80',
-  fire.year >= 1971 & fire.year <= 1980 ~ '1971-1980',
-  ##fire.year >= 1999 & fire.year <= 2001 ~ '1999-2001',#'31-55', 
-  fire.year >= 1981 & fire.year <= 1990 ~ '1981-1990',
-  fire.year >= 1991 & fire.year <= 2000 ~ '1991-2000',
+  fire.year >= 1971 & fire.year <= 1985 ~ '1971-1985',#'56-80',
+  # fire.year >= 1971 & fire.year <= 1980 ~ '35-44',
+  fire.year >= 1986 & fire.year <= 2000 ~ '1986-2000',#'31-55', 
+  # fire.year >= 1991 & fire.year <= 2000 ~ '15-24',
   fire.year >= 2001 & fire.year <= 2010 ~ '2001-2010',
+  # fire.year >= 2001 & fire.year <= 2010 ~ '2001-2010',
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
 

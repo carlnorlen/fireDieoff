@@ -24,12 +24,12 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
-rx.fire.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by_rxfire_10pt_300m_ts4_20220915.csv"), header = TRUE, na.strings = "NaN")
+rx.fire.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by_rxfire_10pt_300m_ts8_20220927.csv"), header = TRUE, na.strings = "NaN")
 rx.fire.data$fire.year <- rx.fire.data$perimeter_year
 rx.fire.data$treatment <- 'Wildfire'
 # list.files(fire_in)
 # list.files(fire_in)
-rx.control.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by_1km_rxfire_buffers_10pt_300m_ts4_20220915.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by_2km_rxfire_buffers_10pt_300m_ts8_20220927.csv"), header = TRUE, na.strings = "NaN")
 # summary(control.data)
 #Get a  of the data
 # summary(pixel.data)
@@ -37,22 +37,22 @@ rx.control.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by
 rx.control.data$fire.year <- rx.control.data$perimeter_year
 # rx.control.data$perimeter_year <- NA
 # rx.control.data$fire.year <- rx.control.data$perimeter_year
-rx.control.data$treatment <- '1-km Buffer' #Try making this 1-km versus, 2-km
+rx.control.data$treatment <- '2-km Buffer' #Try making this 1-km versus, 2-km
 
 #Data on 2-km buffers
-# control.data.2km <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by_2km_wildfire_buffers_10pt_300m_ts8_20220926.csv"), header = TRUE, na.strings = "NaN")
-# # summary(control.data)
-# #Get a  of the data
-# # summary(pixel.data)
-# # pixel.data <- pixel.data %>% filter(fire.year >= 1919 & !is.na(stand.age) & !is.na(NDMI))
-# control.data.2km$fire.year <- control.data.2km$perimeter_year
-# control.data.2km$treatment <- '2-km Buffer' #Try making this 1-km versus, 2-km
+rx.control.data.4km <- read.csv(file.path(dir_in, "fraprx_ecoregion_simple_sample_by_4km_rxfire_buffers_10pt_300m_ts8_20220927.csv"), header = TRUE, na.strings = "NaN")
+# summary(control.data)
+#Get a  of the data
+# summary(pixel.data)
+# pixel.data <- pixel.data %>% filter(fire.year >= 1919 & !is.na(stand.age) & !is.na(NDMI))
+rx.control.data.4km$fire.year <- rx.control.data.4km$perimeter_year
+rx.control.data.4km$treatment <- '4-km Buffer' #Try making this 1-km versus, 2-km
 
 # summary(fire.data)
 # summary(control.data)
 #Combine the data together
-rx.pixel.data <- rbind(rx.fire.data, rx.control.data)
-# pixel.data <- rbind(combine.data, control.data.2km)
+rx.combine.data <- rbind(rx.fire.data, rx.control.data)
+rx.pixel.data <- rbind(rx.combine.data, rx.control.data.4km)
 summary(rx.pixel.data)
 
 
@@ -269,12 +269,12 @@ p2 <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
   geom_line(data = rx.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 37 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
+              filter(stand.age >= -10 & stand.age <= 35 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
               group_by(stand.age, treatment) %>%
               summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = 'Shrub'), size = 1) +
   #Shrub Cover 95% CI
   geom_ribbon(data = rx.pixel.data %>% 
-                filter(stand.age >= -10 & stand.age <= 37 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
+                filter(stand.age >= -10 & stand.age <= 35 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
                 group_by(stand.age, treatment) %>%
                 summarize(Shrub_Cover.mean = mean(Shrub_Cover),
                           Shrub_Cover.sd = sd(Shrub_Cover), Shrub_Cover.n = n()),
@@ -283,12 +283,12 @@ p2 <- ggplot() +
                             x = stand.age, fill = "Shrub"), alpha = 0.3) +
   #Create a Tree Cover line
   geom_line(data = rx.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 37 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
+              filter(stand.age >= -10 & stand.age <= 35 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
               group_by(stand.age, treatment) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = stand.age, y = Tree_Cover.mean, color = 'Tree'), size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = rx.pixel.data %>% 
-                filter(stand.age >= -10 & stand.age <= 37 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
+                filter(stand.age >= -10 & stand.age <= 35 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
                 group_by(stand.age, treatment) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()),
@@ -297,12 +297,12 @@ p2 <- ggplot() +
                             x = stand.age, fill = "Tree"), alpha = 0.3) +
   #Create an Herb cover line
   geom_line(data = rx.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 37 & !is.na(Herb_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
+              filter(stand.age >= -10 & stand.age <= 35 & !is.na(Herb_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
               group_by(stand.age, treatment) %>%
               summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = stand.age, y = Herb_Cover.mean, color = 'Herb'), size = 1) + 
   #Herb Cover 95% CI
   geom_ribbon(data = rx.pixel.data %>% 
-                filter(stand.age >= -10 & stand.age <= 37 & !is.na(Herb_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
+                filter(stand.age >= -10 & stand.age <= 35 & !is.na(Herb_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
                 group_by(stand.age, treatment) %>%
                 summarize(Herb_Cover.mean = mean(Herb_Cover),
                           Herb_Cover.sd = sd(Herb_Cover), Herb_Cover.n = n()),
@@ -311,12 +311,12 @@ p2 <- ggplot() +
                             x = stand.age, fill = "Herb"), alpha = 0.3) +
   #Create a Bare cover line
   geom_line(data = rx.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 37 & !is.na(Bare_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>% 
+              filter(stand.age >= -10 & stand.age <= 35 & !is.na(Bare_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>% 
               group_by(stand.age, treatment) %>%
               summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = stand.age, y = Bare_Cover.mean, color = 'Bare'), size = 1) + 
   #Bare Cover 95% CI
   geom_ribbon(data = rx.pixel.data %>%
-                filter(stand.age >= -10 & stand.age <= 37 & !is.na(Bare_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
+                filter(stand.age >= -10 & stand.age <= 35 & !is.na(Bare_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
                 group_by(stand.age, treatment) %>%
                 summarize(Bare_Cover.mean = mean(Bare_Cover),
                           Bare_Cover.sd = sd(Bare_Cover), Bare_Cover.n = n()),
@@ -348,12 +348,12 @@ p2a <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
   geom_line(data = rx.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 37 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
+              filter(stand.age >= -10 & stand.age <= 35 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
               group_by(stand.age, treatment) %>%
               summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = 'Shrub', linetype = treatment), size = 1) +
   #Shrub Cover 95% CI
   geom_ribbon(data = rx.pixel.data %>%
-                filter(stand.age >= -10 & stand.age <= 37 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
+                filter(stand.age >= -10 & stand.age <= 35 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
                 group_by(stand.age, treatment) %>%
                 summarize(Shrub_Cover.mean = mean(Shrub_Cover),
                           Shrub_Cover.sd = sd(Shrub_Cover), Shrub_Cover.n = n()),
@@ -362,12 +362,12 @@ p2a <- ggplot() +
                             x = stand.age, fill = "Shrub", linetype = treatment), alpha = 0.3) +
   #Create a Tree Cover line
   geom_line(data = rx.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 37 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
+              filter(stand.age >= -10 & stand.age <= 35 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
               group_by(stand.age, treatment) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = stand.age, y = Tree_Cover.mean, color = 'Tree', linetype = treatment), size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = rx.pixel.data %>% 
-                filter(stand.age >= -10 & stand.age <= 37 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
+                filter(stand.age >= -10 & stand.age <= 35 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971) %>%
                 group_by(stand.age, treatment) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()),
@@ -376,12 +376,12 @@ p2a <- ggplot() +
                             x = stand.age, fill = "Tree", linetype = treatment), alpha = 0.3) +
   #Create a Woody Cover line
   geom_line(data = rx.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 37 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
+              filter(stand.age >= -10 & stand.age <= 35 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year >= 1971 & fire.year <= 2010) %>%
               group_by(stand.age, treatment) %>%
               summarize(Woody_Cover.mean = mean(Tree_Cover + Shrub_Cover)), mapping = aes(x = stand.age, y = Woody_Cover.mean, color = 'Woody', linetype = treatment), size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = rx.pixel.data %>% 
-                filter(stand.age >= -10 & stand.age <= 37 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971 & !is.na(fire.year)) %>%
+                filter(stand.age >= -10 & stand.age <= 35 & !is.na(Tree_Cover) & vi.year <= 2014 & fire.year <= 2010 & fire.year >= 1971 & !is.na(fire.year)) %>%
                 group_by(stand.age, treatment) %>%
                 summarize(Woody_Cover.mean = mean(Tree_Cover + Shrub_Cover),
                           Woody_Cover.sd = sd(Tree_Cover + Shrub_Cover), Woody_Cover.n = n()),
@@ -395,7 +395,7 @@ p2a <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   scale_colour_manual(name="Vegetation Type",values=cols.1, aesthetics = 'color') +
   scale_fill_manual(values = fills.1) + 
-  guides(fill = "none") + ylim(20,85) +
+  guides(fill = "none") + ylim(20,95) +
   ylab(expression('Cover (%)')) + xlab('Years Since Fire') 
 p2a
 
@@ -502,7 +502,7 @@ p4 <- ggplot() +
               filter((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1971) & stand.age > 2) %>% 
               group_by(date, fire.year.bin, treatment) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()) %>%  
-              filter(if_else(fire.year.bin == '2001-2010', Tree_Cover.n >= 750, Tree_Cover.n >= 250)),
+              filter(if_else(fire.year.bin == '2001-2010', Tree_Cover.n >= 290, Tree_Cover.n >= 100)),
               mapping = aes(x = date, y = Tree_Cover.mean, color = treatment, linetype = treatment), 
               size = 1) + 
   #Tree Cover 95% CI
@@ -511,7 +511,7 @@ p4 <- ggplot() +
                 group_by(date, fire.year.bin, treatment) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()) %>%  
-                filter(if_else(fire.year.bin == '2001-2010', Tree_Cover.n >= 750, Tree_Cover.n >= 250)),
+                filter(if_else(fire.year.bin == '2001-2010', Tree_Cover.n >= 290, Tree_Cover.n >= 100)),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -544,7 +544,7 @@ p5 <- ggplot() +
               # fire.year %notin% c(1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 1800, 2001, 2002, 2003)) %>%
               group_by(date, fire.year.bin, treatment) %>%
               summarize(ppt.mean = mean(ppt), count = n()) %>%  
-              filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)), 
+              filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)), 
             mapping = aes(x = date, y = ppt.mean, color = treatment, linetype = treatment), 
             size = 1) +
   #AET 95% CI
@@ -554,7 +554,7 @@ p5 <- ggplot() +
                 group_by(date, fire.year.bin, treatment) %>%
                 summarize(ppt.mean = mean(ppt),
                           ppt.sd = sd(ppt), ppt.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)),
+                filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)),
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -582,7 +582,7 @@ p6 <- ggplot() +
                        # fire.year %notin% c(1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 1800, 2001, 2002, 2003)) %>%
               group_by(date, fire.year.bin, treatment) %>%
               summarize(AET.mean = mean(AET), count = n()) %>%  
-              filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)),
+              filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)),
             mapping = aes(x = date, y = AET.mean, color = treatment, linetype = treatment), 
             size = 1) +
   #AET 95% CI
@@ -592,7 +592,7 @@ p6 <- ggplot() +
                 group_by(date, fire.year.bin, treatment) %>%
                 summarize(AET.mean = mean(AET),
                           AET.sd = sd(AET), AET.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)),
+                filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)),
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
                             ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -620,7 +620,7 @@ p7 <- ggplot() +
               filter((!is.na(Soil_Moisture) & fire.year <= 2010 & fire.year >= 1971 & stand.age > 2)) %>% 
               group_by(date, fire.year.bin, treatment) %>%
               summarize(Soil_Moisture.mean = mean(Soil_Moisture), count = n()) %>%  
-              filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)),
+              filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)),
               mapping = aes(x = date, y = Soil_Moisture.mean, color = treatment, linetype = treatment), 
             size = 1) + 
   #Soil Moisture 95% CI
@@ -629,7 +629,7 @@ p7 <- ggplot() +
                 group_by(date, fire.year.bin, treatment) %>%
                 summarize(Soil_Moisture.mean = mean(Soil_Moisture),
                           Soil_Moisture.sd = sd(Soil_Moisture), Soil_Moisture.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)),
+                filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)),
               mapping = aes(ymin=Soil_Moisture.mean - 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
                             ymax=Soil_Moisture.mean + 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -658,7 +658,7 @@ p8 <- ggplot() +
               filter((!is.na(Water_Stress) & fire.year <= 2010 & fire.year >= 1971 & stand.age > 2)) %>% 
               group_by(date, fire.year.bin, treatment) %>%
               summarize(Water_Stress.mean = mean(Water_Stress), count = n()) %>%  
-              filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)), 
+              filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)), 
             mapping = aes(x = date, y = Water_Stress.mean, color = treatment, linetype = treatment), 
             size = 1) + 
   #Water Stress 95% CI
@@ -667,7 +667,7 @@ p8 <- ggplot() +
                 group_by(date, fire.year.bin, treatment) %>%
                 summarize(Water_Stress.mean = mean(Water_Stress),
                           Water_Stress.sd = sd(Water_Stress), Water_Stress.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '2001-2010', count >= 750, count >= 250)),
+                filter(if_else(fire.year.bin == '2001-2010', count >= 290, count >= 100)),
               mapping = aes(ymin=Water_Stress.mean - 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
                             ymax=Water_Stress.mean + 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -878,3 +878,101 @@ f5 <- ggarrange(p14, p15, p16, p17, p18, p19, ncol = 1, nrow = 6, common.legend 
 f5
 
 ggsave(filename = 'Fig67_stand_age_bins_dieoff_treecover_water_stress_10pt_300m.png', height=28, width = 18, units = 'cm', dpi=900)
+
+#Rx Fire Sample characteristics
+p20 <- ggplot() +
+  #Data Summary
+  # geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2)) %>% 
+  #              dplyr::group_by(system.index, treatment) %>% 
+  #              summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.grp = fire.year.grp[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #            mapping = aes(y = elevation, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
+  # geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
+  #                 dplyr::group_by(system.index, treatment) %>% 
+  #                 summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.grp = fire.year.grp[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #               mapping = aes(y = elevation, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + 
+  geom_histogram(data = rx.pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1971 & stand.age > 2)) %>%
+                   dplyr::group_by(system.index, treatment) %>%
+                   summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+                 mapping = aes(y = elevation, fill = treatment), position = position_dodge()) +
+  theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), legend.position = c(0.15, 0.2), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ fire.year.bin) +
+  xlab('Fire Years') + ylab('Elevation (m)')
+p20
+
+p21 <- ggplot() +
+  #Data Summary
+  # geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2)) %>% 
+  #              dplyr::group_by(system.index, treatment) %>% 
+  #              summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #            mapping = aes(y = elevation, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
+  # geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
+  #                 dplyr::group_by(system.index, treatment) %>% 
+  #                 summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #               mapping = aes(y = elevation, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + 
+  geom_histogram(data = rx.pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1971 & stand.age > 2)) %>%
+                   dplyr::group_by(system.index, treatment) %>%
+                   summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+                 mapping = aes(y = clm_precip, fill = treatment), position = position_dodge()) +
+  theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), legend.position = c(0.15, 0.2), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ fire.year.bin) +
+  xlab('Fire Years') + ylab('Precip Climatology (mm/yr)')
+p21
+
+p22 <- ggplot() +
+  #Data Summary
+  # geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2)) %>% 
+  #              dplyr::group_by(system.index, treatment) %>% 
+  #              summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #            mapping = aes(y = elevation, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
+  # geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
+  #                 dplyr::group_by(system.index, treatment) %>% 
+  #                 summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #               mapping = aes(y = elevation, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + 
+  geom_histogram(data = rx.pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1971 & stand.age > 2)) %>%
+                   dplyr::group_by(system.index, treatment) %>%
+                   summarize(elevation = elevation[vi.year == 2010] , clm_temp = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+                 mapping = aes(y = clm_temp, fill = treatment), position = position_dodge()) +
+  theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), legend.position = c(0.15, 0.2), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ fire.year.bin) +
+  xlab('Fire Years') + ylab('Temp Climatology (C)')
+p22
+
+p23 <- ggplot() +
+  #Data Summary
+  # geom_point(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2)) %>% 
+  #              dplyr::group_by(system.index, treatment) %>% 
+  #              summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #            mapping = aes(y = elevation, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
+  # geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
+  #                 dplyr::group_by(system.index, treatment) %>% 
+  #                 summarize(elevation = elevation[vi.year == 2010] , clm_precip = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+  #               mapping = aes(y = elevation, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + 
+  geom_histogram(data = rx.pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1971 & stand.age > 2)) %>%
+                   dplyr::group_by(system.index, treatment) %>%
+                   summarize(latitude = latitude_mean[vi.year == 2010] , clm_temp = clm_precip_sum_mean[vi.year == 2010], fire.year.bin = fire.year.bin[vi.year == 2010], clm_temp = clm_temp_mean_mean[vi.year == 2015]),
+                 mapping = aes(y = latitude, fill = treatment), position = position_dodge()) +
+  theme_bw() +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), legend.position = c(0.15, 0.2), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ fire.year.bin) +
+  xlab('Count') + ylab('Latitude')
+p23
+
+f6 <- ggarrange(p20, p21, p22, p23, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
+f6
+
+ggsave(filename = 'Fig70_rxfire_sample_characteristics_300m.png', height=28, width = 18, units = 'cm', dpi=900)

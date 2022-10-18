@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: October 11, 2022
+#Date Updated: October 17, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -1542,8 +1542,9 @@ p35 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_point(data = pixel.data %>%
-              dplyr::filter((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) &
-                              if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+              dplyr::filter((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921) #&
+                              # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))
+                            ) %>%
               group_by(date, fire.year, treatment) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()), #%>%  
               # filter(if_else(fire.year.bin == '1981-2010', Tree_Cover.n >= 600, Tree_Cover.n >= 0)) %>%
@@ -1551,8 +1552,8 @@ p35 <- ggplot() +
               # summarize(Tree_Cover.diff = Tree_Cover.mean[treatment == 'Buffer'] - Tree_Cover.mean[treatment == 'Wildfire']), #%>%
             # group_by(date, fire.year.bin) %>%
             # summarize(Tree_Cover.diff.mean = mean(Tree_Cover.diff)),
-            mapping = aes(x = date, y = Tree_Cover.mean, color = treatment, shape = treatment), 
-            size = 1) + 
+            mapping = aes(x = date, y = Tree_Cover.mean, color = treatment), 
+            size = 0.1) + 
   #Tree Cover 95% CI
   # geom_ribbon(data = pixel.data %>%
   #               dplyr::filter((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) &

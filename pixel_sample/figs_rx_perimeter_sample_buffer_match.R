@@ -1065,3 +1065,52 @@ f7
 
 #Save the data
 ggsave(filename = 'Fig74_dieoff_tree_cover_differencetime_series_frap_perimeter_10pt_sample_300m.png', height=12, width= 14, units = 'cm', dpi=900)
+
+p26 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+  geom_point(data = rx.pixel.data %>%
+               dplyr::filter((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1971) #&
+                             # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))
+               ) %>%
+               group_by(date, fire.year, treatment) %>%
+               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()), #%>%  
+             # filter(if_else(fire.year.bin == '1981-2010', Tree_Cover.n >= 600, Tree_Cover.n >= 0)) %>%
+             # group_by(date, fire.year.bin) %>%
+             # summarize(Tree_Cover.diff = Tree_Cover.mean[treatment == 'Buffer'] - Tree_Cover.mean[treatment == 'Wildfire']), #%>%
+             # group_by(date, fire.year.bin) %>%
+             # summarize(Tree_Cover.diff.mean = mean(Tree_Cover.diff)),
+             mapping = aes(x = date, y = Tree_Cover.mean, color = treatment), 
+             size = 0.1) + 
+  #Tree Cover 95% CI
+  # geom_ribbon(data = pixel.data %>%
+  #               dplyr::filter((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) &
+  #                               if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #               group_by(date, fire.year.bin, treatment) %>%
+  #               summarize(Tree_Cover.mean = mean(Tree_Cover),
+  #                         Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()) %>%
+  #               filter(if_else(fire.year.bin == '1981-2010', Tree_Cover.n >= 490, Tree_Cover.n >= 0)) %>%
+  #               group_by(date, fire.year.bin) %>%
+  #               summarize(Tree_Cover.diff = Tree_Cover.mean[treatment == 'Wildfire'] - Tree_Cover.mean[treatment == 'Buffer'],
+  #                         Tree_Cover.se.diff = sqrt((Tree_Cover.sd[treatment == 'Wildfire']/sqrt(Tree_Cover.n[treatment == 'Wildfire']))^2 + (Tree_Cover.sd[treatment == 'Buffer']/sqrt(Tree_Cover.n[treatment == 'Buffer']))^2)), #%>%
+#             mapping = aes(ymin=Tree_Cover.diff - 1.96*(Tree_Cover.se.diff),
+#                           ymax=Tree_Cover.diff + 1.96*(Tree_Cover.se.diff),
+#                           x = date, fill = fire.year.bin), alpha = 0.3) +
+#Do the Formating
+scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_shape(name = 'Treatment') +
+  # scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Fire Year') +
+  guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
+  theme_dark() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_wrap(.~ fire.year) +
+  xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) + #ylim(25, 55) +
+  ylab(expression('Tree (%)')) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+p26
+
+#Save the data
+ggsave(filename = 'Fig75_fire year_tree_cover_frap_perimeter.png', height=18, width= 20, units = 'cm', dpi=900)

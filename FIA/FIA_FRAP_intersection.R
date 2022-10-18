@@ -150,7 +150,7 @@ frap <- read_sf(file.path(frap_in, "firep21_1.shp"))
 rxburn <- read_sf(file.path(frap_in, "rxburn21_1.shp"))
 
 #Extract the CRS from the FRAP data
-frap.crs <- crs(frap)
+frap.crs <- raster::crs(frap)
 
 #USFS Fire severity
 fire.sev <- read_sf(file.path(sev_in, "VegBurnSeverity18.shp"))
@@ -159,11 +159,11 @@ fire.sev <- read_sf(file.path(sev_in, "VegBurnSeverity18.shp"))
 # eco.region <- st_transform(eco.region, crs(frap))
 
 #Add California Boundary shape file
-us_states_20m <- states(cb = TRUE, resolution = "20m", class = "sf")
-
-ca_20m <- us_states_20m[us_states_20m$NAME == "California", ]
-ca_20m <- st_as_sf(ca_20m)
-ca_20m <- st_transform(ca_20m, frap.crs)
+# us_states_20m <- states(cb = TRUE, resolution = "20m", class = "sf")
+# 
+# ca_20m <- us_states_20m[us_states_20m$NAME == "California", ]
+# ca_20m <- st_as_sf(ca_20m)
+# ca_20m <- st_transform(ca_20m, frap.crs)
 
 #Select the Sierra Polygon
 # sierra <- eco.region[eco.region$US_L3NAME == 'Sierra Nevada', ]
@@ -198,9 +198,9 @@ frap.valid <- sf::st_make_valid(frap)
 
 #Add the fire date
 # frap$fire.date <- as.Date(frap$ALARM_DATE)
-frap$year <- frap$YEAR_
+frap.valid$year <- frap.valid$YEAR_
 # frap$Area.sf <- st_area(frap) #m^2 units
-
+frap.valid
 #Add date to FRAP Rx Burn
 rxburn <- st_transform(rxburn, frap.crs)
 # rxburn$fire.date <- as.Date(rxburn$START_DATE)
@@ -208,18 +208,38 @@ rxburn$year <- rxburn$YEAR_  #format(rxburn$fire.date, '%Y')
 # rxburn$Area.sf <- st_area(rxburn) #m^2 units
 rxburn$valid <- sf::st_is_valid(rxburn) #True or False
 # plot(frap)
-frap.south.sierra <- st_intersection(frap[frap$valid == TRUE, ], south.sierra.sf)
-plot(frap.south.sierra)
+frap.south.sierra <- st_intersection(frap.valid, south.sierra.sf) #[frap$valid == TRUE, ]
+# plot(frap.south.sierra)
 
 fia.transform <- st_transform(south.sierra.fia, frap.crs)
 
 frap.fia <- st_intersection(fia.transform, frap.south.sierra)
-plot(frap.fia)
-summary(frap.fia)
+# plot(frap.fia)
+# summary(frap.fia)
+frap.fia
 
-p1 <- ggplot() + geom_point(data = frap.fia %>% filter(year >= 1921 & year <= 2010), mapping = aes(x = year, y = basal_area.dead))
+p1 <- ggplot() + geom_point(data = frap.fia %>% filter(year >= 1921 & year <= 2010), mapping = aes(x = year, y = basal_area.dead)) + theme_bw() + 
+      theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+      axis.text.x = element_blank(), axis.title.x = element_blank()) #+
+      # xlab('Fire Year')
+p1
 
-ggsave(filename = 'Fig27_FIA_mortality_v_FRAP_year.png', height=16, width= 36, units = 'cm', dpi=900)
+p2 <- ggplot() + geom_point(data = frap.fia %>% filter(year >= 1921 & year <= 2010), mapping = aes(x = year, y = STDAGE)) + theme_bw() + 
+      theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+            axis.text.x = element_blank(), axis.title.x = element_blank()) #+
+      # xlab('Fire Year')
+p2
+
+p3 <- ggplot() + geom_point(data = frap.fia %>% filter(year >= 1921 & year <= 2010), mapping = aes(x = year, y = basal_area.all)) + theme_bw() + 
+      theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10)) +
+      xlab('Fire Year')
+p3
+
+f1 <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+f1
+
+ggsave(filename = 'Fig27_FIA_mortality_v_FRAP_year.png', height=28, width= 24, units = 'cm', dpi=900)
 #Create the ecoregion summaries
 # ecosubcd.summary <- join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & (!is.na(STDAGE) & STDAGE != 9999) & STDAGE > 0) %>% group_by(ECOSUBCD) %>% summarize(BAA.all = mean(basal_area.all), BAA.dead = mean(basal_area.dead), stdage.mean = mean(STDAGE), tpa.all = mean(tpa.all), tpa.dead = mean(tpa.dead))
 # 

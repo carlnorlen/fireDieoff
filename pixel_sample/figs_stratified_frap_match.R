@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: October 27, 2022
+#Date Updated: November 7, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -25,11 +25,15 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # pixel.data <- read.csv(file.path(dir_in, "fraprx_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
 fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_300pts_100elev_200precip_5temp_ts8_300m_20221027.csv"), header = TRUE, na.strings = "NaN")
+# fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_10pct_ts8_300m_20221107.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 fire.data$treatment <- 'Disturb'
 # list.files(fire_in)
 # list.files(fire_in)
 control.data <- read.csv(file.path(dir_in, "control_south_sierra_no_FRAP_undist_100pts_100elev_200precip_5temp_ts8_300m_20221025.csv"), header = TRUE, na.strings = "NaN")
+# control.data <- read.csv(file.path(dir_in, "control_south_sierra_no_FRAP_undist_10pct_ts8_300m_20221107.csv"), header = TRUE, na.strings = "NaN")
+
+# control_south_sierra_no_FRAP_undist_10pct_ts8_300m_20221107
 
 #Add Fire Columns
 control.data$fire_type_2010 <- -9999
@@ -483,13 +487,13 @@ ggsave(filename = 'Fig80_veg_cover_stand_age_10pt_300m_frap_perimeter.png', heig
 # fills.1 <- c("Shrub"="green","Tree"="forest green", "Woody" ="brown")
 # fills.1
 
-veg.diff <- pixel.data %>%
-  dplyr::filter(((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921 & stratlayer %in% strat.list) | (!is.na(Tree_Cover) & is.na(fire.year) & stratlayer %in% strat.list)) #&
-                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))
-  ) %>%
-  group_by(stratlayer, vi.year) %>%
-  summarize(Tree_Cover.diff = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']), count = n())
-veg.diff
+# veg.diff <- pixel.data %>%
+#   dplyr::filter(((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921 & stratlayer %in% strat.list) | (!is.na(Tree_Cover) & is.na(fire.year) & stratlayer %in% strat.list)) #&
+#                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))
+#   ) %>%
+#   group_by(stratlayer, vi.year) %>%
+#   summarize(Tree_Cover.diff = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']), count = n())
+# veg.diff
 #Do just the tree cover line, try to remove the control bins
 # p2a <- ggplot() +
 #   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
@@ -1006,7 +1010,7 @@ p14 <- ggplot() +
                              # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                              # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                     dplyr::group_by(system.index, fire.year.bin) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
                          Water_Stress = Water_Stress[vi.year == 2015]),
              mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
        geom_errorbar(data = pixel.data %>% 
@@ -1014,7 +1018,7 @@ p14 <- ggplot() +
                                      # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                                      # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                        dplyr::group_by(system.index, fire.year.bin) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
                          Water_Stress = Water_Stress[vi.year == 2015]),
              mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
   scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
@@ -1033,14 +1037,14 @@ p15 <- ggplot() +
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, fire.year.bin) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), Water_Stress = Water_Stress[vi.year == 2015]),
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), Water_Stress = Water_Stress[vi.year == 2015]),
              mapping = aes(x = fire.year.bin, y = RdTree * 100), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
   geom_errorbar(data = pixel.data %>% 
                   filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # &
                   # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                   dplyr::group_by(system.index, fire.year.bin) %>% 
-                  summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), Water_Stress = Water_Stress[vi.year == 2015]),
+                  summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), Water_Stress = Water_Stress[vi.year == 2015]),
                 mapping = aes(x = fire.year.bin, y = RdTree * 100), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
   scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
@@ -1083,14 +1087,14 @@ p17 <- ggplot() +
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, fire.year.bin) %>%
-               summarize(fire.year.bin = fire.year.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014, 2015)])),
+               summarize(fire.year.bin = fire.year.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)])),
              mapping = aes(x = fire.year.bin, y = Tree_Cover), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
   geom_errorbar(data = pixel.data %>% 
                   filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # &
                   # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                   dplyr::group_by(system.index, fire.year.bin) %>%
-                  summarize(fire.year.bin = fire.year.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014, 2015)])),
+                  summarize(fire.year.bin = fire.year.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)])),
                 mapping = aes(x = fire.year.bin, y = Tree_Cover), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
   scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
@@ -1123,30 +1127,6 @@ p18 <- ggplot() +
                 legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   xlab('Years Since Fire') + ylab('Water Stress (mm)') 
 p18
-
-#Pr-ET 4yr
-# p19 <- ggplot() +
-#   geom_point(data = pixel.data %>% 
-#                filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | (treatment == 'Control' & is.na(fire.year))) %>% # &
-#                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
-#                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
-#                dplyr::group_by(system.index, treatment) %>%
-#                summarize(PrET.4yr = sum(PrET[vi.year %in% c(2012, 2013, 2014, 2015)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-#              mapping = aes(x = fire.year.bin, y = PrET.4yr, color = treatment), stat = 'summary', size = 2, position = position_dodge(width = 1)) + 
-#   geom_errorbar(data = pixel.data %>% 
-#                   dplyr::filter(fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) %>% # & 
-#                   # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
-#                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
-#                   dplyr::group_by(system.index, treatment) %>%
-#                   summarize(PrET.4yr = sum(PrET[vi.year %in% c(2012, 2013, 2014, 2015)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-#                 mapping = aes(x = fire.year.bin, y = PrET.4yr, color = treatment), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
-#   scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-#         axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-#   xlab('Years Since Fire') + ylab('Pr-ET four-year (mm/4yr)')
-# p19
 
 #Combine the Panels
 f5 <- ggarrange(p14, p15, p16, p17, p18,  ncol = 1, nrow = 5, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)', 'e)'))
@@ -1391,3 +1371,270 @@ f7 <- ggarrange(p24, p25, ncol = 1, nrow = 2, common.legend = FALSE, heights = c
 f7
 #Save the data
 ggsave(filename = 'Fig86_dieoff_tree_cover_stand_age_time_series_frap_perimeter_10pt_sample_300m.png', height=12, width= 14, units = 'cm', dpi=900)
+
+#Tree Cover versus Elevation versus Latitude
+p26 <- ggplot() +
+  #Data Summary
+  geom_bin2d(data = pixel.data %>% 
+               filter((Tree_Cover >= 0 & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (Tree_Cover >= 0 & is.na(fire.year))) %>% # &
+               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+               dplyr::group_by(system.index, fire.year.bin) %>% 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2013, 2014)])), elevation = elevation[vi.year == 2015],
+                         latitude = latitude[vi.year == 2015]),
+             mapping = aes(x = latitude, y = elevation, fill = Tree_Cover, group = Tree_Cover), binwidth = c(0.025,100)) + 
+  # geom_errorbar(data = pixel.data %>% 
+  #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
+  #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+  #                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #                 dplyr::group_by(system.index, fire.year.bin) %>% 
+  #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+  #                           Water_Stress = Water_Stress[vi.year == 2015]),
+  #               mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + 
+  theme_bw() +
+  scale_fill_gradient(name = "Tree Cover (%)", limits = c(0, 100), low = "brown", high = "forest green", na.value = 'transparent') +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(.~ fire.year.bin) +
+  ylab('Elevation (m)')
+p26
+
+# pixel.data %>% summary()
+p29<- ggplot() +
+  #Data Summary
+  geom_bin2d(data = pixel.data %>% 
+               filter((!is.na(Tree_Cover) & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) %>% # &
+               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+               dplyr::group_by(system.index, fire.year.bin) %>% 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
+                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2017, 2018)])), elevation = elevation[vi.year == 2015],
+                         latitude = latitude[vi.year == 2015]),
+             mapping = aes(x = latitude, y = elevation, fill = dTree, group = dTree), binwidth = c(0.025, 100)) + 
+  # geom_errorbar(data = pixel.data %>% 
+  #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
+  #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+  #                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #                 dplyr::group_by(system.index, fire.year.bin) %>% 
+  #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+  #                           Water_Stress = Water_Stress[vi.year == 2015]),
+  #               mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + 
+  theme_bw() +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", midpoint = 0,na.value = 'transparent') +  # limits = c(-15, 10), 
+  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(.~ fire.year.bin) +
+  ylab('Elevation (m)')
+p29
+
+#ADS die-off
+p30 <- ggplot() +
+  geom_bin2d(data = pixel.data %>% 
+               filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & !is.na(tpa_max)) | (is.na(fire.year) & !is.na(tpa_max))) %>% # &
+               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+               dplyr::group_by(system.index, fire.year.bin) %>%
+               summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015], elevation = elevation[vi.year == 2015],
+                         latitude = latitude[vi.year == 2015]),
+             mapping = aes(x = latitude, y = elevation, fill = tpa_max, group = tpa_max), binwidth = c(0.025, 100)) + 
+  # geom_errorbar(data = pixel.data %>% 
+  #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & !is.na(tpa_max)) | (is.na(fire.year) & !is.na(tpa_max))) %>% # &
+  #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+  #                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #                 dplyr::group_by(system.index, fire.year.bin) %>%
+  #                 summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]),
+  #               mapping = aes(x = fire.year.bin, y = tpa_max), stat = 'summary', position = position_dodge(width = 1)) + theme_bw() +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_fill_gradient(name = "Die-off \n(trees per hectare)", low = "white", high = "red", na.value = 'transparent') +
+  theme_bw() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), legend.position = "right",
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ fire.year.bin) +
+  ylab('Elevation (m)')
+p30             
+
+p31<- ggplot() +
+  #Data Summary
+  geom_bin2d(data = pixel.data %>% 
+               filter((Tree_Cover >= 0 & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (Tree_Cover >= 0 & is.na(fire.year))) %>% # &
+               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+               dplyr::group_by(system.index, fire.year.bin) %>% 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2018, 2019)])), elevation = elevation[vi.year == 2015],
+                         latitude = latitude[vi.year == 2015], count = sum(elevation[vi.year == 2015]), n = n()),
+             mapping = aes(x = latitude, y = elevation), binwidth = c(0.025, 100)) + 
+  # geom_errorbar(data = pixel.data %>% 
+  #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
+  #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+  #                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #                 dplyr::group_by(system.index, fire.year.bin) %>% 
+  #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+  #                           Water_Stress = Water_Stress[vi.year == 2015]),
+  #               mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + 
+  theme_bw() +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  # scale_fill_gradient2(name = "Die-off (% Tree Cover)", limits = c(-50, 20), midpoint = 0, low = "red", mid = "white", high = "blue", na.value = 'transparent') +
+  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(.~ fire.year.bin) +
+  xlab('Latitude') + ylab('Elevation (m)')
+p31
+
+f8 <- ggarrange(p26, p29, p30, p31, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
+f8
+#Save the data
+ggsave(filename = 'Fig105_dieoff_tree_cover_fireyear_geographic_distribution.png', height=24, width= 24, units = 'cm', dpi=900)
+
+#Climate Space for Tree Cover
+p32 <- ggplot() +
+  #Data Summary
+  geom_bin2d(data = pixel.data %>% 
+               filter((Tree_Cover >= 0 & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (Tree_Cover >= 0 & is.na(fire.year))) %>% # &
+               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+               dplyr::group_by(system.index, fire.year.bin) %>% 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2013, 2014)])), clm_precip_sum = clm_precip_sum[vi.year == 2015],
+                         clm_temp_mean = clm_temp_mean[vi.year == 2015]),
+             mapping = aes(x = clm_temp_mean, y = clm_precip_sum, fill = Tree_Cover, group = Tree_Cover), binwidth = c(1,100)) + 
+  # geom_errorbar(data = pixel.data %>% 
+  #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
+  #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+  #                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #                 dplyr::group_by(system.index, fire.year.bin) %>% 
+  #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+  #                           Water_Stress = Water_Stress[vi.year == 2015]),
+  #               mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + 
+  theme_bw() +
+  scale_fill_gradient(name = "Tree Cover (%)", limits = c(0, 100), low = "brown", high = "forest green", na.value = 'transparent') +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(.~ fire.year.bin) +
+  ylab('Annual Precip (1980-2010)')
+p32
+
+# pixel.data %>% summary()
+p33 <- ggplot() +
+  #Data Summary
+  geom_bin2d(data = pixel.data %>% 
+               filter((!is.na(Tree_Cover) & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) %>% # &
+               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+               dplyr::group_by(system.index, fire.year.bin) %>% 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
+                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2017, 2018)])), elevation = elevation[vi.year == 2015],
+                         latitude = latitude[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
+                         clm_temp_mean = clm_temp_mean[vi.year == 2015]),
+             mapping = aes(x = clm_temp_mean, y = clm_precip_sum,  fill = dTree, group = dTree), binwidth = c(1, 100)) + 
+  # geom_errorbar(data = pixel.data %>% 
+  #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
+  #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+  #                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #                 dplyr::group_by(system.index, fire.year.bin) %>% 
+  #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+  #                           Water_Stress = Water_Stress[vi.year == 2015]),
+  #               mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + 
+  theme_bw() +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", midpoint = 0,na.value = 'transparent') +  # limits = c(-15, 10), 
+  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(.~ fire.year.bin) +
+  ylab('Annual Precip (1980-2010)')
+p33
+
+p34 <- ggplot() +
+  #Data Summary
+  geom_bin2d(data = pixel.data %>% 
+               filter((Tree_Cover >= 0 & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (Tree_Cover >= 0 & is.na(fire.year))) %>% # &
+               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+               dplyr::group_by(system.index, fire.year.bin) %>% 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2018, 2019)])), elevation = elevation[vi.year == 2015],
+                         latitude = latitude[vi.year == 2015], count = sum(elevation[vi.year == 2015]), clm_precip_sum = clm_precip_sum[vi.year == 2015],
+                         clm_temp_mean = clm_temp_mean[vi.year == 2015]),
+             mapping = aes(x = clm_temp_mean, y = clm_precip_sum), binwidth = c(1, 100)) + 
+  # geom_errorbar(data = pixel.data %>% 
+  #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
+  #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
+  #                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
+  #                 dplyr::group_by(system.index, fire.year.bin) %>% 
+  #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+  #                           Water_Stress = Water_Stress[vi.year == 2015]),
+  #               mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + 
+  theme_bw() +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  # scale_fill_gradient2(name = "Die-off (% Tree Cover)", limits = c(-50, 20), midpoint = 0, low = "red", mid = "white", high = "blue", na.value = 'transparent') +
+  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(.~ fire.year.bin) +
+  xlab('Average Temp (1980-2010)') + ylab('Annual Precip (1980-2010)')
+p34
+
+f9 <- ggarrange(p32, p33, p34, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+f9
+#Save the data
+ggsave(filename = 'Fig106_dieoff_tree_cover_fireyear_climate_distribution.png', height=18, width= 24, units = 'cm', dpi=900)
+
+pixel.test <- pixel.data %>%
+  # dplyr::mutate(socal = as.integer(USFS_zone == 262), sierra = as.integer(USFS_zone == 261)) %>% #Make new columns that have 0,1 for Sierra and socal to calculate proportions later
+  dplyr::mutate(clm_precip.bin = cut(clm_precip_sum, breaks = seq(200, 2000, by = 200)),
+                clm_temp.bin = cut(clm_temp_mean, breaks = seq(0, 18, by = 2)),
+  ) 
+
+# pixel.test %>% summary()
+# pixel.test %>%
+#   dplyr::filter(((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) #&
+#                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))
+#   ) %>%
+#   group_by(date, clm_precip.bin, clm_temp.bin, fire.year.bin) %>%
+#   summarize(Tree_Cover.mean = mean(Tree_Cover), count = n())
+
+#Tree Cover climate space test
+p35 <- ggplot() + 
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+  geom_point(data = pixel.test %>%
+               dplyr::filter(((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) #&
+                             # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))
+               ) %>%
+               group_by(date, clm_precip.bin, clm_temp.bin, fire.year.bin) %>%
+               summarize(Tree_Cover.mean = mean(Tree_Cover), count = n()) %>%
+               filter(any(count >= 20 & fire.year.bin == 'No Fire') & any(count >= 20 & (fire.year.bin =='1981-2010' | fire.year.bin =='1951-1980' | fire.year.bin =='1921-1950'))),
+             # filter(if_else(fire.year.bin == '1981-2010', Tree_Cover.n >= 600, Tree_Cover.n >= 0)) %>%
+             # group_by(date, fire.year.bin) %>%
+             # summarize(Tree_Cover.diff = Tree_Cover.mean[treatment == 'Buffer'] - Tree_Cover.mean[treatment == 'Wildfire']), #%>%
+             # group_by(date, fire.year.bin) %>%
+             # summarize(Tree_Cover.diff.mean = mean(Tree_Cover.diff)),
+             mapping = aes(x = date, y = Tree_Cover.mean, color = fire.year.bin), 
+             size = 0.1) + 
+  #Do the Formating
+  # scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  # scale_shape(name = 'Treatment') +
+  # scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Fire Year') +
+  guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
+  theme_dark() +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_wrap(clm_precip.bin ~ clm_temp.bin) +
+  xlim(as.Date('1985-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) + #ylim(25, 55) +
+  ylab(expression('Tree (%)')) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+p35
+
+ggsave(filename = 'Fig107_fire_year_time_series_climate_distribution.png', height=36, width= 36, units = 'cm', dpi=900)

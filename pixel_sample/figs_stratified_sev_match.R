@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: November 8, 2022
+#Date Updated: November 11, 2022
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -1419,7 +1419,7 @@ p26 <- ggplot() +
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2013, 2014)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(x = latitude, y = elevation, fill = Tree_Cover, group = Tree_Cover), binwidth = c(0.1, 200)) + 
+             mapping = aes(x = latitude, y = elevation, fill = Tree_Cover, group = Tree_Cover), binwidth = c(0.25, 500)) + 
   # geom_errorbar(data = pixel.data %>% 
   #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
   #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
@@ -1450,7 +1450,7 @@ p29<- ggplot() +
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2017, 2018)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(x = latitude, y = elevation, fill = dTree, group = dTree), binwidth = c(0.1, 200)) + 
+             mapping = aes(x = latitude, y = elevation, fill = dTree, group = dTree), binwidth = c(0.25, 500)) + 
   # geom_errorbar(data = pixel.data %>% 
   #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
   #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
@@ -1479,7 +1479,7 @@ p30 <- ggplot() +
                dplyr::group_by(system.index, sev.bin) %>%
                summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015], elevation = elevation[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(x = latitude, y = elevation, fill = tpa_max, group = tpa_max), binwidth = c(0.1, 200)) + 
+             mapping = aes(x = latitude, y = elevation, fill = tpa_max, group = tpa_max), binwidth = c(0.25, 500)) + 
   # geom_errorbar(data = pixel.data %>% 
   #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & !is.na(tpa_max)) | (is.na(fire.year) & !is.na(tpa_max))) %>% # &
   #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
@@ -1508,7 +1508,7 @@ p31<- ggplot() +
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2018, 2019)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], count = sum(elevation[vi.year == 2015]), n = n(), SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(x = latitude, y = elevation), binwidth = c(0.1, 200)) + 
+             mapping = aes(x = latitude, y = elevation), binwidth = c(0.25, 500)) + 
   # geom_errorbar(data = pixel.data %>% 
   #                 filter((treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921 & stand.age > 2 & stratlayer %in% strat.list) | (is.na(fire.year) & stratlayer %in% strat.list)) %>% # & 
   #                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
@@ -1530,7 +1530,7 @@ p31
 f8 <- ggarrange(p26, p29, p31, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
 f8
 #Save the data
-ggsave(filename = 'Fig109_sev_fire_dieoff_tree_cover_fireyear_geographic_distribution.png', height=24, width= 24, units = 'cm', dpi=900)
+ggsave(filename = 'Fig109_sev_fire_dieoff_tree_cover_fireyear_geographic_distribution.png', height=18, width= 24, units = 'cm', dpi=900)
 
 p29a<- ggplot() +
   #Data Summary

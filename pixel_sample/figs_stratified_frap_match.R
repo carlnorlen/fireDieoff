@@ -143,7 +143,7 @@ pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   # bin >= 1 ~ '1900',
   # bin == 2 ~ '1909-1910',
   # bin >= 1911 & bin <= 1920 ~ '95-104', #Calculated relative to 2015
-  is.na(fire.year) & fire.year < 1980 ~ 'No Fire',
+  is.na(fire.year) | fire.year < 1980 ~ 'No Fire',
   fire.year <=  1920 ~ '1900-1919',#'81-95',
   # fire.year >= 1936 & fire.year <= 1950 ~ '65-79',
   # fire.year >= 1951 & fire.year <= 1965 ~ '50-64',
@@ -153,7 +153,7 @@ pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   # fire.year >= 1971 & fire.year <= 1980 ~ '35-44',
   #fire.year >= 1999 & fire.year <= 2001 ~ '1999-2001',#'31-55',
   # fire.year >= 1991 & fire.year <= 2000 ~ '15-24',
-  fire.year >= 1980 & fire.year <= 2010 ~ '1981-2010',
+  fire.year >= 1980 & fire.year <= 2010 ~ '1980-2010',
   #fire.year >= 1986 & fire.year <= 2000 ~ '1986-2000',
   #fire.year >= 2001 & fire.year <= 2010 ~ '2001-2010',
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
@@ -611,7 +611,7 @@ p4 <- ggplot() +
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, fire.year.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()) %>%  
-              filter(if_else(fire.year.bin == '1981-2010', Tree_Cover.n >= 3000, Tree_Cover.n >= 0)),
+              filter(if_else(fire.year.bin == '1980-2010', Tree_Cover.n >= 3000, Tree_Cover.n >= 0)),
               mapping = aes(x = date, y = Tree_Cover.mean), 
               size = 1) + 
   #Tree Cover 95% CI
@@ -623,7 +623,7 @@ p4 <- ggplot() +
                 group_by(date, fire.year.bin) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()) %>%  
-              filter(if_else(fire.year.bin == '1981-2010', Tree_Cover.n >= 3000, Tree_Cover.n >= 0)),
+              filter(if_else(fire.year.bin == '1980-2010', Tree_Cover.n >= 3000, Tree_Cover.n >= 0)),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             x = date), alpha = 0.3) +
@@ -658,7 +658,7 @@ p5 <- ggplot() +
                        # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, fire.year.bin) %>%
               summarize(ppt.mean = mean(ppt), ppt.n = n(), count = n()) %>%  
-              filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+              filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
             mapping = aes(x = date, y = ppt.mean), 
             size = 1) +
   #AET 95% CI
@@ -670,7 +670,7 @@ p5 <- ggplot() +
                 group_by(date, fire.year.bin) %>%
                 summarize(ppt.mean = mean(ppt),
                           ppt.sd = sd(ppt), ppt.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+                filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
                             x = date), alpha = 0.3) +
@@ -700,7 +700,7 @@ p6 <- ggplot() +
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, fire.year.bin) %>%
               summarize(AET.mean = mean(AET), AET.n = n(), count = n()) %>%  
-              filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+              filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
             mapping = aes(x = date, y = AET.mean), 
             size = 1) +
   #AET 95% CI
@@ -712,7 +712,7 @@ p6 <- ggplot() +
                 group_by(date, fire.year.bin) %>%
                 summarize(AET.mean = mean(AET),
                           AET.sd = sd(AET), AET.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+                filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
                             ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date), alpha = 0.3) +
@@ -744,7 +744,7 @@ p7 <- ggplot() +
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, fire.year.bin) %>%
               summarize(Soil_Moisture.mean = mean(Soil_Moisture), Soil_Moisture.n = n(), count = n()) %>%  
-              filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+              filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
               mapping = aes(x = date, y = Soil_Moisture.mean), 
             size = 1) + 
   #Soil Moisture 95% CI
@@ -756,7 +756,7 @@ p7 <- ggplot() +
                 group_by(date, fire.year.bin) %>%
                 summarize(Soil_Moisture.mean = mean(Soil_Moisture),
                           Soil_Moisture.sd = sd(Soil_Moisture), Soil_Moisture.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+                filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
               mapping = aes(ymin=Soil_Moisture.mean - 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
                             ymax=Soil_Moisture.mean + 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
                             x = date), alpha = 0.3) +
@@ -788,7 +788,7 @@ p8 <- ggplot() +
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, fire.year.bin) %>%
               summarize(Water_Stress.mean = mean(Water_Stress), Water_Stress.n = n(), count = n()) %>%  
-              filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+              filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
             mapping = aes(x = date, y = Water_Stress.mean), 
             size = 1) + 
   #Water Stress 95% CI
@@ -800,7 +800,7 @@ p8 <- ggplot() +
                 group_by(date, fire.year.bin) %>%
                 summarize(Water_Stress.mean = mean(Water_Stress),
                           Water_Stress.sd = sd(Water_Stress), Water_Stress.n = n(), count = n()) %>%  
-                filter(if_else(fire.year.bin == '1981-2010', count >= 3000, count >= 0)),
+                filter(if_else(fire.year.bin == '1980-2010', count >= 3000, count >= 0)),
               mapping = aes(ymin=Water_Stress.mean - 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
                             ymax=Water_Stress.mean + 1.96*(Water_Stress.sd / sqrt(Water_Stress.n)),
                             x = date), alpha = 0.3) +
@@ -989,7 +989,7 @@ p18 <- ggplot() +
                 axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
                 legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
                 legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  xlab('Years Since Fire') + ylab('Water Stress (mm)') 
+  xlab('Fire Year') + ylab('Water Stress (mm)') 
 p18
 
 #Combine the Panels
@@ -1154,7 +1154,7 @@ p24 <- ggplot() +
   ylab(expression(atop('ADS Die-off (Wildfire - Control)', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p24
 
-#Create the
+# Difference between wilfire and control
 
 p25 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
@@ -1236,12 +1236,14 @@ f7
 #Save the data
 ggsave(filename = 'Fig86_dieoff_tree_cover_stand_age_time_series_frap_perimeter_10pt_sample_300m.png', height=12, width= 14, units = 'cm', dpi=900)
 
+pixel.data %>% summary()
+
 #Tree Cover versus Elevation versus Latitude
 p26 <- ggplot() +
   #Data Summary
   geom_bin2d(data = pixel.data %>% 
                filter((Tree_Cover >= 0 & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (Tree_Cover >= 0 & is.na(fire.year))) %>% # &
-               filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>% #Filter by the tree types
+               (lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>% #Filter by the tree types
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, fire.year.bin) %>% 
@@ -1359,13 +1361,14 @@ p31
 f8 <- ggarrange(p26, p29, p31, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
 f8
 #Save the data
-ggsave(filename = 'Fig105_dieoff_tree_cover_fireyear_geographic_distribution.png', height=18, width= 24, units = 'cm', dpi=900)
+ggsave(filename = 'Fig105_dieoff_tree_cover_fireyear_1980_geographic_distribution.png', height=18, width= 24, units = 'cm', dpi=900)
 
 #Climate Space for Tree Cover
 p32 <- ggplot() +
   #Data Summary
   geom_bin2d(data = pixel.data %>% 
                filter((Tree_Cover >= 0 & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (Tree_Cover >= 0 & is.na(fire.year))) %>% # &
+               filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, fire.year.bin) %>% 
@@ -1396,6 +1399,7 @@ p33 <- ggplot() +
   #Data Summary
   geom_bin2d(data = pixel.data %>% 
                filter((!is.na(Tree_Cover) & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) %>% # &
+               filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, fire.year.bin) %>% 
@@ -1414,7 +1418,7 @@ p33 <- ggplot() +
   #               mapping = aes(x = fire.year.bin, y = dTree), stat = 'summary', position = position_dodge(width = 1)) + 
   theme_bw() +
   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", midpoint = 0,na.value = 'transparent') +  # limits = c(-15, 10), 
+  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", midpoint = 0, limits = c(-10, 5), na.value = 'transparent') +  # limits = c(-15, 10), 
   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -1426,6 +1430,7 @@ p34 <- ggplot() +
   #Data Summary
   geom_bin2d(data = pixel.data %>% 
                filter((Tree_Cover >= 0 & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (Tree_Cover >= 0 & is.na(fire.year))) %>% # &
+               filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, fire.year.bin) %>% 
@@ -1455,8 +1460,9 @@ p34
 f9 <- ggarrange(p32, p33, p34, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
 f9
 #Save the data
-ggsave(filename = 'Fig106_dieoff_tree_cover_fireyear_climate_distribution.png', height=18, width= 24, units = 'cm', dpi=900)
+ggsave(filename = 'Fig106_dieoff_tree_cover_fireyear_1980_climate_distribution.png', height=18, width= 24, units = 'cm', dpi=900)
 
+#Add climate bins
 pixel.test <- pixel.data %>%
   # dplyr::mutate(socal = as.integer(USFS_zone == 262), sierra = as.integer(USFS_zone == 261)) %>% #Make new columns that have 0,1 for Sierra and socal to calculate proportions later
   dplyr::mutate(clm_precip.bin = cut(clm_precip_sum, breaks = seq(200, 2000, by = 200)),
@@ -1479,9 +1485,10 @@ p35 <- ggplot() +
                dplyr::filter(((!is.na(Tree_Cover) & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) #&
                              # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))
                ) %>%
+               filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                group_by(date, clm_precip.bin, clm_temp.bin, fire.year.bin) %>%
                summarize(Tree_Cover.mean = mean(Tree_Cover), count = n()) %>%
-               filter(any(count >= 20 & fire.year.bin == 'No Fire') & any(count >= 20 & (fire.year.bin =='1981-2010' | fire.year.bin =='1951-1980' | fire.year.bin =='1921-1950'))),
+               filter(any(count >= 20 & fire.year.bin == 'No Fire') & any(count >= 20 & (fire.year.bin =='1980-2010'))),
              # filter(if_else(fire.year.bin == '1981-2010', Tree_Cover.n >= 600, Tree_Cover.n >= 0)) %>%
              # group_by(date, fire.year.bin) %>%
              # summarize(Tree_Cover.diff = Tree_Cover.mean[treatment == 'Buffer'] - Tree_Cover.mean[treatment == 'Wildfire']), #%>%
@@ -1505,12 +1512,13 @@ p35 <- ggplot() +
   ylab(expression('Tree (%)')) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p35
 
-ggsave(filename = 'Fig107_fire_year_time_series_climate_distribution.png', height=36, width= 36, units = 'cm', dpi=900)
+ggsave(filename = 'Fig107_fire_year_1980_time_series_climate_distribution.png', height=36, width= 36, units = 'cm', dpi=900)
 
 p36 <- ggplot() +
   #Data Summary
   geom_bin2d(data = pixel.data %>% 
                filter((!is.na(Tree_Cover) & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) %>% # &
+               filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, fire.year.bin) %>% 
@@ -1600,3 +1608,11 @@ p38<- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(veg_name ~ fire.year.bin) +
   ylab('Elevation (m)')
 p38
+# 
+# p39
+# 
+# ggplot() +
+# geom_point(data = pixel.data %>%
+#                   filter((!is.na(Tree_Cover) & treatment == 'Disturb' & fire.year <= 2010 & fire.year >= 1921) | (!is.na(Tree_Cover) & is.na(fire.year))) %>% # &
+#                   filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>% #Filter by the tree types
+#            )

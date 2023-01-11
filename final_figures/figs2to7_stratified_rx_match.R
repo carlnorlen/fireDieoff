@@ -696,7 +696,7 @@ p15
 f4 <- ggarrange(p11, p12, p13, p14, p15,  ncol = 1, nrow = 5, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)', 'e)'))
 f4
 
-ggsave(filename = 'Fig5b_stand_age_bins_dieoff_treecover_water_stress_10pt_300m.png', height=24, width = 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig5b_rx_fire_bar_chart_comparison.png', height=24, width = 18, units = 'cm', dpi=900)
 # summary(pixel.data)
 
 #Figure 6b

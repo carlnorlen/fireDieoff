@@ -1,6 +1,6 @@
 #Author: Carl Norlen
-#Date Created: May 11, 2022
-#Date Updated: January 17, 2023
+#Date Created: January 23, 2023
+#Date Updated: January 24, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -13,7 +13,7 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 
 # install.packages(c('zoo'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
-library(segmented)
+# library(segmented)
 #Set the working directory
 setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 
@@ -27,7 +27,7 @@ frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_40
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_4km_buffer_400pt_ts16_300m_20230123.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_4km_buffer_400pt_ts16_300m_20230124.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -52,7 +52,7 @@ rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_400pt_ts8_3
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_4km_buffer_400pt_ts16_300m_20230123.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_400pt_ts16_300m_20230124.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -125,7 +125,7 @@ pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
 pixel.data %>% summary()
 
 pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
-  is.na(fire_year_2019) | fire.year < 1980 ~ 'No Fire',
+  treatment == 'Control' | fire.year < 1980 ~ 'No Fire',
   fire.year >= 1980 & fire.year <= 2010 ~ '1980-2010',
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
@@ -154,10 +154,10 @@ pixel.filter <- pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & Tr
                     fire.year.bin = fire.year.bin[vi.year == 2010],
                     treatment = treatment[vi.year == 2010],
                     fire.type.bin = fire.type.bin[vi.year == 2010])
-wild.control <- pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == "Wildfire")
-wild.disturb <- pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == "Wildfire")
-rx.control <- pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == "Rxfire")
-rx.disturb <- pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == "Rxfire")  
+wild.control <- pixel.filter %>% filter(fire.year.bin == 'No Fire' & fire.type.bin == "Wildfire")
+wild.disturb <- pixel.filter %>% filter(fire.year.bin == '1980-2010' & fire.type.bin == "Wildfire")
+rx.control <- pixel.filter %>% filter(fire.year.bin == 'No Fire' & fire.type.bin == "Rxfire")
+rx.disturb <- pixel.filter %>% filter(fire.year.bin == '1980-2010' & fire.type.bin == "Rxfire")  
   
 
 #Models for Wild Fire
@@ -209,10 +209,10 @@ r2.text <- data.frame(
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.c)))),
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.d))))
   ),
-  treatment = c('Control', 'Disturb', 'Control', 'Disturb'),
+  fire.year.bin = c('No Fire', '1980-2010', 'No Fire', '1980-2010'),
   fire.type.bin = c('Wildfire', 'Wildfire', 'Rxfire', 'Rxfire'),
-  x = c(3000, 3000, 3000, 3000),
-  y = c(-30, -30, -30, -30)
+  x = c(3500, 3500, 3500, 3500),
+  y = c(-20, -20, -20, -20)
 )
 
 # letter.text <- data.frame(label = c("a)", "b)", "c)", "d)"),
@@ -231,9 +231,11 @@ p1 <- ggplot(data = all.models) +
   #Piecewise fit uncertainty
   geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dNDMI.se.fit), alpha = 0.4) +  
   
-  scale_fill_gradient2(limits = c(0,1500), breaks = c(0,375,750,1125), midpoint = 750, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') + 
-    facet_grid(fire.type.bin ~ treatment) +
+  scale_fill_gradient2(limits = c(0,1200), breaks = c(0,300,600,900), midpoint = 600, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+    facet_grid(fire.type.bin ~ fire.year.bin) +
+  # scale_alpha(range = c(1, 1), limits = c(50, 1000), na.value = 0.4) +
   # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +
+  labs(fill = "Grid Cells") +
   #Add the R^2 values
   geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
   #Add the R^2 text
@@ -242,4 +244,18 @@ p1 <- ggplot(data = all.models) +
   xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (Relative dTree %)')
 p1
 
-ggsave(filename = 'Fig6a_water_stress_dTree_300m.png', height=24, width= 24, units = 'cm', dpi=900)
+p2 <- p1 + theme(
+  legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+  legend.justification = c(1, 0),
+  legend.position = c(0.15, 0.55),
+  legend.text = element_text(size = 10),
+  legend.title = element_text(size = 10),
+  legend.direction = "vertical") +
+  guides(fill = guide_colorbar(barwidth = 1, barheight = 3,
+                               title.position = "top", 
+                               title.hjust = 0.5, 
+                               ticks.colour = "black"))
+
+p2
+
+ggsave(filename = 'Fig6a_water_stress_dTree_300m.png', height=16, width= 16, units = 'cm', dpi=900)

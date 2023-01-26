@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: January 24, 2023
+#Date Updated: January 25, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -24,13 +24,13 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # pixel.data <- read.csv(file.path(dir_in, "frapsev_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_400pt_ts8_300m_20230112.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_400pt_ts8_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Sev_4km_buffer_400pt_ts16_300m_20230123.csv"), header = TRUE, na.strings = "NaN")
+sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Sev_2km_buffer_400pt_ts16_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
 summary(control.data)
 #Add Fire Columns
 # control.data$fire_sev_2010 <- -9999
@@ -83,15 +83,15 @@ sev.pixel.data$year <- as.numeric(sev.pixel.data$year) + 1984
 sev.pixel.data[sev.pixel.data$tpa_max < 0,]$tpa_max <- NA
 
 #Convert fire data -9999 to NAs
-sev.pixel.data[sev.pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
+# sev.pixel.data[sev.pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
 sev.pixel.data[sev.pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2010 == -9999,]$fire_ID_2010 <- NA
 sev.pixel.data[sev.pixel.data$fire_count_2010 == -9999,]$fire_count_2010 <- NA
-sev.pixel.data[sev.pixel.data$fire_type_2019 == -9999,]$fire_type_2019 <- NA
+# sev.pixel.data[sev.pixel.data$fire_type_2019 == -9999,]$fire_type_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2019 == -9999,]$fire_ID_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_count_2019 == -9999,]$fire_count_2019 <- NA
-sev.pixel.data[sev.pixel.data$fire_type_2020 == -9999,]$fire_type_2020 <- NA
+# sev.pixel.data[sev.pixel.data$fire_type_2020 == -9999,]$fire_type_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_year_2020 == -9999,]$fire_year_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2020 == -9999,]$fire_ID_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_count_2020 == -9999,]$fire_count_2020 <- NA
@@ -349,8 +349,8 @@ p6 <- ggplot() +
               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & 
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, sev.bin, treatment) %>%
-              summarize(Tree_Cover.mean = mean(Tree_Cover), count = n()) %>%  
-              filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+              summarize(Tree_Cover.mean = mean(Tree_Cover), count = n()), #%>%  
+              # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
             mapping = aes(x = date, y = Tree_Cover.mean, color = treatment, linetype = treatment), 
             size = 1) + 
   #Tree Cover 95% CI
@@ -361,8 +361,8 @@ p6 <- ggplot() +
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
                 group_by(date, sev.bin, treatment) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
-                          Tree_Cover.sd = sd(Tree_Cover), count = n()) %>%  
-                filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+                          Tree_Cover.sd = sd(Tree_Cover), count = n()), # %>%  
+                # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(count)),
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(count)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -396,8 +396,8 @@ p7 <- ggplot() +
               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & 
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, sev.bin, treatment) %>%
-              summarize(ppt.mean = mean(ppt), ppt.n = n(), count = n()) %>%  
-              filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+              summarize(ppt.mean = mean(ppt), ppt.n = n(), count = n()), # %>%  
+              # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
             mapping = aes(x = date, y = ppt.mean, color = treatment, linetype = treatment), 
             size = 1) +
   #Precip 95% CI
@@ -408,8 +408,8 @@ p7 <- ggplot() +
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
                 group_by(date, sev.bin, treatment) %>%
                 summarize(ppt.mean = mean(ppt),
-                          ppt.sd = sd(ppt), ppt.n = n(), count = n()) %>%  
-                filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+                          ppt.sd = sd(ppt), ppt.n = n(), count = n()), #%>%
+                # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -438,8 +438,8 @@ p8 <- ggplot() +
               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & 
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, sev.bin, treatment) %>%
-              summarize(AET.mean = mean(AET), AET.n = n(), count = n()) %>%  
-              filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+              summarize(AET.mean = mean(AET), AET.n = n(), count = n()), # %>%  
+              # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
             mapping = aes(x = date, y = AET.mean, color = treatment, linetype = treatment), 
             size = 1) +
   #AET 95% CI
@@ -450,8 +450,8 @@ p8 <- ggplot() +
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
                 group_by(date, sev.bin, treatment) %>%
                 summarize(AET.mean = mean(AET),
-                          AET.sd = sd(AET), AET.n = n(), count = n()) %>%  
-                filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+                          AET.sd = sd(AET), AET.n = n(), count = n()), #%>%  
+                # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
                             ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date, fill = treatment), alpha = 0.3) +
@@ -526,8 +526,8 @@ p10 <- ggplot() +
               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & 
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
               group_by(date, sev.bin, treatment) %>%
-              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()) %>%  
-              filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()), #%>%  
+              # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
             mapping = aes(x = date, y = PrET.mean, color = treatment, linetype = treatment), 
             size = 1) + 
   #Water Stress 95% CI
@@ -538,8 +538,8 @@ p10 <- ggplot() +
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
                 group_by(date, sev.bin, treatment) %>%
                 summarize(PrET.mean = mean(PrET),
-                          PrET.sd = sd(PrET), PrET.n = n(), count = n()) %>%  
-                filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+                          PrET.sd = sd(PrET), PrET.n = n(), count = n()), #%>%  
+                # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
                             ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
                             x = date, fill = treatment), alpha = 0.3) +

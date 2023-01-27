@@ -15,7 +15,7 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 lapply(p,require,character.only=TRUE)
 # library(segmented)
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
 dir_in <- "D:\\Fire_Dieoff"
@@ -179,14 +179,14 @@ sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_c
                                   '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
                                   '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
-summary(pixel.data)
+summary(sev.pixel.data)
 
-sev.pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', '1980-2010',  'No Fire')))#
+sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', '1980-2010',  'No Fire')))#
 
 #Recode the veg type data
-sev.pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
-                              '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
-                              '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
+# sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
+#                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
+#                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
 
 #Filter the data into subsets for modeling
@@ -232,9 +232,9 @@ sev.lo.disturb$dTree.fit = broken.line(sev.lo.disturb.seg)$fit
 
 #SE fit
 sev.hi.control$dTree.se.fit = broken.line(sev.hi.control.seg)$se.fit
-sev.hi.disturb$dNDMI.se.fit = broken.line(sev.hi.disturb.seg)$se.fit
-sev.lo.control$dNDMI.se.fit = broken.line(sev.lo.control.seg)$se.fit
-sev.lo.disturb$dNDMI.se.fit = broken.line(sev.lo.disturb.seg)$se.fit
+sev.hi.disturb$dTree.se.fit = broken.line(sev.hi.disturb.seg)$se.fit
+sev.lo.control$dTree.se.fit = broken.line(sev.lo.control.seg)$se.fit
+sev.lo.disturb$dTree.se.fit = broken.line(sev.lo.disturb.seg)$se.fit
 
 #Recombine the data frames with the model fitted dNDMI as a column
 sev.all.models <- rbind(sev.hi.control, sev.hi.disturb, sev.lo.control, sev.lo.disturb)
@@ -272,7 +272,7 @@ p1 <- ggplot(data = sev.all.models) +
   #Piecewise linear regression fit line
   geom_line(mapping = aes(x=Water_Stress, y=dTree.fit), size=2, color = 'black', linetype = 'dotdash') +
   #Piecewise fit uncertainty
-  geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dNDMI.se.fit), alpha = 0.4) +  
+  geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
   
   scale_fill_gradient2(limits = c(0,800), breaks = c(0,200,400,600), midpoint = 400, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
     facet_grid(sev.bin ~ treatment) +

@@ -15,7 +15,7 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 lapply(p,require,character.only=TRUE)
 # library(zoo)
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
 dir_in <- "D:\\Fire_Dieoff"

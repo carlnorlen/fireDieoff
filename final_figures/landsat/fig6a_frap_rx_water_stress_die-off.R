@@ -15,7 +15,7 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 lapply(p,require,character.only=TRUE)
 # library(segmented)
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
 dir_in <- "D:\\Fire_Dieoff"
@@ -151,6 +151,8 @@ pixel.filter <- pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & Tr
                 summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
                     RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
                     Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
+                    #Do dNDMI calculation
+                    # dTree = mean(NDMI[vi.year %in% c(2015, 2016)]) - mean(NDMI[vi.year %in% c(2010, 2011, 2012)]),
                     fire.year.bin = fire.year.bin[vi.year == 2010],
                     treatment = treatment[vi.year == 2010],
                     fire.type.bin = fire.type.bin[vi.year == 2010])
@@ -189,9 +191,9 @@ rx.disturb$dTree.fit = broken.line(rx.disturb.seg)$fit
 
 #SE fit
 wild.control$dTree.se.fit = broken.line(wild.control.seg)$se.fit
-wild.disturb$dNDMI.se.fit = broken.line(wild.disturb.seg)$se.fit
-rx.control$dNDMI.se.fit = broken.line(rx.control.seg)$se.fit
-rx.disturb$dNDMI.se.fit = broken.line(rx.disturb.seg)$se.fit
+wild.disturb$dTree.se.fit = broken.line(wild.disturb.seg)$se.fit
+rx.control$dTree.se.fit = broken.line(rx.control.seg)$se.fit
+rx.disturb$dTree.se.fit = broken.line(rx.disturb.seg)$se.fit
 
 #Recombine the data frames with the model fitted dNDMI as a column
 all.models <- rbind(wild.control, wild.disturb, rx.control, rx.disturb)
@@ -229,9 +231,9 @@ p1 <- ggplot(data = all.models) +
   #Piecewise linear regression fit line
   geom_line(mapping = aes(x=Water_Stress, y=dTree.fit), size=2, color = 'black', linetype = 'dotdash') +
   #Piecewise fit uncertainty
-  geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dNDMI.se.fit), alpha = 0.4) +  
+  geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
   
-  scale_fill_gradient2(limits = c(0,740), breaks = c(0,185,370,555), midpoint = 350, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_fill_gradient2(limits = c(0,740), breaks = c(0,185,370,555), midpoint = 370, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
     facet_grid(fire.type.bin ~ fire.year.bin) +
   # scale_alpha(range = c(1, 1), limits = c(50, 1000), na.value = 0.4) +
   # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +

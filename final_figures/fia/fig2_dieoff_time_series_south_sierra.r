@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: December 10, 2021
-#Date Edited: January 23, 2023
+#Date Edited: January 30, 2023
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -19,7 +19,7 @@ lapply(p,require,character.only=TRUE)
 #cd /C/Users/can02/mystuff/fireDieoff/FIA
 #Command for calling the script in the command line: R < stand_age_dieoff.r --vanilla
 #INstalling packages: install.packages('RColorBrewer',repo='https://cran.cnr.berkeley.edu/')
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
 
 #Add Data Sets
 sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
@@ -139,7 +139,7 @@ join <- join %>% mutate(age.bin = case_when(
 #Order the stand age bins
 join$age.bin = with(join, factor(age.bin, levels = c('0-29', '30-92', '93-119','120-159',
                                                            '160-209','210+')))
-summary(join)
+# summary(join)
 #Region wide counts of dead and live trees
 p1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
@@ -214,7 +214,9 @@ p4<- ggplot() +
                 summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
               mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
                             ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
-  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
 p4
 
 p5<- ggplot() + 
@@ -229,7 +231,9 @@ p5<- ggplot() +
   #               summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
   #             mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
   #                           ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
-  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')'))
 p5
 
 p6<- ggplot() + 
@@ -250,142 +254,142 @@ p6
 f4 <- ggarrange(p4, p5, p6, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
 f4
 
-ggsave(filename = 'Fig4_stand_age_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+ggsave(filename = 'Fig4_stand_age_mortality_time_series_FIA.png', height=18, width= 10, units = 'cm', dpi=900)
 
 # summary(join)
-f3a<- ggplot() + 
-  #Do the mean line
-  geom_line(data = join %>% filter(!is.na(stdage.bin)& MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>% 
-              group_by(INVYR, stdage.bin) %>% 
-              summarize(BA.dead = mean(basal_area.dead), BA.n = n()), 
-            mapping = aes(x = INVYR, y = BA.n, color = stdage.bin, linetype = stdage.bin), size = 1) +
-  #Do the 95% CI Ribbon
-  # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
-  #               group_by(INVYR, stdage.bin) %>% 
-  #               summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
-  #             mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
-  #                           ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
-  xlab('Year') + ylab('Count') + theme_bw()
-f3a
-ggsave(filename = 'Fig3a_stand_age_count_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+# f3a<- ggplot() + 
+#   #Do the mean line
+#   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% #& MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>% 
+#               group_by(INVYR, stdage.bin) %>% 
+#               summarize(BA.dead = mean(basal_area.dead), BA.n = n()), 
+#             mapping = aes(x = INVYR, y = BA.n, color = stdage.bin, linetype = stdage.bin), size = 1) +
+#   #Do the 95% CI Ribbon
+#   # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
+#   #               group_by(INVYR, stdage.bin) %>% 
+#   #               summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
+#   #             mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+#   #                           ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
+#   xlab('Year') + ylab('Count') + theme_bw()
+# f3a
+# ggsave(filename = 'Fig3a_stand_age_count_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
 
 #For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
-f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-  geom_line(data = join %>% filter(!is.na(stdage.bin) & MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>% 
-              group_by(INVYR, stdage.bin) %>% summarize(tpa.dead = mean(tpa.dead)), mapping = aes(x = INVYR, y = tpa.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
-  xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
-# %>% filter(!is.na(stdage.bin)) 
-f4
-ggsave(filename = 'Fig4_stand_age_count_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+# f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
+#   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% # & MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>% 
+#               group_by(INVYR, stdage.bin) %>% summarize(tpa.dead = mean(tpa.dead)), mapping = aes(x = INVYR, y = tpa.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
+#   xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
+# # %>% filter(!is.na(stdage.bin)) 
+# f4
+# ggsave(filename = 'Fig4_stand_age_count_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
 
 
-f5<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-  geom_line(data = join %>% filter(!is.na(age.bin) & MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>% 
-              group_by(INVYR, age.bin) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead, color = age.bin, linetype = age.bin), size = 1) +
-  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
-# %>% filter(!is.na(stdage.bin)) 
-f5
-ggsave(filename = 'Fig5_stand_age_basal_area_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+# f5<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
+#   geom_line(data = join %>% filter(!is.na(age.bin)) %>%  #& MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>% 
+#               group_by(INVYR, age.bin) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead, color = age.bin, linetype = age.bin), size = 1) +
+#   xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
+# # %>% filter(!is.na(stdage.bin)) 
+# f5
+# ggsave(filename = 'Fig5_stand_age_basal_area_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
 
-p6 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
-                                                     MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = STDAGE, y = basal_area.all)) +
-      theme_bw()
-p6
+# p6 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
+#                                                      MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = STDAGE, y = basal_area.all)) +
+#       theme_bw()
+# p6
+# 
+# p7 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
+#                                                      MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = STDAGE, y = tpa.all)) +
+#       theme_bw()
+# p7
+# 
+# p8 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
+#                                                      MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = STDAGE, y = basal_area.dead)) +
+#   theme_bw() #+ geom_smooth(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019)), mapping = aes(x = STDAGE, y = basal_area.dead), method = 'lm')
+# p8
+# 
+# p9 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
+#                                                      MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = basal_area.all, y = basal_area.dead)) +
+#   theme_bw()
+# p9
+# 
+# fig2 <- ggarrange(p6, p7, p8, p9, ncol = 2, nrow = 2, common.legend = FALSE, align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
+# fig2
 
-p7 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
-                                                     MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = STDAGE, y = tpa.all)) +
-      theme_bw()
-p7
+# ggsave(filename = 'Fig6_mortality_standage_FIA_forest_type.png', height=18, width= 18, units = 'cm', dpi=900)
 
-p8 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
-                                                     MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = STDAGE, y = basal_area.dead)) +
-  theme_bw() #+ geom_smooth(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019)), mapping = aes(x = STDAGE, y = basal_area.dead), method = 'lm')
-p8
-
-p9 <- ggplot() + geom_point(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & STDAGE <= 250 & 
-                                                     MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')), mapping = aes(x = basal_area.all, y = basal_area.dead)) +
-  theme_bw()
-p9
-
-fig2 <- ggarrange(p6, p7, p8, p9, ncol = 2, nrow = 2, common.legend = FALSE, align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
-fig2
-
-ggsave(filename = 'Fig6_mortality_standage_FIA_forest_type.png', height=18, width= 18, units = 'cm', dpi=900)
-
-join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & !is.na(STDAGE) & MEANING %in% c('California mixed conifer',  'White fir','Pinyon / juniper woodland',  'Ponderosa pine', 'Jeffrey pine'))
-join$stdage.bin <- as.factor(join$stdage.bin)
-
-#Calculate the Quintiles of stand age
-std.q <- as.data.frame(unname(quantile((join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0))$STDAGE, prob = seq(0,1, 1/20), type = 3, na.rm = TRUE)))
-# precip.q
-colnames(std.q) <- 'STDAGE'
-std.q$'Quintile' <- c(0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0)
-# temp.q
-std.q
-
-#Bin data by Stand Age. Bins are quintiles.
-join <- join %>% mutate(std.bin = case_when(
-  STDAGE >= std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '235+',
-  STDAGE >= std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() &
-  STDAGE < std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '180-234',
-  STDAGE >= std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '165-179',
-  STDAGE >= std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '145-164',
-  STDAGE >= std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '130-144',
-  STDAGE >= std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '115-129',
-  STDAGE >= std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '110-114',
-  STDAGE >= std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '100-109',
-  STDAGE >= std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-    STDAGE < std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '90-99',
-    STDAGE < std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '35-89'))
-  # STDAGE < std.q %>% filter(Quintile == 0.05) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-49'))
-
-#Order the stand age bins
-join$std.bin = with(join, factor(std.bin, levels = c('35-89', '90-99', '100-109', '110-114', '115-129',  '130-144', '145-164','165-179', '180-234','235+')))
-summary(join)
-# MORTYR %in% c(2013, 2014, 2015, 2016, 2017, 2018, 2019) & 
-p10 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE)), mapping = aes(x = std.bin, y = basal_area.dead)) +
-       geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
-  # scale_color_brewer(name = 'Average Tree Age Bins')
-  theme_bw() + 
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Average Tree Age Bins') + ylab(expression('Mortality (m'^2*' ha'^-1*')'))
-p10
-
-p11 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = basal_area.all)) +
-  geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
-  # scale_color_brewer(name = 'Average Tree Age Bins')
-  theme_bw() + xlab('Average Tree Age Bins') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) #+ ylim(0, 55)
-p11
-
-fig3 <- ggarrange(p10, p11, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
-fig3
-
-ggsave(filename = 'Fig7_mortality_standage_pointrange_FIA_wo_high_elevation.png', height=18, width= 22, units = 'cm', dpi=900)
-
-#Tree Density Version
-p12 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = tpa.dead)) +
-  geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
-  # scale_color_brewer(name = 'Average Tree Age Bins')
-  theme_bw() + 
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Average Tree Age Bins') + ylab(expression('Mortality (trees ha'^-1*')'))
-p12
-
-p13 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = tpa.all)) +
-  geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
-  # scale_color_brewer(name = 'Average Tree Age Bins')
-  theme_bw() + xlab('Average Tree Age Bins') + ylab(expression('Tree Density (tress ha'^-1*')'))
-p13
-
-fig4 <- ggarrange(p12, p13, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
-fig4
-
-ggsave(filename = 'Fig8_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
+# join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & !is.na(STDAGE) & MEANING %in% c('California mixed conifer',  'White fir','Pinyon / juniper woodland',  'Ponderosa pine', 'Jeffrey pine'))
+# join$stdage.bin <- as.factor(join$stdage.bin)
+# 
+# #Calculate the Quintiles of stand age
+# std.q <- as.data.frame(unname(quantile((join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0))$STDAGE, prob = seq(0,1, 1/20), type = 3, na.rm = TRUE)))
+# # precip.q
+# colnames(std.q) <- 'STDAGE'
+# std.q$'Quintile' <- c(0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0)
+# # temp.q
+# std.q
+# 
+# #Bin data by Stand Age. Bins are quintiles.
+# join <- join %>% mutate(std.bin = case_when(
+#   STDAGE >= std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '235+',
+#   STDAGE >= std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() &
+#   STDAGE < std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '180-234',
+#   STDAGE >= std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+#     STDAGE < std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '165-179',
+#   STDAGE >= std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+#     STDAGE < std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '145-164',
+#   STDAGE >= std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+#     STDAGE < std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '130-144',
+#   STDAGE >= std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+#     STDAGE < std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '115-129',
+#   STDAGE >= std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+#     STDAGE < std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '110-114',
+#   STDAGE >= std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+#     STDAGE < std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '100-109',
+#   STDAGE >= std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() & 
+#     STDAGE < std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '90-99',
+#     STDAGE < std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '35-89'))
+#   # STDAGE < std.q %>% filter(Quintile == 0.05) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-49'))
+# 
+# #Order the stand age bins
+# join$std.bin = with(join, factor(std.bin, levels = c('35-89', '90-99', '100-109', '110-114', '115-129',  '130-144', '145-164','165-179', '180-234','235+')))
+# summary(join)
+# # MORTYR %in% c(2013, 2014, 2015, 2016, 2017, 2018, 2019) & 
+# p10 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE)), mapping = aes(x = std.bin, y = basal_area.dead)) +
+#        geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
+#   # scale_color_brewer(name = 'Average Tree Age Bins')
+#   theme_bw() + 
+#   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+#   xlab('Average Tree Age Bins') + ylab(expression('Mortality (m'^2*' ha'^-1*')'))
+# p10
+# 
+# p11 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = basal_area.all)) +
+#   geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
+#   # scale_color_brewer(name = 'Average Tree Age Bins')
+#   theme_bw() + xlab('Average Tree Age Bins') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) #+ ylim(0, 55)
+# p11
+# 
+# fig3 <- ggarrange(p10, p11, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
+# fig3
+# 
+# ggsave(filename = 'Fig7_mortality_standage_pointrange_FIA_wo_high_elevation.png', height=18, width= 22, units = 'cm', dpi=900)
+# 
+# #Tree Density Version
+# p12 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = tpa.dead)) +
+#   geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
+#   # scale_color_brewer(name = 'Average Tree Age Bins')
+#   theme_bw() + 
+#   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+#   xlab('Average Tree Age Bins') + ylab(expression('Mortality (trees ha'^-1*')'))
+# p12
+# 
+# p13 <- ggplot(data = join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), mapping = aes(x = std.bin, y = tpa.all)) +
+#   geom_point(stat = 'summary') + geom_errorbar(stat = 'summary') + 
+#   # scale_color_brewer(name = 'Average Tree Age Bins')
+#   theme_bw() + xlab('Average Tree Age Bins') + ylab(expression('Tree Density (tress ha'^-1*')'))
+# p13
+# 
+# fig4 <- ggarrange(p12, p13, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
+# fig4
+# 
+# ggsave(filename = 'Fig8_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
 
 

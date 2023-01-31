@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: August 23, 2022
-#Date Edited: January 27, 2023
+#Date Edited: January 31, 2023
 #Purpose: Create maps of FIA data for the Sierra Nevada (and SoCal Mountains?) with average StandAge total Basal Area and Dead Basal Area?
 
 # Specify necessary packages
@@ -19,7 +19,7 @@ lapply(p,require,character.only=TRUE)
 #cd /C/Users/can02/mystuff/fireDieoff/FIA
 #Command for calling the script in the command line: R < stand_age_dieoff.r --vanilla
 #INstalling packages: install.packages('RColorBrewer',repo='https://cran.cnr.berkeley.edu/')
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/FIA')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
 
 #Add Data Sets
 sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
@@ -139,14 +139,15 @@ p1 <- ggplot() +
   geom_sf(data=ecosubcd.join, mapping = aes(fill=stdage.mean), lwd=0.8, alpha=0.6) +
   geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
   geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
-  geom_sf(data = spat.join, mapping = aes(color = STDAGE), size = 1.5) +
+  # geom_sf(data = spat.join, mapping = aes(color = STDAGE), size = 1) +
   theme_bw()+
+  # guides(fill = guide_colorbar(order = 1), color = guide_colorbar(order = 2)) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  scale_fill_viridis_c("Region \nTree Age") +
-  scale_color_viridis_c("Plot \nTree Age", option = 'B')
+  scale_fill_viridis_c("Tree Age") #+
+  # scale_color_viridis_c("Tree Age", option = 'B')
 p1
 
 # ggsave(filename = 'Fig20_FIA_average_tree_age.png', height=16, width= 12, units = 'cm', dpi=900)
@@ -155,14 +156,15 @@ p2 <- ggplot() +
   geom_sf(data=ecosubcd.join, mapping = aes(fill=BAA.all), lwd=0.8, alpha=0.6) +
   geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
   geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
-  geom_sf(data = spat.join, mapping = aes(color = basal_area.all), size = 1.5) +
+  # geom_sf(data = spat.join, mapping = aes(color = basal_area.all), size = 1) +
   theme_bw()+
+  guides(fill = guide_colorbar(order = 1), color = guide_colorbar(order = 2)) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  scale_fill_viridis_c("Region \nBasal Area \n(m^2/ha)") +
-  scale_color_viridis_c("Plot \nBasal Area \n(m^2/ha)", option = 'B')
+  scale_fill_viridis_c(expression('Basal Area (m'^2*' ha'^-1*')'), option = 'A', direction = -1) #+
+  # scale_color_viridis_c("Plot \nBasal Area \n(m^2/ha)", option = 'B')
 p2
 
 # ggsave(filename = 'Fig21_FIA_average_basal_area.png', height=16, width= 12, units = 'cm', dpi=900)
@@ -171,16 +173,71 @@ p3 <- ggplot() +
   geom_sf(data=ecosubcd.join, mapping = aes(fill=BAA.dead), lwd=0.8, alpha=0.6) +
   geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
   geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
-  geom_sf(data = spat.join, mapping = aes(color = basal_area.dead), size = 1.5) +
+  # geom_sf(data = spat.join, mapping = aes(color = basal_area.dead), size = 1) +
   theme_bw()+
+  # guides(fill = guide_colorbar(order = 1), color = guide_colorbar(order = 2)) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  scale_fill_viridis_c("Region \nMortality \n(m^2/ha)") +
-  scale_color_viridis_c("Plot \nMortality \n(m^2/ha)", option = 'B')
+  scale_fill_viridis_c(expression('Mortality (m'^2*' ha'^-1*')'), option = 'C') #+
+  # scale_color_viridis_c("Plot \nMortality \n(m^2/ha)", option = 'B')
 p3
 
 f1 <- ggarrange(p1, p2, p3, ncol = 3, nrow = 1, common.legend = FALSE, align = "h", labels = c('a)', 'b)', 'c)'))
 f1
-ggsave(filename = 'fig1_FIA_average_mortality.png', height=16, width= 36, units = 'cm', dpi=900)
+ggsave(filename = 'fig1_FIA_region_summary.png', height=16, width= 36, units = 'cm', dpi=900)
+
+#Plot data for FIA
+p4 <- ggplot() +
+  # geom_sf(data=ecosubcd.join, mapping = aes(fill=stdage.mean), lwd=0.8, alpha=0.6) +
+  geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
+  geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
+  geom_sf(data = spat.join, mapping = aes(color = STDAGE), size = 1) +
+  theme_bw()+
+  guides(fill = guide_colorbar(order = 1), color = guide_colorbar(order = 2)) +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  # scale_fill_viridis_c("Region \nTree Age") +
+  scale_color_viridis_c("Tree Age")
+p4
+
+# ggsave(filename = 'Fig20_FIA_average_tree_age.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p5 <- ggplot() +
+  # geom_sf(data=ecosubcd.join, mapping = aes(fill=BAA.all), lwd=0.8, alpha=0.6) +
+  geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
+  geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
+  geom_sf(data = spat.join, mapping = aes(color = basal_area.all), size = 1) +
+  theme_bw()+
+  guides(fill = guide_colorbar(order = 1), color = guide_colorbar(order = 2)) +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  # scale_fill_viridis_c("Region \nBasal Area \n(m^2/ha)") +
+  scale_color_viridis_c(expression('Basal Area (m'^2*' ha'^-1*')'), option = 'A', direction = -1)
+p5
+
+# ggsave(filename = 'Fig21_FIA_region_summary.png', height=16, width= 12, units = 'cm', dpi=900)
+
+p6 <- ggplot() +
+  # geom_sf(data=ecosubcd.join, mapping = aes(fill=BAA.dead), lwd=0.8, alpha=0.6) +
+  geom_sf(data = north.sierra, lwd = 1.2, alpha = 0.0, color = 'dark gray') +
+  geom_sf(data = south.sierra, lwd = 1.2, alpha = 0.0, color = 'black') +
+  geom_sf(data = spat.join, mapping = aes(color = basal_area.dead), size = 1) +
+  theme_bw()+
+  guides(fill = guide_colorbar(order = 1), color = guide_colorbar(order = 2)) +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.32), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  # scale_fill_viridis_c("Region \nMortality \n(m^2/ha)") +
+  scale_color_viridis_c(expression('Mortality (m'^2*' ha'^-1*')'), option = 'B')
+p6
+
+f2 <- ggarrange(p4, p5, p6, ncol = 3, nrow = 1, common.legend = FALSE, align = "h", labels = c('a)', 'b)', 'c)'))
+f2
+ggsave(filename = 'fig2_FIA_plot_summary.png', height=16, width= 36, units = 'cm', dpi=900)

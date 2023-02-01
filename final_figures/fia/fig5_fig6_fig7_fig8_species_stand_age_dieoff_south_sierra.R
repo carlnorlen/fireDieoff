@@ -8,8 +8,8 @@ p <- c("RSQLite","dbplyr","ggplot2","dplyr","tidyr", "ggpubr", "RColorBrewer",
 	   'gt', 'gtsummary', 'webshot', 'kableExtra', 'broom')
 
 # If necessary: install/update packages
-# install.packages('rlang',repo='https://cloud.r-project.org/')
-# library("agricolae")
+# install.packages(p,repo='https://cloud.r-project.org/')
+
 # Load packages
 lapply(p,require,character.only=TRUE)
 
@@ -19,11 +19,12 @@ lapply(p,require,character.only=TRUE)
 #cd /C/Users/can02/mystuff/fireDieoff/FIA
 #Command for calling the script in the command line: R < stand_age_dieoff.r --vanilla
 #INstalling packages: install.packages('RColorBrewer',repo='https://cran.cnr.berkeley.edu/')
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
-
+# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
+setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/fia')
 #Add Data Sets
-sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
-fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
+# sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+sql_dir <- 'C:\\Users\\Carl\\mystuff\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+fiaCA <- file.path(sql_dir, 'SQLite_FIADB_CA.db')
 sqlite.driver <- dbDriver("SQLite")
 db <- dbConnect(sqlite.driver,
                 dbname = fiaCA)  
@@ -746,170 +747,127 @@ f9
 
 ggsave(filename = 'Fig12_pine_fir_byDIA_FIA_mortality_density_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
 
-#Stand Age Histogram with data binned by stand age
-# f4 <- ggplot() + geom_histogram(data = (join %>% filter(!is.na(dia)) %>% select(STDAGE)), mapping = aes(x =STDAGE), bins = 60) +
-#   geom_vline(xintercept = (stdage.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric()), color = 'black') + 
-#   geom_vline(xintercept = (stdage.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (stdage.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric()), color = 'black') +
-#   geom_vline(xintercept = (stdage.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric()), color = 'black') +
-#   theme_bw() + xlab('Stand Age') + ylab('Count')
-# f4
-# ggsave(filename = 'Fig2_Stand_Age_Quintiles_historgram.png', height=6, width= 10, units = 'cm', dpi=900)
+#Test of Mortality by common name species
+live.pine <- all %>% filter(STATUSCD == 1 & tree_type %in% c('pine', 'fir')) %>% 
+  group_by(INVYR, PLOT, COMMON_NAME, .drop = FALSE) %>% 
+  summarize(count.live = n(), tpa.live = sum(count), 
+            basal_area.live = sum(basal_area), STDAGE = median(STDAGE))
+live.pine
+#There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
+dead.pine <- all %>% filter(STATUSCD == 2 & MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019") & tree_type %in% c('pine', 'fir')) %>% 
+  group_by(PLOT, INVYR, COMMON_NAME, .drop = FALSE) %>% 
+  summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
 
-#For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
-# f4 <- ggplot() + 
-#   #Do the mean line
-#   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% 
-#                             group_by(INVYR, stdage.bin) %>% 
-#                             summarize(BA.dead = mean(basal_area.dead), BA.n = n()), 
-#                             mapping = aes(x = INVYR, y = BA.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
-#   #Do the 95% CI Ribbon
-#   geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
-#                 group_by(INVYR, stdage.bin) %>% 
-#                 summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
-#               mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
-#                             ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
-#   xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()
-# f3
-# 
-# ggsave(filename = 'Fig3_stand_age_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+dead.pine
+join.pine <- left_join(live.pine, dead.pine, by = c('PLOT', 'INVYR', 'COMMON_NAME'))
+
+#Replace the NAs with 0s
+join.pine <- join.pine %>% dplyr::mutate(basal_area.dead = replace(basal_area.dead, is.na(basal_area.dead), 0), 
+                               count.dead = replace(count.dead, is.na(count.dead), 0),
+                               tpa.dead = replace(tpa.dead, is.na(tpa.dead), 0)
+) %>% group_by(INVYR, PLOT) %>%
+  fill(STDAGE, .direction = c("up"))
+# join
 # summary(join)
-# f3a<- ggplot() + 
-#   #Do the mean line
-#   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% 
-#               group_by(INVYR, stdage.bin) %>% 
-#               summarize(BA.dead = mean(basal_area.dead), BA.n = n()), 
-#             mapping = aes(x = INVYR, y = BA.n, color = stdage.bin, linetype = stdage.bin), size = 1) +
-#   #Do the 95% CI Ribbon
-#   # geom_ribbon(data = join %>% filter(!is.na(stdage.bin)) %>% 
-#   #               group_by(INVYR, stdage.bin) %>% 
-#   #               summarize(BA.dead = mean(basal_area.dead), BA.n = n(), BA.dead.sd = sd(basal_area.dead)), 
-#   #             mapping = aes(x = INVYR, ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
-#   #                           ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)), fill = stdage.bin), alpha = 0.3) +
-#   xlab('Year') + ylab('Count') + theme_bw()
-# f3a
-# ggsave(filename = 'Fig3a_stand_age_count_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
-# 
-# #For some reason Right now this is showing the youngest stands with the most die-off. However, the youngest stands are pretty old
-# f4<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-#   geom_line(data = join %>% filter(!is.na(stdage.bin)) %>% group_by(INVYR, stdage.bin) %>% summarize(tpa.dead = mean(tpa.dead)), mapping = aes(x = INVYR, y = tpa.dead, color = stdage.bin, linetype = stdage.bin), size = 1) +
-#   xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
-# # %>% filter(!is.na(stdage.bin)) 
-# f4
-# ggsave(filename = 'Fig4_stand_age_count_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
-# 
-# 
-# f5<- ggplot() + #geom_line(data = live %>% filter(STATUSCD == 1  & !is.na(STDAGE)) %>% group_by(INVYR, stdage.bin) %>% summarize(Live.count = sum(count)), mapping = aes(x = INVYR, y = Live.count), color = 'green') + 
-#   geom_line(data = join %>% filter(!is.na(age.bin)) %>% group_by(INVYR, age.bin) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead, color = age.bin, linetype = age.bin), size = 1) +
-#   xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) + theme_bw()# + facet_wrap(~stdage.bin, ncol = 5)
-# # %>% filter(!is.na(stdage.bin)) 
-# f5
-# ggsave(filename = 'Fig5_stand_age_basal_area_mortality_time_series_FIA.png', height=6, width= 15, units = 'cm', dpi=900)
+#Add the total basal area calculations
+join.pine$count.all <- join.pine$count.live + join.pine$count.dead
+join.pine$tpa.all <- join.pine$tpa.live + join.pine$tpa.dead
+join.pine$basal_area.all <- join.pine$basal_area.live + join.pine$basal_area.dead
+join.pine$basal_area.dead.pct <- join.pine$basal_area.dead / join.pine$basal_area.all
+#fill the NAs for basal_area.dead.pct, this could go earlier
+join.pine <- join.pine %>% dplyr::mutate(basal_area.dead.pct = replace(basal_area.dead.pct, is.na(basal_area.dead.pct), 0))
 
-# p4 <- ggplot() + geom_point(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine')) %>%   
-#                               filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE <= 250 & STDAGE > 0), mapping = aes(x = STDAGE, y = basal_area.all, color = tree_type)) +
-#       theme_bw()
-# p4
-# 
-# p5 <- ggplot() + geom_point(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine')) %>%   
-#                               filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE <= 250 & STDAGE > 0), mapping = aes(x = STDAGE, y = tpa.all, color = tree_type)) +
-#       theme_bw()
-# p5
-# 
-# p6 <- ggplot() + geom_point(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine')) %>%   
-#                               filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE <= 250 & STDAGE > 0), mapping = aes(x = STDAGE, y = basal_area.dead, color = tree_type)) +
-#   theme_bw() #+ geom_smooth(data = join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019)), mapping = aes(x = STDAGE, y = basal_area.dead), method = 'lm')
-# p6
-# 
-# p7 <- ggplot() + geom_point(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine')) %>%  
-#                               filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & STDAGE > 0), mapping = aes(x = basal_area.all, y = basal_area.dead, color = tree_type)) +
-#   theme_bw()
-# p7
-# 
-# fig2 <- ggarrange(p4, p5, p6, p7, ncol = 2, nrow = 2, common.legend = TRUE, align = "v", labels = c('a)', 'b)', 'c)', 'd)'))
-# fig2
-# 
-# ggsave(filename = 'Fig10_mortality_standage_FIA.png', height=18, width= 18, units = 'cm', dpi=900)
-# 
-# # join %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019) & !is.na(STDAGE))
-# # join$stdage.bin <- as.factor(join$stdage.bin)
-# 
-# #Calculate the Quintiles of stand age
-# std.q <- as.data.frame(unname(quantile((join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0) %>% distinct(PLOT, .keep_all = TRUE))$STDAGE, prob = seq(0,1, 1/20), type = 3, na.rm = TRUE)))
-# # precip.q
-# colnames(std.q) <- 'STDAGE'
-# std.q$'Quintile' <- c(0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1.0)
-# # temp.q
-# std.q
-# 
-# #Bin data by Stand Age. Bins are quintiles.
-# join <- join %>% mutate(std.bin = case_when(
-#   STDAGE >= std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '265+',
-#   STDAGE >= std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() &
-#   STDAGE < std.q %>% filter(Quintile == 0.9) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '235-264',
-#   STDAGE >= std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-#     STDAGE < std.q %>% filter(Quintile == 0.8) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '190-234',
-#   STDAGE >= std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-#     STDAGE < std.q %>% filter(Quintile == 0.7) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '165-189',
-#   STDAGE >= std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-#     STDAGE < std.q %>% filter(Quintile == 0.6) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '152-164',
-#   STDAGE >= std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-#     STDAGE < std.q %>% filter(Quintile == 0.5) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '130-151',
-#   STDAGE >= std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-#     STDAGE < std.q %>% filter(Quintile == 0.4) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '110-129',
-#   STDAGE >= std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-#     STDAGE < std.q %>% filter(Quintile == 0.3) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '100-109',
-#   STDAGE >= std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() & 
-#     STDAGE < std.q %>% filter(Quintile == 0.2) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '85-99',
-#   STDAGE >= std.q %>% filter(Quintile == 0.05) %>% dplyr::select(STDAGE) %>% as.numeric() &
-#     STDAGE < std.q %>% filter(Quintile == 0.1) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '50-84',
-#   STDAGE < std.q %>% filter(Quintile == 0.05) %>% dplyr::select(STDAGE) %>% as.numeric() ~ '0-49'))
-# 
-# #Order the stand age bins
-# join$std.bin = with(join, factor(std.bin, levels = c('0-49', '50-84', '85-99', '100-109', '110-129', '130-151',  '152-164', '165-189','190-234', '235-264','265+')))
-# # summary(live)
-# # MORTYR %in% c(2013, 2014, 2015, 2016, 2017, 2018, 2019) & 
-# p10 <- ggplot(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine') & INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), 
-#               mapping = aes(x = std.bin, y = basal_area.dead, color = tree_type)) +
-#        geom_point(stat = 'summary', position = position_dodge(width = .5)) + geom_errorbar(stat = 'summary', position = position_dodge(width = .5)) + 
-#   # scale_color_brewer(name = 'Average Tree Age Bins')
-#   theme_bw() + 
-#   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-#   xlab('Average Tree Age Bins') + ylab(expression('Mortality (m'^2*' ha'^-1*')'))
-# p10
-# 
-# p11 <- ggplot(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine') & INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), 
-#               mapping = aes(x = std.bin, y = basal_area.all, color = tree_type)) +
-#   geom_point(stat = 'summary', position = position_dodge(width = .5)) + geom_errorbar(stat = 'summary', position = position_dodge(width = .5)) + 
-#   # scale_color_brewer(name = 'Average Tree Age Bins')
-#   theme_bw() + xlab('Average Tree Age Bins') + ylab(expression('Basal Area (m'^2*' ha'^-1*')'))
-# p11
-# 
-# fig3 <- ggarrange(p10, p11, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
-# fig3
-# 
-# ggsave(filename = 'Fig11_species_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
-# 
-# #Tree Density Version
-# p12 <- ggplot(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine') & INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), 
-#               mapping = aes(x = std.bin, y = tpa.dead, color = tree_type)) +
-#   geom_point(stat = 'summary', position = position_dodge(width = .5)) + geom_errorbar(stat = 'summary', position = position_dodge(width = .5)) + 
-#   # scale_color_brewer(name = 'Average Tree Age Bins')
-#   theme_bw() + 
-#   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-#   xlab('Average Tree Age Bins') + ylab(expression('Mortality (trees ha'^-1*')'))
-# p12
-# 
-# p13 <- ggplot(data = join %>% filter(tree_type %in% c('cedar', 'fir', 'oak', 'juniper', 'pine') & INVYR %in% c(2015,2016,2017,2018,2019) & !is.na(STDAGE) & STDAGE > 0), 
-#               mapping = aes(x = std.bin, y = tpa.all, color = tree_type)) +
-#   geom_point(stat = 'summary', position = position_dodge(width = .5)) + geom_errorbar(stat = 'summary', position = position_dodge(width = .5)) + 
-#   # scale_color_brewer(name = 'Average Tree Age Bins')
-#   theme_bw() + xlab('Average Tree Age Bins') + ylab(expression('Tree Density (tress ha'^-1*')'))
-# p13
-# 
-# fig4 <- ggarrange(p12, p13, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
-# fig4
-# 
-# ggsave(filename = 'Fig12_species_mortality_standage_pointrange_FIA.png', height=18, width= 22, units = 'cm', dpi=900)
+join.pine$tpa.dead.pct <- join.pine$tpa.dead / join.pine$tpa.all
+#fill the NAs for basal_area.dead.pct, this could go earlier
+join.pine <- join.pine %>% dplyr::mutate(tpa.dead.pct = replace(tpa.dead.pct, is.na(tpa.dead.pct), 0))
 
+#Mortality by specific pine species
+#Figure out species level mortality
 
+#Percentage mortality by Pine/Fir species
+join.pine %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019)) %>% group_by(COMMON_NAME) %>% summarize(mortality = mean(basal_area.dead.pct))
+
+p19 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #Mean Die-off
+  geom_line(data = join.pine %>% ungroup() %>% 
+              filter(COMMON_NAME %in% c('ponderosa pine', 'sugar pine', 'California red fir', 'white fir', 'western white pine', 'Jeffrey pine', 'lodgepole pine', 'singleleaf pinyon')) %>% 
+              group_by(INVYR, COMMON_NAME) %>% summarize(BA.dead = mean(basal_area.dead)), 
+            mapping = aes(x = INVYR, y = BA.dead, color = COMMON_NAME, linetype = COMMON_NAME), size = 1) +
+  #95% CI Die-off
+  geom_ribbon(data = join.pine %>% ungroup() %>%
+  filter(COMMON_NAME %in% c('ponderosa pine', 'sugar pine', 'California red fir', 'white fir', 'western white pine', 'Jeffrey pine', 'lodgepole pine', 'singleleaf pinyon')) %>%
+                group_by(INVYR, COMMON_NAME) %>%
+                summarize(BA.dead = mean(basal_area.dead),
+                          BA.dead.sd = sd(basal_area.dead), BA.n = n()),
+              mapping = aes(ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+                            ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
+                            x = INVYR, fill = COMMON_NAME, linetype = COMMON_NAME), alpha = 0.2) +
+  theme_bw() +
+  guides(color=guide_legend(ncol=2)) +
+  theme(axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.6), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.y = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  scale_color_viridis_d(name = "Tree\nSpecies") +
+  scale_fill_viridis_d(name = "Tree\nSpecies") +
+  scale_linetype_discrete(name = "Tree\nSpecies") +
+  # scale_fill_viridis_d("Tree\nSpecies", option = 'B') +
+  # scale_color_viridis_d("Tree\nSpecies", option = 'B') +
+  # theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
+p19
+
+# join.pine %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019)) %>% group_by(COMMON_NAME) %>% summarize(mortality = mean(basal_area.dead.pct))
+
+p20 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #The data mean
+  geom_line(data = join.pine %>% ungroup() %>% 
+              filter(COMMON_NAME %in% c('ponderosa pine', 'sugar pine', 'California red fir', 'white fir', 'western white pine', 'Jeffrey pine', 'lodgepole pine', 'singleleaf pinyon')) %>% 
+              group_by(INVYR, COMMON_NAME) %>% summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100, BA.n = n()), 
+            mapping = aes(x = INVYR, y = BA.dead.pct.mean, color = COMMON_NAME, linetype = COMMON_NAME),  size = 1) +
+  #The error bars
+  geom_ribbon(data = join.pine %>% ungroup() %>% 
+                filter(COMMON_NAME %in% c('ponderosa pine', 'sugar pine', 'California red fir', 'white fir', 'western white pine', 'Jeffrey pine', 'lodgepole pine', 'singleleaf pinyon')) %>%  
+                group_by(INVYR, COMMON_NAME) %>%
+                summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100,
+                          BA.dead.pct.sd = sd(basal_area.dead.pct) * 100, 
+                          BA.n = n()),
+              mapping = aes(ymin=BA.dead.pct.mean - 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
+                            ymax=BA.dead.pct.mean + 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
+                            x = INVYR, fill = COMMON_NAME), alpha = 0.2) +
+  scale_color_viridis_d(name = "Tree\nSpecies") +
+  scale_fill_viridis_d(name = "Tree\nSpecies") +
+  scale_linetype_discrete(name = "Tree\nSpecies") +
+  theme_bw() +
+  theme(legend.position = 'none', axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), axis.text.y = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  xlab('Year') + ylab('Mortality (%)')
+p20
+
+# join %>% filter(STDAGE <= 10) %>% count()
+p21 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #The data mean
+  geom_line(data = join.pine %>% ungroup() %>% 
+              filter(COMMON_NAME %in% c('ponderosa pine', 'sugar pine', 'California red fir', 'white fir', 'western white pine', 'Jeffrey pine', 'lodgepole pine', 'singleleaf pinyon')) %>%               group_by(INVYR, COMMON_NAME) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), 
+            mapping = aes(x = INVYR, y = BA.all, color = COMMON_NAME, linetype = COMMON_NAME),  size = 1) +
+  #The error bars
+  geom_ribbon(data = join.pine %>% ungroup() %>% 
+                filter(COMMON_NAME %in% c('ponderosa pine', 'sugar pine', 'California red fir', 'white fir', 'western white pine', 'Jeffrey pine', 'lodgepole pine', 'singleleaf pinyon')) %>%                 group_by(INVYR, COMMON_NAME) %>%
+                summarize(BA.mean = mean(basal_area.all),
+                          BA.sd = sd(basal_area.all), BA.n = n()),
+              mapping = aes(ymin=BA.mean - 1.96*(BA.sd / sqrt(BA.n)),
+                            ymax=BA.mean + 1.96*(BA.sd / sqrt(BA.n)),
+                            x = INVYR, fill = COMMON_NAME), alpha = 0.2) +
+  scale_color_viridis_d(name = "Tree\nSpecies") +
+  scale_fill_viridis_d(name = "Tree\nSpecies") +
+  scale_linetype_discrete(name = "Tree\nSpecies") +
+  theme_bw() +
+  theme(legend.position = 'none') +
+  xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')'))
+p21
+
+f10 <- ggarrange(p19, p20, p21, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+f10
+
+ggsave(filename = 'Fig13_pine_fir_bySpecies_FIA_mortality_density_time_series.png', height=18, width= 10, units = 'cm', dpi=900)

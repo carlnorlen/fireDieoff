@@ -98,7 +98,7 @@ join <- join %>% dplyr::mutate(basal_area.dead.pct = replace(basal_area.dead.pct
 
 join$tpa.dead.pct <- join$tpa.dead / join$tpa.all
 #fill the NAs for basal_area.dead.pct, this could go earlier
-join. <- join %>% dplyr::mutate(tpa.dead.pct = replace(tpa.dead.pct, is.na(tpa.dead.pct), 0))
+join <- join %>% dplyr::mutate(tpa.dead.pct = replace(tpa.dead.pct, is.na(tpa.dead.pct), 0))
 
 # summary(join)
 #Region wide counts of dead and live trees (basal area)

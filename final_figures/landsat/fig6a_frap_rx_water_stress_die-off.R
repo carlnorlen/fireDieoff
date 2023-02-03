@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 23, 2023
-#Date Updated: January 25, 2023
+#Date Updated: February 02, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -21,13 +21,13 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_400pt_ts8_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_400pt_ts16_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_400pt_ts16_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -46,13 +46,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_400pt_ts8_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_400pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_400pt_ts16_300m_20230124.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_400pt_ts16_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -150,12 +150,14 @@ pixel.filter <- pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & Tr
                 dplyr::group_by(system.index) %>% 
                 summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
                     RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
-                    Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
-                    #Do dNDMI calculation
-                    # dTree = mean(NDMI[vi.year %in% c(2015, 2016)]) - mean(NDMI[vi.year %in% c(2010, 2011, 2012)]),
+                    Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
+                    ADS = max(tpa_max[vi.year %in% c(2015, 2016, 2017)]), 
+                    dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)]),
                     fire.year.bin = fire.year.bin[vi.year == 2010],
                     treatment = treatment[vi.year == 2010],
                     fire.type.bin = fire.type.bin[vi.year == 2010])
+
+# pixel.filter %>% summary()
 wild.control <- pixel.filter %>% filter(fire.year.bin == 'No Fire' & fire.type.bin == "Wildfire")
 wild.disturb <- pixel.filter %>% filter(fire.year.bin == '1980-2010' & fire.type.bin == "Wildfire")
 rx.control <- pixel.filter %>% filter(fire.year.bin == 'No Fire' & fire.type.bin == "Rxfire")
@@ -163,7 +165,7 @@ rx.disturb <- pixel.filter %>% filter(fire.year.bin == '1980-2010' & fire.type.b
   
 
 #Models for Wild Fire
-wild.control.lm <- lm(data = wild.control, dTree~ Water_Stress) 
+wild.control.lm <- lm(data = wild.control, dTree ~ Water_Stress) 
 wild.disturb.lm <- lm(data = wild.disturb, dTree ~ Water_Stress) 
 
 #Models for Rx Fire
@@ -232,8 +234,7 @@ p1 <- ggplot(data = all.models) +
   geom_line(mapping = aes(x=Water_Stress, y=dTree.fit), size=2, color = 'black', linetype = 'dotdash') +
   #Piecewise fit uncertainty
   geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
-  
-  scale_fill_gradient2(limits = c(0,740), breaks = c(0,185,370,555), midpoint = 370, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_fill_gradient2(limits = c(0,640), breaks = c(0,160, 320, 480), midpoint = 320, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
     facet_grid(fire.type.bin ~ fire.year.bin) +
   # scale_alpha(range = c(1, 1), limits = c(50, 1000), na.value = 0.4) +
   # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +
@@ -243,7 +244,7 @@ p1 <- ggplot(data = all.models) +
   #Add the R^2 text
   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
   theme_bw() +
-  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (Relative dTree %)')
+  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab(expression('Die-off (trees ha'^-1*')'))
 p1
 
 p2 <- p1 + theme(
@@ -261,3 +262,6 @@ p2 <- p1 + theme(
 p2
 
 ggsave(filename = 'Fig6a_water_stress_dTree_300m.png', height=16, width= 16, units = 'cm', dpi=900)
+
+# ggplot(data = pixel.filter, mapping = aes(x = ADS, y = dNDMI)) + geom_point() +
+# geom_smooth(method = 'lm') + stat_cor(arg = 'pearson')

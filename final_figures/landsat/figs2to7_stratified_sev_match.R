@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: January 25, 2023
+#Date Updated: February 02, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -24,13 +24,13 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # pixel.data <- read.csv(file.path(dir_in, "frapsev_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_400pt_ts8_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Sev_2km_buffer_400pt_ts16_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
+sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Sev_2km_buffer_500pt_ts16_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 summary(control.data)
 #Add Fire Columns
 # control.data$fire_sev_2010 <- -9999
@@ -148,7 +148,7 @@ sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
 #Fire Severity Bins
 #With re-export type needs to be converted to sev
 sev.pixel.data <- sev.pixel.data %>% mutate(sev.bin = case_when(
-  fire_sev_2010 == '0' ~ 'No Fire',
+  fire_sev_2010 == '0' | treatment == 'Control' ~ 'Control',
   fire_sev_2010 == '1'  ~ 'Unchanged',
   fire_sev_2010 == '2' ~ 'Low',
   fire_sev_2010 == '3' ~ 'Mid',
@@ -159,7 +159,7 @@ sev.pixel.data <- sev.pixel.data %>% mutate(sev.bin = case_when(
 sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2011-2017', '1985-2010', 'No Fire')))#c('0-4','5-30','31-55','56-80',
 
 #Make the years bin lables in the correct order
-sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Masked', 'Unchanged', 'Low','Mid', 'High')))#c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
+sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('Control','Masked', 'Unchanged', 'Low','Mid', 'High')))#c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
 
 #Recode the veg type data
 sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
@@ -177,7 +177,7 @@ p1 <- ggplot() +
                # filter(elevation <= 3000) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
-               dplyr::group_by(system.index, sev.bin, treatment) %>% 
+               dplyr::group_by(system.index, sev.bin) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2013, 2014)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
@@ -196,7 +196,7 @@ p1 <- ggplot() +
   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ sev.bin) +
   ylab('Latitude')
 p1
 
@@ -209,7 +209,7 @@ p2<- ggplot() +
                # filter(elevation <= 3000) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
-               dplyr::group_by(system.index, sev.bin, treatment) %>% 
+               dplyr::group_by(system.index, sev.bin) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2017, 2018)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
@@ -228,7 +228,7 @@ p2<- ggplot() +
   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ sev.bin) +
   ylab('Latitude')
 p2
 
@@ -240,7 +240,7 @@ p3 <- ggplot() +
                # filter(elevation <= 3000) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
-               dplyr::group_by(system.index, sev.bin, treatment) %>%
+               dplyr::group_by(system.index, sev.bin) %>%
                summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015], elevation = elevation[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
              mapping = aes(y = latitude, x = elevation, fill = tpa_max, group = tpa_max), binwidth = c(500, 0.25)) + 
@@ -254,11 +254,11 @@ p3 <- ggplot() +
   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   scale_fill_gradient(name = "Die-off \n(trees per hectare)", low = "white", high = "red", na.value = 'transparent') +
   theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), legend.position = "right",
-        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-  ylab('Latitude')
+  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ sev.bin) +
+  ylab('Latitude') + xlab('Elevation (m)')
 p3             
 
 p4<- ggplot() +
@@ -269,7 +269,7 @@ p4<- ggplot() +
                # filter(elevation <= 3000) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
-               dplyr::group_by(system.index, sev.bin, treatment) %>% 
+               dplyr::group_by(system.index, sev.bin) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2018, 2019)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], count = sum(elevation[vi.year == 2015]), n = n(), SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
@@ -288,17 +288,17 @@ p4<- ggplot() +
   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ sev.bin) +
   ylab('Latitude') + xlab('Elevation (m)')
 p4
 
-f1 <- ggarrange(p1, p2, p4, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+f1 <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
 f1
 #Save the data
-ggsave(filename = 'Fig2c_sev_fire_dieoff_tree_cover_fireyear_geographic_distribution.png', height=24, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig2c_sev_fire_dieoff_tree_cover_fireyear_geographic_distribution.png', height=28, width= 24, units = 'cm', dpi=900)
 
 # summary(pixel.data)
-sev.pixel.data %>% dplyr::select(fire_sev_2010) %>% unique()
+# sev.pixel.data %>% dplyr::select(fire_sev_2010) %>% unique()
 #Figure of Dead Trees per acre separated by fire years with time series
 p5 <- ggplot() + 
   geom_hline(yintercept = 0) +
@@ -736,22 +736,22 @@ ggsave(filename = 'Fig5c_sev_fire_bar_chart_comparison.png', height=24, width = 
 #Figure 6c
 #Water Stress Versus dTree to check the mechanism...
 #figure out how to filter low count numbers (look at manuscript 1)
-p16 <- ggplot(data = sev.pixel.data %>% filter(Tree_Cover > 0 & fire.year <= 2010 & (sev.bin != 'Masked') & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
-                # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%  
-                # filter(elevation <= 3000) %>%
-                dplyr::group_by(system.index) %>% 
-                summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
-                          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
-                          Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
-                          sev.bin = sev.bin[vi.year == 2010], treatment = treatment[vi.year == 2010])) +
-  geom_bin2d(binwidth = c(100, 1), mapping = aes(x = Water_Stress, y = dTree, group = ..count..)) +
-  scale_fill_gradient2(limits = c(0,410), breaks = c(0,100, 200, 300, 400), midpoint = 205, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') + #
-  # geom_point(mapping = aes(x = Water_Stress, y = dTree), size = 1) + 
-  geom_smooth(method = 'lm', mapping = aes(x = Water_Stress, y = dTree), size = 2, color = 'black', linetype = 'dashed') + facet_grid (sev.bin ~ treatment) +
-  stat_cor( mapping = aes(x = Water_Stress, y = dTree), color= 'black') + #xlim(-600, 0) + #
-  theme_bw() + xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (Relative dTree %)')
-p16
-ggsave(filename = 'Fig6c_sev_water_stress_dTree_correlation.png', height=16, width= 18, units = 'cm', dpi=900)
+# p16 <- ggplot(data = sev.pixel.data %>% filter(Tree_Cover > 0 & fire.year <= 2010 & (sev.bin != 'Masked') & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
+#                 # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%  
+#                 # filter(elevation <= 3000) %>%
+#                 dplyr::group_by(system.index) %>% 
+#                 summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
+#                           RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
+#                           Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
+#                           sev.bin = sev.bin[vi.year == 2010], treatment = treatment[vi.year == 2010])) +
+#   geom_bin2d(binwidth = c(100, 1), mapping = aes(x = Water_Stress, y = dTree, group = ..count..)) +
+#   scale_fill_gradient2(limits = c(0,410), breaks = c(0,100, 200, 300, 400), midpoint = 205, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') + #
+#   # geom_point(mapping = aes(x = Water_Stress, y = dTree), size = 1) + 
+#   geom_smooth(method = 'lm', mapping = aes(x = Water_Stress, y = dTree), size = 2, color = 'black', linetype = 'dashed') + facet_grid (sev.bin ~ treatment) +
+#   stat_cor( mapping = aes(x = Water_Stress, y = dTree), color= 'black') + #xlim(-600, 0) + #
+#   theme_bw() + xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (Relative dTree %)')
+# p16
+# ggsave(filename = 'Fig6c_sev_water_stress_dTree_correlation.png', height=16, width= 18, units = 'cm', dpi=900)
 
 # summary(sev.pixel.data)
 # data <- sev.pixel.data %>% filter((sev.bin != 'No Fire' & !is.na(sev.bin) & fire.year <= 2010 & stand.age > 2 & Tree_Cover > 0)) %>% # &
@@ -763,29 +763,29 @@ ggsave(filename = 'Fig6c_sev_water_stress_dTree_correlation.png', height=16, wid
 
 #Figure 7c
 #Tree Cover Die-off
-p17 <- ggplot(data = sev.pixel.data %>% filter((sev.bin != 'No Fire' & !is.na(sev.bin) & fire.year <= 2010 & stand.age > 2 & Tree_Cover > 0)) %>% # &
-                filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
-                filter(elevation <= 3000) %>%
-                dplyr::group_by(system.index) %>% 
-                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
-                          RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
-                          Water_Stress = Water_Stress[vi.year == 2015], stand.age = stand.age[vi.year == 2015], sev.bin = sev.bin[vi.year == 2010])) +
-  geom_point(mapping = aes(x = stand.age, y = dTree), color = 'grey', size = 1.5) +
-  geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree, linetype = sev.bin, color = sev.bin), size = 2) +
-  stat_cor( mapping = aes(x = stand.age, y = dTree, color = sev.bin)) +
-  # geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
-  #                 dplyr::group_by(system.index) %>% 
-  #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
-  #               mapping = aes(x = fire.year.grp, y = dTree), stat = 'summary') + 
-  theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.2), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  xlab('Stand Age') + ylab('dTree (%)')
-p17
+# p17 <- ggplot(data = sev.pixel.data %>% filter(( fire.year <= 2010 & stand.age > 2 & Tree_Cover > 0)) %>% # &
+#                 # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
+#                 # filter(elevation <= 3000) %>%
+#                 dplyr::group_by(system.index) %>% 
+#                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
+#                           RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+#                           Water_Stress = Water_Stress[vi.year == 2015], stand.age = stand.age[vi.year == 2015], sev.bin = sev.bin[vi.year == 2010])) +
+#   geom_point(mapping = aes(x = stand.age, y = dTree), color = 'grey', size = 1.5) +
+#   geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree, linetype = sev.bin, color = sev.bin), size = 2) +
+#   stat_cor( mapping = aes(x = stand.age, y = dTree, color = sev.bin)) +
+#   # geom_errorbar(data = pixel.data %>% dplyr::filter((fire.year <= 2010 & fire.year >= 1921 & stand.age > 2) | is.na(fire.year)) %>% 
+#   #                 dplyr::group_by(system.index) %>% 
+#   #                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), fire.year.grp = fire.year.grp[vi.year == 2010], Water_Stress = Water_Stress[vi.year == 2015]),
+#   #               mapping = aes(x = fire.year.grp, y = dTree), stat = 'summary') + 
+#   theme_bw() +
+#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+#         axis.title.x = element_text(size = 10), legend.position = c(0.2, 0.2), legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+#   xlab('Stand Age') + ylab('dTree (%)')
+# p17
 
-ggsave(filename = 'Fig7c_stand_age_dTree_correlation.png', height=16, width= 18, units = 'cm', dpi=900)
+# ggsave(filename = 'Fig7c_stand_age_dTree_correlation.png', height=16, width= 18, units = 'cm', dpi=900)
 
 #Create a manual color scale
 cols <- c("Shrub"="green","Herb"="brown","Tree"="forest green", "Bare" = "gray")

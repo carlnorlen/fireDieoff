@@ -80,7 +80,8 @@ live$basal_area <- (((live$DIA / 2)^2) * pi)*(1/10000) * live$count
 #Get the live and dead values of the FIA data
 # live %>% filter(!is.na(MORTYR)) %>% select(PLOT) %>% unique() %>% count()
 # test <- live %>% select(PLOT, INVYR) %>% group_by(PLOT, INVYR) %>% summarize(count = n())
-total <- live %>% group_by(INVYR, PLOT) %>% summarize(count = n(), tpa.all = sum(count), basal_area.all = sum(basal_area), STDAGE = median(STDAGE), DSTRBCD1 = median(DSTRBCD1), DSTRBYR1 = median(DSTRBYR1), OWNGRPCD = median(OWNGRPCD))
+total <- live %>% group_by(INVYR, PLOT) %>% summarize(count = n(), tpa.all = sum(count), basal_area.all = sum(basal_area), STDAGE = median(STDAGE), 
+                                                      DSTRBCD1 = median(DSTRBCD1), DSTRBYR1 = median(DSTRBYR1), OWNGRPCD = median(OWNGRPCD))
 total
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
 #Use my MORTYR stuff from before to fix this.

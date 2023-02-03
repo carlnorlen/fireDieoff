@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 23, 2023
-#Date Updated: January 25, 2023
+#Date Updated: February 02, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -39,13 +39,13 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # pixel.data <- read.csv(file.path(dir_in, "frapsev_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_400pt_ts8_300m_20230112.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Sev_2km_buffer_400pt_ts16_300m_20230125.csv"), header = TRUE, na.strings = "NaN")
+sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Sev_2km_buffer_450pt_ts16_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 summary(control.data)
 #Add Fire Columns
 # control.data$fire_sev_2010 <- -9999

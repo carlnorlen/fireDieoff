@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 23, 2023
-#Date Updated: February 02, 2023
+#Date Updated: February 06, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -35,22 +35,23 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 #The data directory
 dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
-#Add the data
-# pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
-# pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
-# pixel.data <- read.csv(file.path(dir_in, "frapsev_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
+#Add the treatment data
 sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
+
+
+
 summary(sev.data)
-# list.files(fire_in)
-# list.files(fire_in)
-sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Sev_2km_buffer_450pt_ts16_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
+#Control data
+unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
+low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
+med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
+high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
+
+sev.control.data <- rbind(unchanged.control.data, low.control.data, med.control.data, high.control.data)
 summary(control.data)
-#Add Fire Columns
-# control.data$fire_sev_2010 <- -9999
-# control.data$fire_year_2010 <- -9999
-# control.data$fire_ID_2010 <- -9999
+#Add Fire columns for other years for the buffer data
 sev.control.data$fire_count_2010 <- -9999
 sev.control.data$fire_sev_2019 <- -9999
 sev.control.data$fire_year_2019 <- -9999
@@ -146,7 +147,7 @@ sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
   # bin >= 1 ~ '1900',
   # bin == 2 ~ '1909-1910',
   # bin >= 1911 & bin <= 1920 ~ '95-104', #Calculated relative to 2015
-  treatment == 'Control' ~ 'No Fire',
+  #treatment == 'Control' ~ 'No Fire',
   # fire.year >= 1910 & fire.year <=  1970 ~ '1910-1970',#'81-95',
   # fire.year >= 1936 & fire.year <= 1950 ~ '65-79',
   # fire.year >= 1951 & fire.year <= 1965 ~ '50-64',
@@ -164,15 +165,17 @@ sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
 #With re-export type needs to be converted to sev
 sev.pixel.data <- sev.pixel.data %>% mutate(sev.bin = case_when(
   fire_sev_2010 == '0' ~ 'No Fire',
-  fire_sev_2010 == '1' | fire_sev_2010 == '2' ~ 'Unchanged or Low',
-  fire_sev_2010 == '3' | fire_sev_2010 == '4' ~ 'Mid or High',
+  fire_sev_2010 == '1' ~ 'Unchanged',
+  fire_sev_2010 == '2' ~ 'Low',
+  fire_sev_2010 == '3' ~ 'Mid',
+  fire_sev_2010 == '4' ~ 'High',
   fire_sev_2010 == '255' ~ 'Masked')) # end function
 
 #Fire year bins for Fire Severity Data
-sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2011-2017', '1985-2010', 'No Fire')))#c('0-4','5-30','31-55','56-80',
+sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2011-2017', '1985-2010')))#c('0-4','5-30','31-55','56-80',
 
 #Make the years bin lables in the correct order
-sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
+sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Masked', 'Unchanged', 'Low','Mid', 'High')))
 
 #Recode the veg type data
 sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
@@ -197,15 +200,22 @@ sev.pixel.filter <- sev.pixel.data %>% filter(fire.year <= 2010 & Tree_Cover > 0
                     Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
                     sev.bin = sev.bin[vi.year == 2010],
                     treatment = treatment[vi.year == 2010])
-sev.hi.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Mid or High")
-sev.hi.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Mid or High")
-sev.lo.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Unchanged or Low")
-sev.lo.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Unchanged or Low")  
+
+sev.hi.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "High")
+sev.hi.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "High")
+sev.mid.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Mid")
+sev.mid.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Mid")
+sev.lo.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Low")
+sev.lo.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Low")  
   
 
 #Models for Wild Fire
 sev.hi.control.lm <- lm(data = sev.hi.control, dTree~ Water_Stress) 
 sev.hi.disturb.lm <- lm(data = sev.hi.disturb, dTree ~ Water_Stress) 
+
+#Models for Mid Severity fire
+sev.mid.control.lm <- lm(data = sev.mid.control, dTree~ Water_Stress) 
+sev.mid.disturb.lm <- lm(data = sev.mid.disturb, dTree ~ Water_Stress) 
 
 #Models for Rx Fire
 sev.lo.control.lm <- lm(data = sev.lo.control, dTree~ Water_Stress) 
@@ -214,12 +224,16 @@ sev.lo.disturb.lm <- lm(data = sev.lo.disturb, dTree ~ Water_Stress)
 #Calculate the sgemented models
 sev.hi.control.seg <- segmented(sev.hi.control.lm)
 sev.hi.disturb.seg <- segmented(sev.hi.disturb.lm)
+sev.mid.control.seg <- segmented(sev.mid.control.lm)
+sev.mid.disturb.seg <- segmented(sev.mid.disturb.lm)
 sev.lo.control.seg <- segmented(sev.lo.control.lm)
 sev.lo.disturb.seg <- segmented(sev.lo.disturb.lm)
 
 #Add predicted dNDMI values
 sev.hi.control$dTree.predict = predict(sev.hi.control.seg)
 sev.hi.disturb$dTree.predict = predict(sev.hi.disturb.seg)
+sev.mid.control$dTree.predict = predict(sev.mid.control.seg)
+sev.mid.disturb$dTree.predict = predict(sev.mid.disturb.seg)
 sev.lo.control$dTree.predict = predict(sev.lo.control.seg)
 sev.lo.disturb$dTree.predict = predict(sev.lo.disturb.seg)
 
@@ -227,43 +241,44 @@ sev.lo.disturb$dTree.predict = predict(sev.lo.disturb.seg)
 #Fits
 sev.hi.control$dTree.fit = broken.line(sev.hi.control.seg)$fit
 sev.hi.disturb$dTree.fit = broken.line(sev.hi.disturb.seg )$fit
+sev.mid.control$dTree.fit = broken.line(sev.mid.control.seg)$fit
+sev.mid.disturb$dTree.fit = broken.line(sev.mid.disturb.seg )$fit
 sev.lo.control$dTree.fit = broken.line(sev.lo.control.seg)$fit
 sev.lo.disturb$dTree.fit = broken.line(sev.lo.disturb.seg)$fit
 
 #SE fit
 sev.hi.control$dTree.se.fit = broken.line(sev.hi.control.seg)$se.fit
 sev.hi.disturb$dTree.se.fit = broken.line(sev.hi.disturb.seg)$se.fit
+sev.mid.control$dTree.se.fit = broken.line(sev.mid.control.seg)$se.fit
+sev.mid.disturb$dTree.se.fit = broken.line(sev.mid.disturb.seg)$se.fit
 sev.lo.control$dTree.se.fit = broken.line(sev.lo.control.seg)$se.fit
 sev.lo.disturb$dTree.se.fit = broken.line(sev.lo.disturb.seg)$se.fit
 
 #Recombine the data frames with the model fitted dNDMI as a column
-sev.all.models <- rbind(sev.hi.control, sev.hi.disturb, sev.lo.control, sev.lo.disturb)
+sev.all.models <- rbind(sev.hi.control, sev.hi.disturb, sev.mid.control, sev.mid.disturb, sev.lo.control, sev.lo.disturb)
 
 #R-Squared values for the four models
 r2.a  <- format(summary(sev.hi.control.seg)$r.squared, digits = 2) #I could switch this back to segmented
 r2.b <- format(summary(sev.hi.disturb.seg)$r.squared, digits = 2)
-r2.c <- format(summary(sev.lo.control.seg)$r.squared, digits = 2)
-r2.d <- format(summary(sev.lo.disturb.seg)$r.squared, digits = 2) #I could switch this back to segmented
+r2.c  <- format(summary(sev.mid.control.seg)$r.squared, digits = 2) #I could switch this back to segmented
+r2.d <- format(summary(sev.mid.disturb.seg)$r.squared, digits = 2)
+r2.e <- format(summary(sev.lo.control.seg)$r.squared, digits = 2)
+r2.f <- format(summary(sev.lo.disturb.seg)$r.squared, digits = 2) #I could switch this back to segmented
 
 #Create a data.frame of R.squared values
 r2.text <- data.frame(
   label = c(as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 =r2.a)))), 
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.b)))),
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.c)))),
-            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.d))))
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.d)))),
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.e)))),
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.f))))
   ),
-  treatment = c('Control', 'Disturb', 'Control', 'Disturb'),
-  sev.bin = c('Mid or High', 'Mid or High', 'Unchanged or Low', 'Unchanged or Low'),
-  x = c(3500, 3500, 3500, 3500),
-  y = c(-20, -20, -20, -20)
+  treatment = c('Control', 'Disturb', 'Control', 'Disturb', 'Control', 'Disturb'),
+  sev.bin = c('High', 'High', 'Mid', 'Mid', 'Low', 'Low'),
+  x = c(3500, 3500, 3500, 3500, 3500, 3500),
+  y = c(-20, -20, -20, -20, -20, -20)
 )
-
-# letter.text <- data.frame(label = c("a)", "b)", "c)", "d)"),
-#                           sequence   = c('Both Droughts', 'Both Droughts', '2nd Drought Only', '2nd Drought Only'),
-#                           drought = c('1999-2002', '2012-2015', '1999-2002',  '2012-2015'),
-#                           y     = c(-0.3, -0.3, -0.3, -0.3),
-#                           x     = c(-2400, -2400, -2400, -2400)
-# )
 
 #Create the figure
 p1 <- ggplot(data = sev.all.models) +
@@ -274,7 +289,7 @@ p1 <- ggplot(data = sev.all.models) +
   #Piecewise fit uncertainty
   geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
   
-  scale_fill_gradient2(limits = c(0,800), breaks = c(0,200,400,600), midpoint = 400, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_fill_gradient2(limits = c(0,360), breaks = c(0,90,180,270), midpoint = 180, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
     facet_grid(sev.bin ~ treatment) +
   # scale_alpha(range = c(1, 1), limits = c(50, 1000), na.value = 0.4) +
   # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +
@@ -290,7 +305,7 @@ p1
 p2 <- p1 + theme(
   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
   legend.justification = c(1, 0),
-  legend.position = c(0.15, 0.55),
+  legend.position = c(0.5, 0.4),
   legend.text = element_text(size = 10),
   legend.title = element_text(size = 10),
   legend.direction = "vertical") +
@@ -301,4 +316,4 @@ p2 <- p1 + theme(
 
 p2
 
-ggsave(filename = 'Fig6c_sev_water_stress_dTree_300m.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig6c_sev_water_stress_dTree_300m.png', height=24, width= 16, units = 'cm', dpi=900)

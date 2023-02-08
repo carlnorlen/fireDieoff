@@ -19,12 +19,14 @@ lapply(p,require,character.only=TRUE)
 #cd /C/Users/can02/mystuff/fireDieoff/FIA
 #Command for calling the script in the command line: R < stand_age_dieoff.r --vanilla
 #INstalling packages: install.packages('RColorBrewer',repo='https://cran.cnr.berkeley.edu/')
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
-# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/fia')
+# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
+setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/fia')
+
 #Add Data Sets
-sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
-# sql_dir <- 'C:\\Users\\Carl\\mystuff\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+# sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+sql_dir <- 'C:\\Users\\Carl\\mystuff\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
 fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
+
 sqlite.driver <- dbDriver("SQLite")
 db <- dbConnect(sqlite.driver,
                 dbname = fiaCA)  

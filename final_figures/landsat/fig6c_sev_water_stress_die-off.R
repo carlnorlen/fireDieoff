@@ -36,7 +36,7 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the treatment data
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_ts8_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 
@@ -44,10 +44,10 @@ sev.data$treatment <- 'Disturb'
 
 summary(sev.data)
 #Control data
-unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
-low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
-med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
-high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
+unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_ts16_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
+low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_ts16_300m_20230210.csv"), header = TRUE, na.strings = "NaN")
+med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_ts16_300m_20230210.csv"), header = TRUE, na.strings = "NaN")
+high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_ts16_300m_20230210.csv"), header = TRUE, na.strings = "NaN")
 
 sev.control.data <- rbind(unchanged.control.data, low.control.data, med.control.data, high.control.data)
 summary(control.data)
@@ -290,7 +290,7 @@ p1 <- ggplot(data = sev.all.models) +
   geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
   
   scale_fill_gradient2(limits = c(0,360), breaks = c(0,90,180,270), midpoint = 180, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-    facet_grid(sev.bin ~ treatment) +
+    facet_grid(factor(sev.bin, levels = c('Low', 'Mid', 'High')) ~ treatment) +
   # scale_alpha(range = c(1, 1), limits = c(50, 1000), na.value = 0.4) +
   # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +
   labs(fill = "Grid Cells") +
@@ -299,7 +299,7 @@ p1 <- ggplot(data = sev.all.models) +
   #Add the R^2 text
   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
   theme_bw() +
-  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (Relative dTree %)')
+  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (dTree %)')
 p1
 
 p2 <- p1 + theme(

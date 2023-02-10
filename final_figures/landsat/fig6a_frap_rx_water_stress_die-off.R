@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 23, 2023
-#Date Updated: February 02, 2023
+#Date Updated: February 10, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -21,13 +21,13 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_ts8_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_400pt_ts16_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_ts16_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -46,13 +46,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_400pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_ts8_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_400pt_ts16_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_ts16_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -125,8 +125,8 @@ pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
 pixel.data %>% summary()
 
 pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
-  treatment == 'Control' | fire.year < 1980 ~ 'No Fire',
-  fire.year >= 1980 & fire.year <= 2010 ~ '1980-2010',
+  treatment == 'Control' | fire.year < 1980 ~ 'Control',
+  fire.year >= 1980 & fire.year <= 2010 ~ 'Fire',
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
 
@@ -137,7 +137,7 @@ pixel.data <- pixel.data %>% mutate(fire.type.bin = case_when(
 
 summary(pixel.data)
 
-pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', '1980-2010',  'No Fire')))#
+pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Fire',  'Control')))#
 
 #Recode the veg type data
 pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
@@ -158,10 +158,10 @@ pixel.filter <- pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & Tr
                     fire.type.bin = fire.type.bin[vi.year == 2010])
 
 # pixel.filter %>% summary()
-wild.control <- pixel.filter %>% filter(fire.year.bin == 'No Fire' & fire.type.bin == "Wildfire")
-wild.disturb <- pixel.filter %>% filter(fire.year.bin == '1980-2010' & fire.type.bin == "Wildfire")
-rx.control <- pixel.filter %>% filter(fire.year.bin == 'No Fire' & fire.type.bin == "Rxfire")
-rx.disturb <- pixel.filter %>% filter(fire.year.bin == '1980-2010' & fire.type.bin == "Rxfire")  
+wild.control <- pixel.filter %>% filter(fire.year.bin == 'Control' & fire.type.bin == "Wildfire")
+wild.disturb <- pixel.filter %>% filter(fire.year.bin == 'Fire' & fire.type.bin == "Wildfire")
+rx.control <- pixel.filter %>% filter(fire.year.bin == 'Control' & fire.type.bin == "Rxfire")
+rx.disturb <- pixel.filter %>% filter(fire.year.bin == 'Fire' & fire.type.bin == "Rxfire")  
   
 
 #Models for Wild Fire
@@ -213,7 +213,7 @@ r2.text <- data.frame(
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.c)))),
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.d))))
   ),
-  fire.year.bin = c('No Fire', '1980-2010', 'No Fire', '1980-2010'),
+  fire.year.bin = c('Control', 'Fire', 'Control', 'Fire'),
   fire.type.bin = c('Wildfire', 'Wildfire', 'Rxfire', 'Rxfire'),
   x = c(3500, 3500, 3500, 3500),
   y = c(-20, -20, -20, -20)
@@ -234,7 +234,7 @@ p1 <- ggplot(data = all.models) +
   geom_line(mapping = aes(x=Water_Stress, y=dTree.fit), size=2, color = 'black', linetype = 'dotdash') +
   #Piecewise fit uncertainty
   geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
-  scale_fill_gradient2(limits = c(0,640), breaks = c(0,160, 320, 480), midpoint = 320, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_fill_gradient2(limits = c(0,800), breaks = c(0,200, 400, 600), midpoint = 400, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
     facet_grid(fire.type.bin ~ fire.year.bin) +
   # scale_alpha(range = c(1, 1), limits = c(50, 1000), na.value = 0.4) +
   # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +

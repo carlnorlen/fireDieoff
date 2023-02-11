@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: February 06, 2023
+#Date Updated: February 10, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -24,16 +24,16 @@ fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 # pixel.data <- read.csv(file.path(dir_in, "Stratified_sample_stand_age_2012_no_fire_history_mask_20210629_30m_v2.csv"), header = TRUE, na.strings = "NaN") #v2 is for all of Sierra and Socal
 # pixel.data <- read.csv(file.path(fire_in, "Stratified_sample_stand_age_no_fire_history_mask_01242022_30m.csv"), header = TRUE, na.strings = "NaN")
 # pixel.data <- read.csv(file.path(dir_in, "frapsev_ecoregion_stratified_sample_100pts_30m_ts8_20220713.csv"), header = TRUE, na.strings = "NaN")
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_ts8_300m_20230202.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_ts8_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
-low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
-med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
-high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_ts16_300m_20230206.csv"), header = TRUE, na.strings = "NaN")
+unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_ts16_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
+low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_ts16_300m_20230210.csv"), header = TRUE, na.strings = "NaN")
+med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_ts16_300m_20230210.csv"), header = TRUE, na.strings = "NaN")
+high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_ts16_300m_20230210.csv"), header = TRUE, na.strings = "NaN")
 
 sev.control.data <- rbind(unchanged.control.data, low.control.data, med.control.data, high.control.data)
 #Add Fire Columns
@@ -175,8 +175,8 @@ sev.pixel.data %>% summary()
 #Tree Cover versus Elevation versus Latitude
 p1 <- ggplot() +
   #Data Summary
-  geom_bin2d(data = sev.pixel.data %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+  geom_bin2d(data = sev.pixel.data %>% #sev.bin != 'Unchanged' & 
+               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                dplyr::group_by(system.index, treatment, sev.bin) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2013, 2014)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
@@ -196,7 +196,7 @@ p1
 p2<- ggplot() +
   #Data Summary
   geom_bin2d(data = sev.pixel.data %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>% #Filter by the tree types
                # filter(elevation <= 3000) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
@@ -227,7 +227,7 @@ p2
 #ADS die-off
 p3 <- ggplot() +
   geom_bin2d(data = sev.pixel.data %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>% #Filter by the tree types
                # filter(elevation <= 3000) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
@@ -248,7 +248,7 @@ p3
 p4<- ggplot() +
   #Data Summary
   geom_bin2d(data = sev.pixel.data %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+               filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>% #Filter by the tree types
                # filter(elevation <= 3000) %>%
                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
@@ -459,50 +459,6 @@ p8 <- ggplot() +
   ylab(expression('AET (mm yr'^-1*')')) + xlab('Year') 
 p8
 
-#Create the Soil Moisture Panel
-# p9 <- ggplot() + 
-#   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-#   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
-#   geom_line(data = sev.pixel.data %>%
-#               filter(Tree_Cover > 0 & fire.year <= 2010 & (sev.bin != 'Masked') & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
-#               filter(vi.year >= 2010) %>%
-#               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & 
-#               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
-#               group_by(date, sev.bin, treatment) %>%
-#               summarize(Soil_Moisture.mean = mean(Soil_Moisture), Soil_Moisture.n = n(), count = n()) %>%  
-#               filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-#             mapping = aes(x = date, y = Soil_Moisture.mean, color = treatment, linetype = treatment), 
-#             size = 1) + 
-#   #Soil Moisture 95% CI
-#   geom_ribbon(data = sev.pixel.data %>%
-#                 filter(Tree_Cover > 0 & fire.year <= 2010 & (sev.bin != 'Masked') & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
-#                 filter(vi.year >= 2010) %>%
-#                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & 
-#                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
-#                 group_by(date, sev.bin, treatment) %>%
-#                 summarize(Soil_Moisture.mean = mean(Soil_Moisture),
-#                           Soil_Moisture.sd = sd(Soil_Moisture), Soil_Moisture.n = n(), count = n()) %>%  
-#                 filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-#               mapping = aes(ymin=Soil_Moisture.mean - 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
-#                             ymax=Soil_Moisture.mean + 1.96*(Soil_Moisture.sd / sqrt(Soil_Moisture.n)),
-#                             x = date, fill = treatment), alpha = 0.3) +
-#   #Do the Formatting
-#   scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
-#   scale_linetype(name = 'Treatment') +
-#   scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
-#   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-#   guides(color = guide_legend(), linetype = guide_legend()) +
-#   theme_dark() +
-#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-#         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-#   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-#             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-#   xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ sev.bin) +
-#   ylab(expression('Soil Moisture (mm)')) + xlab('Year')
-# p9
-
 #Create the Water Stress Panel
 p10 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
@@ -565,7 +521,7 @@ p11 <- ggplot() +
              mapping = aes(x = sev.bin, y = dTree, fill = treatment), 
              fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
   stat_summary(data = sev.pixel.data %>% 
-                  filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' &  (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # & 
+                  filter(Tree_Cover > 0 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # & 
                   # filter(elevation <= 3000) %>% 
                  # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
@@ -726,7 +682,7 @@ p18 <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
   geom_line(data = sev.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 10 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' &(fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
+              filter(stand.age >= -10 & stand.age <= 10 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%         
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire perimeter and fier year by pixel match 
@@ -823,7 +779,7 @@ p19 <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
   geom_line(data = sev.pixel.data %>%
-              filter(stand.age >= -10 & stand.age <= 10 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
+              filter(stand.age >= -10 & stand.age <= 10 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & !is.na(sev.bin) &sev.bin != 'Unchanged' &  (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire

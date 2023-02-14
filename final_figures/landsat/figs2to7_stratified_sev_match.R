@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: February 10, 2023
+#Date Updated: February 14, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -153,17 +153,17 @@ sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
 #With re-export type needs to be converted to sev
 sev.pixel.data <- sev.pixel.data %>% mutate(sev.bin = case_when(
   fire_sev_2010 == '0' ~ 'No Fire',
-  fire_sev_2010 == '1'  ~ 'Unchanged',
+  fire_sev_2010 == '1' ~ 'Unchanged',
   fire_sev_2010 == '2' ~ 'Low',
   fire_sev_2010 == '3' ~ 'Mid',
- fire_sev_2010 == '4' ~ 'High',
+  fire_sev_2010 == '4' ~ 'High',
   fire_sev_2010 == '255' ~ 'Masked')) # end function
 sev.pixel.data %>% summary()
 #Fire year bins for Fire Severity Data
 sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2011-2017', '1985-2010')))#c('0-4','5-30','31-55','56-80',
 
 #Make the years bin lables in the correct order
-sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Masked', 'Unchanged', 'Low','Mid', 'High')))#c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
+sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Unchanged', 'Low','Mid', 'High')))#c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
 
 #Recode the veg type data
 sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
@@ -533,7 +533,7 @@ p11 <- ggplot() +
   theme_bw() +
   scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  theme(axis.text.y = element_text(size = 8), legend.position = c(0.8, 0.2), axis.title.y = element_text(size = 10),
+  theme(axis.text.y = element_text(size = 8), legend.position = c(0.9, 0.2), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
@@ -892,3 +892,22 @@ p21
 
 #Save the data
 ggsave(filename = 'Fig11c_sev_stand_age_shrub.png', height=18, width= 20, units = 'cm', dpi=900)
+
+sev.pixel.data %>% summary()
+
+#Stand age versus die-off
+p22 <- ggplot(data = sev.pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                dplyr::group_by(system.index, treatment, sev.bin) %>% 
+                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
+                          tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE),
+                          Water_Stress = Water_Stress[vi.year == 2015], stand.age = stand.age[vi.year == 2015]),
+              mapping = aes(x = stand.age, y = tpa_max)) + 
+  facet_wrap(.~ sev.bin) + theme_bw() +
+  geom_point(mapping = aes(color = treatment), size = 1) + 
+  geom_smooth(mapping = aes(color = treatment), method = 'lm') +
+  stat_cor(mapping = aes(color = treatment)) +
+  xlab('Years Since Fire') + ylab(expression('Die-off (trees ha'^-1*')'))
+p22
+
+#Save the data
+ggsave(filename = 'Fig7c_sev_stand_age_dieoff.png', height=24, width= 24, units = 'cm', dpi=900)

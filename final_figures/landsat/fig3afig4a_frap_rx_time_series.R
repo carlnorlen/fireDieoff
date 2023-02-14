@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 24, 2022
-#Date Updated: February 10, 2023
+#Date Updated: February 14, 2023
 #Purpose: Create figures for chapter 2 manuscript
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -128,7 +128,7 @@ pixel.data %>% summary()
 
 pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   treatment == 'Control' | fire.year < 1980 ~ 'Control',
-  fire.year >= 1980 & fire.year <= 2010 ~ 'Fire',
+  fire.year >= 1980 & fire.year <= 2010 ~ 'Disturb',
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
 
@@ -139,7 +139,7 @@ pixel.data <- pixel.data %>% mutate(fire.type.bin = case_when(
 
 summary(pixel.data)
 
-pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Fire',  'Control')))#
+pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Disturb',  'Control')))#
 
 #Recode the veg type data
 pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',

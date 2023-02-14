@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 23, 2023
-#Date Updated: February 10, 2023
+#Date Updated: February 15, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -126,7 +126,7 @@ pixel.data %>% summary()
 
 pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   treatment == 'Control' | fire.year < 1980 ~ 'Control',
-  fire.year >= 1980 & fire.year <= 2010 ~ 'Fire',
+  fire.year >= 1980 & fire.year <= 2010 ~ 'Disturb',
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2018',
   fire.year >= 2019 ~ '2019-2020'))#'0-4'))
 
@@ -137,7 +137,7 @@ pixel.data <- pixel.data %>% mutate(fire.type.bin = case_when(
 
 summary(pixel.data)
 
-pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Fire',  'Control')))#
+pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Disturb',  'Control')))#
 
 #Recode the veg type data
 pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
@@ -159,9 +159,9 @@ pixel.filter <- pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & Tr
 
 # pixel.filter %>% summary()
 wild.control <- pixel.filter %>% filter(fire.year.bin == 'Control' & fire.type.bin == "Wildfire")
-wild.disturb <- pixel.filter %>% filter(fire.year.bin == 'Fire' & fire.type.bin == "Wildfire")
+wild.disturb <- pixel.filter %>% filter(fire.year.bin == 'Disturb' & fire.type.bin == "Wildfire")
 rx.control <- pixel.filter %>% filter(fire.year.bin == 'Control' & fire.type.bin == "Rxfire")
-rx.disturb <- pixel.filter %>% filter(fire.year.bin == 'Fire' & fire.type.bin == "Rxfire")  
+rx.disturb <- pixel.filter %>% filter(fire.year.bin == 'Disturb' & fire.type.bin == "Rxfire")  
   
 
 #Models for Wild Fire
@@ -213,7 +213,7 @@ r2.text <- data.frame(
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.c)))),
             as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.d))))
   ),
-  fire.year.bin = c('Control', 'Fire', 'Control', 'Fire'),
+  fire.year.bin = c('Control', 'Disturb', 'Control', 'Disturb'),
   fire.type.bin = c('Wildfire', 'Wildfire', 'Rxfire', 'Rxfire'),
   x = c(3500, 3500, 3500, 3500),
   y = c(-20, -20, -20, -20)
@@ -261,7 +261,7 @@ p2 <- p1 + theme(
 
 p2
 
-ggsave(filename = 'Fig6a_water_stress_dTree_300m.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig6a_frap_rx_water_stress_dTree_300m.png', height=16, width= 16, units = 'cm', dpi=900)
 
 # ggplot(data = pixel.filter, mapping = aes(x = ADS, y = dNDMI)) + geom_point() +
 # geom_smooth(method = 'lm') + stat_cor(arg = 'pearson')

@@ -90,7 +90,7 @@ live <- all %>% filter(STATUSCD == 1) %>% group_by(INVYR, PLOT) %>% summarize(co
                                                                               FORTYPCD = first(FORTYPCD), MEANING = first(MEANING), DSTRBCD1 = first(DSTRBCD1), 
                                                                               DSTRBYR1 = first(DSTRBYR1), OWNGRPCD = first(OWNGRPCD))
 
-all %>% filter(STATUSCD == 1)
+# all %>% filter(STATUSCD == 1)
 # live
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
 dead <- all %>% filter(STATUSCD == 2 & AGENTCD %in% c(70, 30, 31, 32)) %>% group_by(PLOT, INVYR) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
@@ -118,7 +118,7 @@ join <- join %>% dplyr::mutate(tpa.dead.pct = replace(tpa.dead.pct, is.na(tpa.de
 # join %>% summary()
 join$years.disturb <- join$INVYR - join$DSTRBYR1
 
-join %>% filter(DSTRBCD1 %in% c('31', '32') & INVYR %in% c('2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013')) %>% group_by(DSTRBCD1) %>% count()
+# join %>% filter(DSTRBCD1 %in% c('31', '32') & INVYR %in% c('2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013')) %>% group_by(DSTRBCD1) %>% count()
 
 join <- join %>% mutate(disturb.bin = case_when(
   # DSTRBCD1 %in% c(10, 11, 12, 54, 70) ~ 'Die-off',
@@ -506,6 +506,134 @@ f2 <- ggarrange(p4, p5, p6, ncol = 1, nrow = 3, common.legend = FALSE, heights =
 f2
 
 ggsave(filename = 'Fig17_FIA_fire_recovery_desnity_plots_exploration.png', height=15, width= 10, units = 'cm', dpi=900)
+
+#Test of Mortality by common name species
+live.pine <- all %>% filter(STATUSCD == 1) %>% 
+  group_by(INVYR, PLOT, COMMON_NAME, .drop = FALSE) %>% 
+  summarize(count.live = n(), tpa.live = sum(count), 
+            basal_area.live = sum(basal_area), STDAGE = median(STDAGE), FORTYPCD = median (FORTYPCD), MEANING = first(MEANING), DSTRBCD1 = first(DSTRBCD1), 
+            DSTRBYR1 = first(DSTRBYR1), OWNGRPCD = first(OWNGRPCD))
+live.pine
+#There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
+dead.pine <- all %>% filter(STATUSCD == 2 & AGENTCD %in% c(70, 30, 31, 32)) %>% 
+  group_by(PLOT, INVYR, COMMON_NAME, .drop = FALSE) %>% 
+  summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
+
+dead.pine
+join.pine <- left_join(live.pine, dead.pine, by = c('PLOT', 'INVYR', 'COMMON_NAME'))
+
+#Replace the NAs with 0s
+join.pine <- join.pine %>% dplyr::mutate(basal_area.dead = replace(basal_area.dead, is.na(basal_area.dead), 0), 
+                                         count.dead = replace(count.dead, is.na(count.dead), 0),
+                                         tpa.dead = replace(tpa.dead, is.na(tpa.dead), 0)
+) %>% group_by(INVYR, PLOT) %>%
+  fill(STDAGE, .direction = c("up"))
+# join
+# summary(join)
+#Add the total basal area calculations
+join.pine$count.all <- join.pine$count.live + join.pine$count.dead
+join.pine$tpa.all <- join.pine$tpa.live + join.pine$tpa.dead
+join.pine$basal_area.all <- join.pine$basal_area.live + join.pine$basal_area.dead
+join.pine$basal_area.dead.pct <- join.pine$basal_area.dead / join.pine$basal_area.all
+#fill the NAs for basal_area.dead.pct, this could go earlier
+join.pine <- join.pine %>% dplyr::mutate(basal_area.dead.pct = replace(basal_area.dead.pct, is.na(basal_area.dead.pct), 0))
+
+join.pine$tpa.dead.pct <- join.pine$tpa.dead / join.pine$tpa.all
+#fill the NAs for basal_area.dead.pct, this could go earlier
+join.pine <- join.pine %>% dplyr::mutate(tpa.dead.pct = replace(tpa.dead.pct, is.na(tpa.dead.pct), 0))
+
+#Mortality by specific pine species
+#Figure out species level mortality
+
+#Percentage mortality by Pine/Fir species
+pct.dead <- join.pine %>% group_by(COMMON_NAME) %>% summarize(mortality = mean(basal_area.dead.pct), n = n()) %>% filter(mortality > 0.02)
+pct.dead$COMMON_NAME
+p7 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #Mean Die-off
+  geom_line(data = join.pine %>% ungroup() %>% 
+              filter(COMMON_NAME %in% pct.dead$COMMON_NAME & COMMON_NAME != 'California juniper' & COMMON_NAME != 'white alder' & COMMON_NAME != 'gray or California foothill pine') %>% 
+              group_by(INVYR, COMMON_NAME) %>% summarize(BA.dead = mean(basal_area.dead)), 
+            mapping = aes(x = INVYR, y = BA.dead, color = COMMON_NAME, linetype = COMMON_NAME), linewidth = 1) +
+  #95% CI Die-off
+  geom_ribbon(data = join.pine %>% ungroup() %>%
+                filter(COMMON_NAME %in% pct.dead$COMMON_NAME & COMMON_NAME != 'California juniper' & COMMON_NAME != 'white alder' & COMMON_NAME != 'gray or California foothill pine') %>%
+                group_by(INVYR, COMMON_NAME) %>%
+                summarize(BA.dead = mean(basal_area.dead),
+                          BA.dead.sd = sd(basal_area.dead), BA.n = n()),
+              mapping = aes(ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+                            ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
+                            x = INVYR, fill = COMMON_NAME, linetype = COMMON_NAME), alpha = 0.2) +
+  theme_bw() +
+  guides(color=guide_legend(ncol=2)) +
+  theme(axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = c(0.35, 0.6), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.y = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  scale_color_viridis_d(name = "Tree\nSpecies") +
+  scale_fill_viridis_d(name = "Tree\nSpecies") +
+  scale_linetype_discrete(name = "Tree\nSpecies") +
+  # scale_fill_viridis_d("Tree\nSpecies", option = 'B') +
+  # scale_color_viridis_d("Tree\nSpecies", option = 'B') +
+  # theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
+p7
+
+# join.pine %>% filter(INVYR %in% c(2013,2014,2015,2016,2017,2018,2019)) %>% group_by(COMMON_NAME) %>% summarize(mortality = mean(basal_area.dead.pct))
+
+p8 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #The data mean
+  geom_line(data = join.pine %>% ungroup() %>% 
+              filter(COMMON_NAME %in% pct.dead$COMMON_NAME & COMMON_NAME != 'California juniper' & COMMON_NAME != 'white alder' & COMMON_NAME != 'gray or California foothill pine') %>% 
+              group_by(INVYR, COMMON_NAME) %>% summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100, BA.n = n()), 
+            mapping = aes(x = INVYR, y = BA.dead.pct.mean, color = COMMON_NAME, linetype = COMMON_NAME),  size = 1) +
+  #The error bars
+  geom_ribbon(data = join.pine %>% ungroup() %>% 
+                filter(COMMON_NAME %in% pct.dead$COMMON_NAME & COMMON_NAME != 'California juniper' & COMMON_NAME != 'white alder' & COMMON_NAME != 'gray or California foothill pine') %>%  
+                group_by(INVYR, COMMON_NAME) %>%
+                summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100,
+                          BA.dead.pct.sd = sd(basal_area.dead.pct) * 100, 
+                          BA.n = n()),
+              mapping = aes(ymin=BA.dead.pct.mean - 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
+                            ymax=BA.dead.pct.mean + 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
+                            x = INVYR, fill = COMMON_NAME), alpha = 0.2) +
+  scale_color_viridis_d(name = "Tree\nSpecies") +
+  scale_fill_viridis_d(name = "Tree\nSpecies") +
+  scale_linetype_discrete(name = "Tree\nSpecies") +
+  theme_bw() +
+  theme(legend.position = 'none', axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), axis.text.y = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  xlab('Year') + ylab('Mortality (%)')
+p8
+
+# join %>% filter(STDAGE <= 10) %>% count()
+p9 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+  #The data mean
+  geom_line(data = join.pine %>% ungroup() %>% 
+              filter(COMMON_NAME %in% pct.dead$COMMON_NAME & COMMON_NAME != 'California juniper' & COMMON_NAME != 'white alder' & COMMON_NAME != 'gray or California foothill pine') %>%               
+              group_by(INVYR, COMMON_NAME) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), 
+            mapping = aes(x = INVYR, y = BA.all, color = COMMON_NAME, linetype = COMMON_NAME),  size = 1) +
+  #The error bars
+  geom_ribbon(data = join.pine %>% ungroup() %>% 
+                filter(COMMON_NAME %in% pct.dead$COMMON_NAME & COMMON_NAME != 'California juniper' & COMMON_NAME != 'white alder' & COMMON_NAME != 'gray or California foothill pine') %>%                 
+                group_by(INVYR, COMMON_NAME) %>%
+                summarize(BA.mean = mean(basal_area.all),
+                          BA.sd = sd(basal_area.all), BA.n = n()),
+              mapping = aes(ymin=BA.mean - 1.96*(BA.sd / sqrt(BA.n)),
+                            ymax=BA.mean + 1.96*(BA.sd / sqrt(BA.n)),
+                            x = INVYR, fill = COMMON_NAME), alpha = 0.2) +
+  scale_color_viridis_d(name = "Tree\nSpecies") +
+  scale_fill_viridis_d(name = "Tree\nSpecies") +
+  scale_linetype_discrete(name = "Tree\nSpecies") +
+  theme_bw() +
+  theme(legend.position = 'none') +
+  xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')'))
+p9
+
+f10 <- ggarrange(p7, p8, p9, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+f10
+
+ggsave(filename = 'Fig20_pine_fir_byCommonName_FIA_mortality_density_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
 
 #Do Plot by Ownership Type
 # p5<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 

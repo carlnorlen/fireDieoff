@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: February 14, 2023
+#Date Updated: February 16, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -8,12 +8,13 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv')
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'MatchIt')
 # install.packages(p,repo='https://cran.r-project.org/')
 
 # install.packages(c('ggmap'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 
+library(MatchIt)
 #Set the working directory
 setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 
@@ -131,6 +132,16 @@ sev.pixel.data$GPP <- sev.pixel.data$GPP
 sev.pixel.data$elevation <- sev.pixel.data$elevation
 sev.pixel.data$PrET <- sev.pixel.data$ppt - sev.pixel.data$AET
 # 
+
+summary(sev.pixel.data %>% filter(fire_sev_2010 != 243))
+sev.pixel.data <- sev.pixel.data %>% mutate(treat = case_when(treatment == 'Disturb' ~ 1, treatment == 'Control' ~ 0))
+match0 <- matchit(data = sev.pixel.data %>% filter(fire_sev_2010 != 243), formula = treat ~ Tree_Cover + clm_precip_sum, method = NULL, distance = "glm")
+summary(match0)
+
+match1 <- matchit(data = sev.pixel.data %>% filter(fire_sev_2010 != 243), formula = treat ~ clm_precip_sum, 
+                  method = "nearest", distance = "glm")
+summary(match1)
+
 sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
   # bin >= 1 ~ '1900',
   # bin == 2 ~ '1909-1910',

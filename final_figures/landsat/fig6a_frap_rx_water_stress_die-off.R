@@ -21,13 +21,13 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_ts8_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_100mm_2C_ts8_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_ts16_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_100mm_2C_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -46,13 +46,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_ts8_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_100mm_2C_ts8_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_ts16_300m_20230207.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_100mm_2C_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999

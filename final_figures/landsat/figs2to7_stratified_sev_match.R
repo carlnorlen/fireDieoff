@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: February 21, 2023
+#Date Updated: February 22, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -16,22 +16,26 @@ lapply(p,require,character.only=TRUE)
 
 # library(MatchIt)
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
-dir_in <- "D:\\Fire_Dieoff"
-fire_in <- "D:\\Large_Files\\Fire_Dieoff"
+# dir_in <- "D:\\Fire_Dieoff"
+# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
+dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
+
 #Add the data
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_20shrub_20tree_ts8_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_500mm_10tree_ts8_300m_20230222.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_20shrub_20tree_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
-low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_20shrub_20tree_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
-med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_20shrub_20tree_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
-high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_20shrub_20tree_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
+unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_500mm_10tree_ts16_300m_20230222.csv"), header = TRUE, na.strings = "NaN")
+low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_500mm_10tree_ts16_300m_20230222.csv"), header = TRUE, na.strings = "NaN")
+med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_500mm_10tree_ts16_300m_20230222.csv"), header = TRUE, na.strings = "NaN")
+high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_500mm_10tree_ts16_300m_20230222.csv"), header = TRUE, na.strings = "NaN")
 
 sev.control.data <- rbind(unchanged.control.data, low.control.data, med.control.data, high.control.data)
 #Add Fire Columns
@@ -206,7 +210,7 @@ sev.pixel.data %>%
 
 #Testing out the control matches...
 pa <- ggplot(data = sev.pixel.data %>% 
-         filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
+         filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1987 & !is.na(sev.bin) & sev.bin != 'Unchanged' & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
          #Match the controls to the disturbed based on the stratified sampling bins
          filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
                           sev.bin == 'Low' ~ stratlayer %in% lo.strat,

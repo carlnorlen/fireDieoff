@@ -36,22 +36,35 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the treatment data
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_100mm_2C_ts8_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_200mm_5C_5tree_ts8_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
-
-
-
 summary(sev.data)
-#Control data
-unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_100mm_2C_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
-low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_100mm_2C_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
-med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_100mm_2C_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
-high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_100mm_2C_ts16_300m_20230221.csv"), header = TRUE, na.strings = "NaN")
+# list.files(fire_in)
+# list.files(fire_in)
+raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_200mm_5C_5tree_ts16_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+# unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
+# low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
+# med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
+# high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
 
+#Duplicate and add the fire severity columns
+unchanged.control.data <- raw.sev.control.data
+unchanged.control.data$fire_sev_2010 <- 1
+low.control.data <- raw.sev.control.data
+low.control.data$fire_sev_2010 <- 2
+med.control.data <- raw.sev.control.data
+med.control.data$fire_sev_2010 <- 3
+high.control.data <- raw.sev.control.data
+high.control.data$fire_sev_2010 <- 4
+# unchanged.control.data
+# raw.sev.control.data
+# sev.data
 sev.control.data <- rbind(unchanged.control.data, low.control.data, med.control.data, high.control.data)
-summary(control.data)
-#Add Fire columns for other years for the buffer data
+#Add Fire Columns
+# control.data$fire_sev_2010 <- -9999
+# control.data$fire_year_2010 <- -9999
+# control.data$fire_ID_2010 <- -9999
 sev.control.data$fire_count_2010 <- -9999
 sev.control.data$fire_sev_2019 <- -9999
 sev.control.data$fire_year_2019 <- -9999
@@ -99,15 +112,15 @@ sev.pixel.data$year <- as.numeric(sev.pixel.data$year) + 1984
 sev.pixel.data[sev.pixel.data$tpa_max < 0,]$tpa_max <- NA
 
 #Convert fire data -9999 to NAs
-# sev.pixel.data[sev.pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
+sev.pixel.data[sev.pixel.data$fire_sev_2010 == -9999,]$fire_sev_2010 <- NA
 sev.pixel.data[sev.pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2010 == -9999,]$fire_ID_2010 <- NA
 sev.pixel.data[sev.pixel.data$fire_count_2010 == -9999,]$fire_count_2010 <- NA
-# sev.pixel.data[sev.pixel.data$fire_type_2019 == -9999,]$fire_type_2019 <- NA
+sev.pixel.data[sev.pixel.data$fire_sev_2019 == -9999,]$fire_sev_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2019 == -9999,]$fire_ID_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_count_2019 == -9999,]$fire_count_2019 <- NA
-# sev.pixel.data[sev.pixel.data$fire_type_2020 == -9999,]$fire_type_2020 <- NA
+sev.pixel.data[sev.pixel.data$fire_sev_2020 == -9999,]$fire_sev_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_year_2020 == -9999,]$fire_year_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2020 == -9999,]$fire_ID_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_count_2020 == -9999,]$fire_count_2020 <- NA
@@ -143,11 +156,21 @@ sev.pixel.data$GPP <- sev.pixel.data$GPP
 sev.pixel.data$elevation <- sev.pixel.data$elevation
 sev.pixel.data$PrET <- sev.pixel.data$ppt - sev.pixel.data$AET
 # 
+
+summary(sev.pixel.data %>% filter(fire_sev_2010 != 243))
+sev.pixel.data <- sev.pixel.data %>% mutate(treat = case_when(treatment == 'Disturb' ~ 1, treatment == 'Control' ~ 0))
+# match0 <- matchit(data = sev.pixel.data %>% filter(fire_sev_2010 != 243), formula = treat ~ Tree_Cover + clm_precip_sum, method = NULL, distance = "glm")
+# summary(match0)
+# 
+# match1 <- matchit(data = sev.pixel.data %>% filter(fire_sev_2010 != 243), formula = treat ~ clm_precip_sum, 
+#                   method = "nearest", distance = "glm")
+# summary(match1)
+
 sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
   # bin >= 1 ~ '1900',
   # bin == 2 ~ '1909-1910',
   # bin >= 1911 & bin <= 1920 ~ '95-104', #Calculated relative to 2015
-  #treatment == 'Control' ~ 'No Fire',
+  # treatment == 'Control' ~ 'No Fire',
   # fire.year >= 1910 & fire.year <=  1970 ~ '1910-1970',#'81-95',
   # fire.year >= 1936 & fire.year <= 1950 ~ '65-79',
   # fire.year >= 1951 & fire.year <= 1965 ~ '50-64',
@@ -170,30 +193,33 @@ sev.pixel.data <- sev.pixel.data %>% mutate(sev.bin = case_when(
   fire_sev_2010 == '3' ~ 'Mid',
   fire_sev_2010 == '4' ~ 'High',
   fire_sev_2010 == '255' ~ 'Masked')) # end function
-
+sev.pixel.data %>% summary()
 #Fire year bins for Fire Severity Data
 sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2011-2017', '1985-2010')))#c('0-4','5-30','31-55','56-80',
 
 #Make the years bin lables in the correct order
-sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Masked', 'Unchanged', 'Low','Mid', 'High')))
+sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Unchanged', 'Low','Mid', 'High')))#c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
 
 #Recode the veg type data
 sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
                                   '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
                                   '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
-summary(sev.pixel.data)
+sev.pixel.data %>% summary()
 
-sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', '1980-2010',  'No Fire')))#
-
-#Recode the veg type data
-# sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
-#                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
-#                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
+#Select strat categories for fire treatments
+un.strat <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
+lo.strat <- sev.pixel.data %>% filter(sev.bin == 'Low' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 60) %>% pull(stratlayer)
+mid.strat <- sev.pixel.data %>% filter(sev.bin == 'Mid' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 40) %>% pull(stratlayer)
+hi.strat <- sev.pixel.data %>% filter(sev.bin == 'High' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 40) %>% pull(stratlayer)
 
 
 #Filter the data into subsets for modeling
 sev.pixel.filter <- sev.pixel.data %>% filter(fire.year <= 2010 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+                    filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
+                   sev.bin == 'Low' ~ stratlayer %in% lo.strat,
+                   sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
+                   sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
                 dplyr::group_by(system.index) %>% 
                 summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
                     RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]),

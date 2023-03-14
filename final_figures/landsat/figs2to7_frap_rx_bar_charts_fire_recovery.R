@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: February 14, 2023
+#Date Updated: March 14, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -23,13 +23,13 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5C_5tree_ts8_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_100elev_5tree_ts8_300m_20230314.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5C_5tree_ts16_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_100elev_5tree_ts16_300m_20230314.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -48,13 +48,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5C_5tree_ts8_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_100elev_5tree_ts8_300m_20230314.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5C_5tree_ts16_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_100elev_5tree_ts16_300m_20230314.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -148,8 +148,8 @@ pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character
 
 
 #Select strat categories for fire treatments
-frap.strat <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 40) %>% pull(stratlayer) 
-rx.strat <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer)
+frap.strat <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
+rx.strat <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 5) %>% pull(stratlayer)
 
 #Tree Cover versus Elevation versus Latitude
 p1 <- ggplot() +
@@ -408,11 +408,144 @@ f4
 ggsave(filename = 'Fig5a_wild_fire_bar_chart_comparison.png', height=24, width = 18, units = 'cm', dpi=900)
 # summary(pixel.data)
 
+# pixel.data %>% 
+#   filter(!is.na(tpa_max) & tpa_max > 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+#   filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+#                    fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+#   dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
+#   summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]) %>%
+#   ungroup() %>%
+#   group_by(fire.type.bin, system.index) %>%
+#   summarize(dADS.mean = mean((tpa_max[fire.year.bin == 'Disturb'] - tpa_max[fire.year.bin == 'Control'])/ tpa_max[fire.year.bin == 'Control']))
+
+#Figure 12: Bar Chats, this could be for statistics
+#ADS die-off
+p16 <- ggplot() +
+  #Create bars and error bars
+  geom_point(data = pixel.data %>% 
+                 filter(!is.na(tpa_max) & tpa_max > 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
+                 summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]) %>%
+                 ungroup() %>%
+                 group_by(fire.type.bin) %>%
+                 summarize(dADS.mean = (mean(tpa_max[fire.year.bin == 'Disturb']) - mean(tpa_max[fire.year.bin == 'Control']))/ mean(tpa_max[fire.year.bin == 'Control'])),
+               mapping = aes(x = fire.type.bin, y = dADS.mean * 100), position = position_dodge(width = 0.5)) +  
+  geom_errorbar(data = pixel.data %>%
+                 filter(!is.na(tpa_max) & tpa_max > 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
+                 summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]) %>%
+                 ungroup() %>%
+                 group_by(fire.type.bin) %>%
+                 summarize(dADS.mean = (mean(tpa_max[fire.year.bin == 'Disturb']) - mean(tpa_max[fire.year.bin == 'Control']))/ mean(tpa_max[fire.year.bin == 'Control']),
+          dADS.sd = (sd(tpa_max[fire.year.bin == 'Disturb'])^2 + sd(tpa_max[fire.year.bin == 'Control'])^2) / sd(tpa_max[fire.year.bin == 'Control']), 
+          dADS.n = n()),
+mapping = aes(ymin=dADS.mean*100 - 1.96*(dADS.sd*100 / dADS.n),
+              ymax=dADS.mean*100 + 1.96*(dADS.sd*100 / dADS.n),
+              x = fire.type.bin), position = position_dodge(width = 0.1)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab('Difference in Mortality (%)') 
+p16
+
+# ggsave(filename = 'Fig10_ADS_mortality_stand_age_wildfire_10pt_300m.png', height=16, width= 18, units = 'cm', dpi=900)
+
+#Pre-Die-off Tree Cover
+p17 <- ggplot() +
+  #Create the Error Bars
+  geom_point(data = pixel.data %>% 
+                 filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
+                 summarize(Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)])) %>%
+                 ungroup() %>%
+                 group_by(fire.type.bin) %>%
+                 summarize(dTree.mean = (mean(Tree_Cover[fire.year.bin == 'Disturb']) - mean(Tree_Cover[fire.year.bin == 'Control']))/ mean(Tree_Cover[fire.year.bin == 'Control'])),
+               mapping = aes(x = fire.type.bin, y = dTree.mean * 100), position = position_dodge(width = 0.5)) +  
+  geom_errorbar(data = pixel.data %>% 
+                 filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
+                 summarize(Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)]))%>%
+                 ungroup() %>%
+                 group_by(fire.type.bin) %>%
+                 summarize(dTree.mean = (mean(Tree_Cover[fire.year.bin == 'Disturb']) - mean(Tree_Cover[fire.year.bin == 'Control']))/ mean(Tree_Cover[fire.year.bin == 'Control']),
+                           dTree.sd = (sd(Tree_Cover[fire.year.bin == 'Disturb'])^2 + sd(Tree_Cover[fire.year.bin == 'Control'])^2) / sd(Tree_Cover[fire.year.bin == 'Control']), 
+                           dTree.n = n()),
+               mapping = aes(ymin=dTree.mean*100 - 1.96*(dTree.sd*100 / dTree.n),
+                             ymax=dTree.mean*100 + 1.96*(dTree.sd*100 / dTree.n),
+                             x = fire.type.bin), position = position_dodge(width = 0.1)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  ylab('Change in Tree Cover (%)')
+p17
+
+#Water Stress
+p18 <- ggplot() +
+  #Create the Error Bars
+  geom_point(data = pixel.data %>% 
+                 filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
+                 summarize(#tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], 
+                           Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)])) %>%
+               ungroup() %>%
+               group_by(fire.type.bin) %>%
+               summarize(dWater_Stress.mean = (mean(Water_Stress[fire.year.bin == 'Disturb']) - mean(Water_Stress[fire.year.bin == 'Control']))/ mean(Water_Stress[fire.year.bin == 'Control'])),
+             mapping = aes(x = fire.type.bin, y = dWater_Stress.mean * 100), position = position_dodge(width = 0.5)) + 
+  geom_errorbar(data = pixel.data %>% 
+                 filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
+                 summarize(#tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], 
+                           Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)])) %>%
+                 ungroup() %>%
+                 group_by(fire.type.bin) %>%
+                 summarize(dWater_Stress.mean = (mean(Water_Stress[fire.year.bin == 'Disturb']) - mean(Water_Stress[fire.year.bin == 'Control']))/ mean(Water_Stress[fire.year.bin == 'Control']),
+                           dWater_Stress.sd = (sd(Water_Stress[fire.year.bin == 'Disturb'])^2 + sd(Water_Stress[fire.year.bin == 'Control'])^2) / sd(Water_Stress[fire.year.bin == 'Control']), 
+                           dWater_Stress.n = n()),
+               mapping = aes(ymin=dWater_Stress.mean*100 - 1.96*(dWater_Stress.sd*100 / dWater_Stress.n),
+                             ymax=dWater_Stress.mean*100 + 1.96*(dWater_Stress.sd*100 / dWater_Stress.n),
+                             x = fire.type.bin), position = position_dodge(width = 0.1)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  xlab('Fire Type') + ylab('Change in Water Stress (%)') 
+p18
+
+#Combine the Panels
+f5 <- ggarrange(p16, p17, p18,  ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)', 'd)', 'e)'))
+f5
+
+ggsave(filename = 'Fig12a_wild_fire_bar_chart_comparison.png', height=24, width = 18, units = 'cm', dpi=900)
+# summary(pixel.data)
+
 #Create a manual color scale
 cols <- c("Shrub"="green","Herb"="brown","Tree"="forest green", "Bare" = "gray")
 fills <- c("Shrub"="green","Herb"="brown","Tree"="forest green", "Bare" = "gray")
 fills
-p18 <- ggplot() + 
+p19 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
@@ -517,12 +650,12 @@ p18 <- ggplot() +
   scale_fill_manual(values = fills) + 
   guides(fill = "none") +
   ylab(expression('Cover (%)')) + xlab('Years Since Fire')
-p18
+p19
 
 #Save the data
 ggsave(filename = 'Fig8a_frap_stand_age_veg_cover.png', height=18, width= 20, units = 'cm', dpi=900)
 
-p19 <- ggplot() + 
+p20 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
@@ -560,13 +693,13 @@ p19 <- ggplot() +
   scale_fill_manual(values = fills) + facet_grid(.~ fire.type.bin) +
   guides(fill = "none") +
   ylab(expression('Tree Reduction (%)')) + xlab('Years Since Fire')
-p19
+p20
 
 #Save the data
-ggsave(filename = 'Fig9a_frap_stand_age_tree_cover.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig9a_frap_stand_age_tree_cover.png', height=12, width= 20, units = 'cm', dpi=900)
 
 #AET change with wildfire (FRAP)
-p20 <- ggplot() + 
+p21 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
 #Create a Tree Cover line
@@ -604,13 +737,13 @@ theme_bw() +
   scale_fill_manual(values = fills) + facet_grid(.~ fire.type.bin) +
   guides(fill = "none") +
   ylab(expression('AET Reduction (mm yr'^-1*')')) + xlab('Years Since Fire')
-p20
+p21
 
 #Save the data
 ggsave(filename = 'Fig10a_frap_stand_age_AET.png', height=18, width= 20, units = 'cm', dpi=900)
 
 #Pr-ET change with wildfire (FRAP)
-p21 <- ggplot() + 
+p22 <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
@@ -648,7 +781,7 @@ p21 <- ggplot() +
   scale_fill_manual(values = fills) + facet_grid(.~ fire.type.bin) +
   guides(fill = "none") +
   ylab(expression('Shrub Change (%)')) + xlab('Years Since Fire')
-p21
+p22
 
 #Save the data
 ggsave(filename = 'Fig11a_frap_stand_age_shrub.png', height=18, width= 20, units = 'cm', dpi=900)
@@ -656,7 +789,7 @@ ggsave(filename = 'Fig11a_frap_stand_age_shrub.png', height=18, width= 20, units
 pixel.data %>% summary()
 
 #Do stand age versus die-off
-p22 <- ggplot(data = pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+p23 <- ggplot(data = pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>% 
@@ -669,7 +802,7 @@ p22 <- ggplot(data = pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921
   geom_smooth(mapping = aes(color = fire.year.bin), method = 'lm') +
   stat_cor(mapping = aes(color = fire.year.bin)) +
   xlab('Years Since Fire') + ylab(expression('Die-off (trees ha'^-1*')'))
-p22
+p23
 
 #Save the data
 ggsave(filename = 'Fig7a_frap_rx_stand_age_dieoff.png', height=12, width= 24, units = 'cm', dpi=900)

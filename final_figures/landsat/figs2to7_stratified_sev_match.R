@@ -26,13 +26,13 @@ dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 
 #Add the data
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_100elev_5tree_ts8_300m_20230314.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_200elev_lfevt_5tree_ts8_300m_20230315.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_100elev_5tree_ts16_300m_20230314.csv"), header = TRUE, na.strings = "NaN")
+raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_200elev_lfevt_5tree_ts16_300m_20230315.csv"), header = TRUE, na.strings = "NaN")
 # unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
 # low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
 # med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
@@ -198,10 +198,23 @@ sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_c
 sev.pixel.data %>% summary()
 
 #Select strat categories for fire treatments
-un.strat <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 10) %>% pull(stratlayer) 
-lo.strat <- sev.pixel.data %>% filter(sev.bin == 'Low' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer)
-mid.strat <- sev.pixel.data %>% filter(sev.bin == 'Mid' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 15) %>% pull(stratlayer)
-hi.strat <- sev.pixel.data %>% filter(sev.bin == 'High' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 15) %>% pull(stratlayer)
+un.disturb <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
+lo.disturb <- sev.pixel.data %>% filter(sev.bin == 'Low' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 35) %>% pull(stratlayer)
+mid.disturb <- sev.pixel.data %>% filter(sev.bin == 'Mid' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer)
+hi.disturb <- sev.pixel.data %>% filter(sev.bin == 'High' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 25) %>% pull(stratlayer)
+
+un.control <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
+lo.control <- sev.pixel.data %>% filter(sev.bin == 'Low' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 35) %>% pull(stratlayer)
+mid.control <- sev.pixel.data %>% filter(sev.bin == 'Mid' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer)
+hi.control <- sev.pixel.data %>% filter(sev.bin == 'High' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 25) %>% pull(stratlayer)
+
+un.strat <- intersect(un.disturb, un.control)
+lo.strat <- intersect(lo.disturb, lo.control)
+mid.strat <- intersect(mid.disturb, mid.control)
+hi.strat <- intersect(hi.disturb, hi.control)
+
+# sev.pixel.data %>% group_by(sev.bin, treatment) %>% summary()
+
 # print(hi.strat)
 # print(mid.strat)
 # print(lo.strat)
@@ -596,7 +609,7 @@ p8 <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(200, 600) + 
+  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(200, 650) + 
   #facet_grid(. ~ sev.bin) +
   ylab(expression('AET (mm yr'^-1*')')) + xlab('Year') 
 p8

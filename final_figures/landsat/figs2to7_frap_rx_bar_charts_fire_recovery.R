@@ -23,13 +23,13 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_100elev_5tree_ts8_300m_20230315.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_100elev_lfevt_5tree_ts8_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_100elev_5tree_ts16_300m_20230315.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_100elev_lfevt_5tree_ts16_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -48,13 +48,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_100elev_5tree_ts8_300m_20230315.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_100elev_lfevt_5tree_ts8_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_100elev_5tree_ts16_300m_20230315.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_100elev_lfevt_5tree_ts16_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -148,8 +148,15 @@ pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character
 
 
 #Select strat categories for fire treatments
-frap.strat <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
-rx.strat <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer)
+frap.disturb <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
+rx.disturb <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 5) %>% pull(stratlayer)
+# print(frap.strat)
+
+frap.control <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
+rx.control <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 5) %>% pull(stratlayer)
+
+frap.strat <- intersect(frap.disturb, frap.control)
+rx.strat <- intersect(rx.disturb, rx.control)
 
 #Tree Cover versus Elevation versus Latitude
 p1 <- ggplot() +
@@ -696,7 +703,7 @@ p20 <- ggplot() +
 p20
 
 #Save the data
-ggsave(filename = 'Fig9a_frap_stand_age_tree_cover.png', height=12, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig9a_frap_stand_age_tree_cover.png', height=8, width= 20, units = 'cm', dpi=900)
 
 #AET change with wildfire (FRAP)
 p21 <- ggplot() + 
@@ -740,7 +747,7 @@ theme_bw() +
 p21
 
 #Save the data
-ggsave(filename = 'Fig10a_frap_stand_age_AET.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig10a_frap_stand_age_AET.png', height=8, width= 20, units = 'cm', dpi=900)
 
 #Pr-ET change with wildfire (FRAP)
 p22 <- ggplot() + 
@@ -784,12 +791,12 @@ p22 <- ggplot() +
 p22
 
 #Save the data
-ggsave(filename = 'Fig11a_frap_stand_age_shrub.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig11a_frap_stand_age_shrub.png', height=8, width= 20, units = 'cm', dpi=900)
 
 pixel.data %>% summary()
 
 #Do stand age versus die-off
-p23 <- ggplot(data = pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+p23 <- ggplot(data = pixel.data %>% filter(tpa_max >= 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>% 

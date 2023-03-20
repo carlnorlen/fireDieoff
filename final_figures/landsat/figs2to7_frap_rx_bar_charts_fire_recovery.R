@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: March 14, 2023
+#Date Updated: March 20, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -8,7 +8,7 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo')
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr')
 # install.packages(p,repo='https://cran.r-project.org/')
 
 # install.packages(c('zoo'),repo='https://cran.r-project.org/')
@@ -23,13 +23,13 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_100elev_lfevt_5tree_ts8_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_100elev_lfevt_5tree_ts16_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -48,13 +48,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_100elev_lfevt_5tree_ts8_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_100elev_lfevt_5tree_ts16_300m_20230316.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5tree_ts16_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -148,20 +148,66 @@ pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character
 
 
 #Select strat categories for fire treatments
-frap.disturb <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
-rx.disturb <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 5) %>% pull(stratlayer)
+frap.disturb <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% filter(n >= 20) %>% pull(stratlayer) 
+rx.disturb <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% filter(n >= 5) %>% pull(stratlayer)
 # print(frap.strat)
 
-frap.control <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer) 
-rx.control <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 5) %>% pull(stratlayer)
+frap.control <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% pull(stratlayer) 
+rx.control <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% pull(stratlayer)
 
-frap.strat <- intersect(frap.disturb, frap.control)
-rx.strat <- intersect(rx.disturb, rx.control)
+frap.strat <- intersect((frap.disturb %>% filter(n /35 >= 9) %>% pull(stratlayer)), (frap.control %>% filter(n/35 >= 9) %>% pull(stratlayer)))
+rx.strat <- intersect((rx.disturb %>% filter(n/35 >= 9) %>% pull(stratlayer)), (rx.control %>% filter(n/35 >= 9) %>% pull(stratlayer)))
+
+set.seed(4561)
+colnames(pixel.data %>% dplyr::select(-c(date, stratlayer,year)))
+#Sample the unchanged control pixels
+rx.sample <- pixel.data %>%
+  filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% rx.strat) %>% #Get just the unchanged control stratification layers
+  # pivot_wider(names_from = c('vi.year','system.index'), values_from = colnames(pixel.data %>% dplyr::select(-stratlayer))) %>%
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (rx.disturb %>% filter(stratlayer %in% rx.strat) %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
+  # pivot_longer()
+  dplyr::select(-c(data, n)) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+rx.control.data <- pixel.data %>% filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% rx.strat)
+rx.split <- split(rx.control.data, rx.control.data$stratlayer) # why can't Species be found in iris?
+# where else would it be found?
+str(rx.split) 
+rx.sizes <- vapply(rx.split, nrow, integer(1)) # also floating free
+rx.sizes
+rx.n <- (rx.disturb %>% filter(stratlayer %in% rx.strat) %>% pull(n))
+rx.n
+rx.sampled_obs <- mapply(sample, group_sizes, rx.n) # I'm floating free too!
+
+
+#Sample the low severity control pixels
+frap.sample <- pixel.data %>%
+  filter(treatment == 'Control' & fire.type.bin == 'Wildfire' & stratlayer %in% frap.strat) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (frap.disturb %>% filter(stratlayer %in% frap.strat) %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#Sample the moderate severity control pixels
+
+#Make sure the stratlayer bins match with the sampled control bins
+pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire.type.bin) %>% filter(case_when(fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat,
+                                                                                                            fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat))
+
+#Combine the sampled data back together
+pixel.sample <- rbind(pixel.disturb, rx.sample, frap.sample)
+
 
 #Tree Cover versus Elevation versus Latitude
 p1 <- ggplot() +
   #Data Summary
-  geom_bin2d(data = pixel.data %>% 
+  geom_bin2d(data = pixel.sample %>% 
                filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                                 fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
@@ -556,20 +602,20 @@ p19 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a shrub cover line
-  geom_line(data = pixel.data %>%
+  geom_line(data = pixel.sample %>%
               filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-              filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                               fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%         
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire perimeter and fier year by pixel match 
               group_by(stand.age, fire.year.bin, fire.type.bin) %>%
               summarize(Shrub_Cover.mean = mean(Shrub_Cover)), mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = 'Shrub', linetype = fire.year.bin), size = 1) +
   #Shrub Cover 95% CI
-  geom_errorbar(data = pixel.data %>% 
+  geom_errorbar(data = pixel.sample %>% 
                 filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% #& #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                   fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                   group_by(stand.age, fire.year.bin, fire.type.bin) %>%
                 summarize(Shrub_Cover.mean = mean(Shrub_Cover),
                           Shrub_Cover.sd = sd(Shrub_Cover), Shrub_Cover.n = n()),
@@ -577,20 +623,20 @@ p19 <- ggplot() +
                             ymax=Shrub_Cover.mean + 1.96*(Shrub_Cover.sd / sqrt(Shrub_Cover.n)),
                             x = stand.age, color = "Shrub",  linetype = fire.year.bin), alpha = 0.3) +
   #Create a Tree Cover line
-  geom_line(data = pixel.data %>%
+  geom_line(data = pixel.sample %>%
               filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-              filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                               fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
               group_by(stand.age, fire.year.bin, fire.type.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover)), mapping = aes(x = stand.age, y = Tree_Cover.mean, color = 'Tree',  linetype = fire.year.bin), size = 1) + 
   #Tree Cover 95% CI
-  geom_errorbar(data = pixel.data %>% 
+  geom_errorbar(data = pixel.sample %>% 
                 filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                   fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                   # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                 # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -601,20 +647,20 @@ p19 <- ggplot() +
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             x = stand.age, color = "Tree",  linetype = fire.year.bin), alpha = 0.3) +
   #Create an Herb cover line
-  geom_line(data = pixel.data %>%
+  geom_line(data = pixel.sample %>%
               filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-              filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                               fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
               group_by(stand.age, fire.year.bin, fire.type.bin) %>%
               summarize(Herb_Cover.mean = mean(Herb_Cover)), mapping = aes(x = stand.age, y = Herb_Cover.mean, color = 'Herb',  linetype = fire.year.bin), size = 1) + 
   #Herb Cover 95% CI
-  geom_errorbar(data = pixel.data %>% 
+  geom_errorbar(data = pixel.sample %>% 
                 filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                   fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                   # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                 # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -625,20 +671,20 @@ p19 <- ggplot() +
                             ymax=Herb_Cover.mean + 1.96*(Herb_Cover.sd / sqrt(Herb_Cover.n)),
                             x = stand.age, color = "Herb",  linetype = fire.year.bin), alpha = 0.3) +
   #Create a Bare cover line
-  geom_line(data = pixel.data %>%
+  geom_line(data = pixel.sample %>%
               filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-              filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                               fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
               group_by(stand.age, fire.year.bin, fire.type.bin) %>%
               summarize(Bare_Cover.mean = mean(Bare_Cover)), mapping = aes(x = stand.age, y = Bare_Cover.mean, color = 'Bare',  linetype = fire.year.bin), size = 1) + 
   #Bare Cover 95% CI
-  geom_errorbar(data = pixel.data %>%
+  geom_errorbar(data = pixel.sample %>%
                 filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                   fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                   # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                 # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -666,10 +712,10 @@ p20 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
-  geom_line(data = pixel.data %>%
+  geom_line(data = pixel.sample %>%
               filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-              filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                               fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -677,10 +723,10 @@ p20 <- ggplot() +
               summarize(Tree_Cover.mean = mean(Tree_Cover[fire.year.bin == 'Disturb']) - mean(Tree_Cover[fire.year.bin == 'Control'])), 
             mapping = aes(x = stand.age, y = Tree_Cover.mean), size = 1) + 
   #Tree Cover 95% CI
-  geom_errorbar(data = pixel.data %>%
+  geom_errorbar(data = pixel.sample %>%
                   filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                   fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                   # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                   # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -710,10 +756,10 @@ p21 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
 #Create a Tree Cover line
-geom_line(data = pixel.data %>%
+geom_line(data = pixel.sample %>%
             filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-            filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                             fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+            # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+            #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
             # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
             # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
             # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -721,10 +767,10 @@ geom_line(data = pixel.data %>%
             summarize(AET.mean = mean(AET[fire.year.bin == 'Disturb']) - mean(AET[fire.year.bin == 'Control'])), 
           mapping = aes(x = stand.age, y = AET.mean), size = 1) + 
   #Tree Cover 95% CI
-  geom_errorbar(data = pixel.data %>%
+  geom_errorbar(data = pixel.sample %>%
                   filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                   fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                   # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                   # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -754,10 +800,10 @@ p22 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
-  geom_line(data = pixel.data %>%
+  geom_line(data = pixel.sample %>%
               filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-              filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                               fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
               # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -765,10 +811,10 @@ p22 <- ggplot() +
               summarize(Shrub_Cover.mean = mean(Shrub_Cover[fire.year.bin == 'Disturb']) - mean(Shrub_Cover[fire.year.bin == 'Control'])), 
             mapping = aes(x = stand.age, y = Shrub_Cover.mean), size = 1) + 
   #Tree Cover 95% CI
-  geom_errorbar(data = pixel.data %>%
+  geom_errorbar(data = pixel.sample %>%
                   filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year >= 1980 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                   fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                   # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
                   # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
@@ -796,9 +842,9 @@ ggsave(filename = 'Fig11a_frap_stand_age_shrub.png', height=8, width= 20, units 
 pixel.data %>% summary()
 
 #Do stand age versus die-off
-p23 <- ggplot(data = pixel.data %>% filter(tpa_max >= 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                 fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+p23 <- ggplot(data = pixel.sample %>% filter(tpa_max >= 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>% 
                 summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
                           tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE),

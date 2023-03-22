@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: March 20, 2023
+#Date Updated: March 22, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -14,7 +14,7 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 # install.packages(c('ggmap'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 
-library(purrr)
+# library(purrr)
 #Set the working directory
 # setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
@@ -77,13 +77,6 @@ sev.control.data$fire_count_2020 <- -9999
 # pixel.data <- pixel.data %>% filter(fire.year >= 1919 & !is.na(stand.age) & !is.na(NDMI))
 # control.data$fire.year <- control.data$perimeter_year
 sev.control.data$treatment <- 'Control' #Try making this 1-km versus, 2-km
-
-#Figure out why the two dataframes don't match
-# sev.n <- sev.data %>% colnames()
-# con.n <- control.data %>% colnames()
-# sev.n
-# con.n
-# sev.n[!(sev.n %in% con.n)]
 
 #Combine the data together
 sev.pixel.data <- rbind(sev.data, sev.control.data)
@@ -157,18 +150,6 @@ sev.pixel.data <- sev.pixel.data %>% mutate(treat = case_when(treatment == 'Dist
 # summary(match1)
 
 sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
-  # bin >= 1 ~ '1900',
-  # bin == 2 ~ '1909-1910',
-  # bin >= 1911 & bin <= 1920 ~ '95-104', #Calculated relative to 2015
-  # treatment == 'Control' ~ 'No Fire',
-  # fire.year >= 1910 & fire.year <=  1970 ~ '1910-1970',#'81-95',
-  # fire.year >= 1936 & fire.year <= 1950 ~ '65-79',
-  # fire.year >= 1951 & fire.year <= 1965 ~ '50-64',
-  # fire.year >= 1951 & fire.year <= 1960 ~ '55-64',
-  # fire.year >= 1971 & fire.year <= 1980 ~ '1971-1980',#'56-80',
-  # fire.year >= 1985 & fire.year <= 1990 ~ '1985-1990',
-  # fire.year >= 1991 & fire.year <= 2000 ~ '1991-2000',#'31-55', 
-  # fire.year >= 1991 & fire.year <= 2000 ~ '15-24',
   fire.year >= 1985 & fire.year <= 2010 ~ '1985-2010',
   # fire.year >= 2001 & fire.year <= 2010 ~ '2001-2010',
   fire.year >= 2011 & fire.year <= 2018 ~ '2011-2017')) #,
@@ -183,7 +164,7 @@ sev.pixel.data <- sev.pixel.data %>% mutate(sev.bin = case_when(
   fire_sev_2010 == '3' ~ 'Mid',
   fire_sev_2010 == '4' ~ 'High',
   fire_sev_2010 == '255' ~ 'Masked')) # end function
-sev.pixel.data %>% summary()
+# sev.pixel.data %>% summary()
 #Fire year bins for Fire Severity Data
 sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels = c('2011-2017', '1985-2010')))#c('0-4','5-30','31-55','56-80',
 
@@ -195,7 +176,7 @@ sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_c
                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
-sev.pixel.data %>% summary()
+# sev.pixel.data %>% summary()
 
 #Select strat categories for fire treatments
 un.disturb <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n())
@@ -266,13 +247,52 @@ hi.sample <- sev.pixel.data %>%
   unnest(samp) #unnest the data
 
 #Make sure the stratlayer bins match with the sampled control bins
-sev.disturb <- sev.pixel.data %>% filter(treatment == 'Disturb') %>% group_by(sev.bin) %>% filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% (un.strat %>% pull(stratlayer)),
-                                                                                                            sev.bin == 'Low' ~ stratlayer %in% (lo.strat %>% pull(stratlayer)),
-                                                                                                            sev.bin == 'Mid' ~ stratlayer %in% (mid.strat %>% pull(stratlayer)),
-                                                                                                            sev.bin == 'High' ~ stratlayer %in% (hi.strat%>% pull(stratlayer))))
+#Sample the unchanged control pixels
+un.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'Unchanged' & stratlayer %in% (un.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (un.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#Sample the low severity control pixels
+lo.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'Low' & stratlayer %in% (lo.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (lo.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#Sample the moderate severity control pixels
+mid.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'Mid' & stratlayer %in% (mid.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (mid.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#High Severity Samples
+hi.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'High' & stratlayer %in% (hi.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (hi.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
 #Combine the sampled data back together
-sev.pixel.sample <- rbind(sev.disturb, un.sample, lo.sample, mid.sample, hi.sample)
+sev.pixel.sample <- rbind(un.disturb, lo.disturb, mid.disturb, hi.disturb, un.sample, lo.sample, mid.sample, hi.sample)
 
 
 #Testing out the control matches...
@@ -496,7 +516,7 @@ p5 <- ggplot() +
               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), # %>%
             # filter(if_else(sev.bin == '1985-2010', tpa_max.n >= 6000, tpa_max.n >= 0)), 
             mapping = aes(x = date, y = tpa_max.mean, color = treatment, linetype = treatment), 
-            size = 1
+            linewidth = 1
   ) +
   #Dead Trees 95% CI
   geom_ribbon(data = sev.pixel.sample %>%

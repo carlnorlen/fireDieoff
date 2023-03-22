@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: March 20, 2023
+#Date Updated: March 22, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -15,13 +15,14 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 lapply(p,require,character.only=TRUE)
 # library(zoo)
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
 # dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
-dir_in <- "D:\\Fire_Dieoff"
-# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
+# dir_in <- "D:\\Fire_Dieoff"
+dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
 frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
 
@@ -148,48 +149,45 @@ pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character
 
 
 #Select strat categories for fire treatments
-frap.disturb <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% filter(n >= 20) %>% pull(stratlayer) 
-rx.disturb <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% filter(n >= 5) %>% pull(stratlayer)
+frap.disturb <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) 
+rx.disturb <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) 
 # print(frap.strat)
 
-frap.control <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% pull(stratlayer) 
-rx.control <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n()) #%>% pull(stratlayer)
+frap.control <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n())
+rx.control <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n()) 
 
-frap.strat <- intersect((frap.disturb %>% filter(n /35 >= 9) %>% pull(stratlayer)), (frap.control %>% filter(n/35 >= 9) %>% pull(stratlayer)))
-rx.strat <- intersect((rx.disturb %>% filter(n/35 >= 9) %>% pull(stratlayer)), (rx.control %>% filter(n/35 >= 9) %>% pull(stratlayer)))
+#Get final stratlayers and numbers to sample from each
+frap.strat <- inner_join(frap.disturb, frap.control, by = 'stratlayer') %>% 
+              group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
 
+rx.strat <- inner_join(rx.disturb, rx.control, by = 'stratlayer') %>% #Inner Join the disturb and control data sets
+            group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) #Take the minimum of the number of pixels as the sample number
+
+rx.strat %>% pull(n)
+
+#Set the random number seed
 set.seed(4561)
-colnames(pixel.data %>% dplyr::select(-c(date, stratlayer,year)))
-#Sample the unchanged control pixels
+
+#Sample the prescribed fire control pixels
 rx.sample <- pixel.data %>%
-  filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% rx.strat) %>% #Get just the unchanged control stratification layers
-  # pivot_wider(names_from = c('vi.year','system.index'), values_from = colnames(pixel.data %>% dplyr::select(-stratlayer))) %>%
+  filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  # pivot_wider(names_from = c('vi.year','system.index'), values_from = colnames(pixel.data %>% dplyr::select(-stratlayer))) %>% #This still needs to be fixed
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
   ungroup() %>% #Un group the data
-  mutate(n = (rx.disturb %>% filter(stratlayer %in% rx.strat) %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
   # pivot_longer()
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
-rx.control.data <- pixel.data %>% filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% rx.strat)
-rx.split <- split(rx.control.data, rx.control.data$stratlayer) # why can't Species be found in iris?
-# where else would it be found?
-str(rx.split) 
-rx.sizes <- vapply(rx.split, nrow, integer(1)) # also floating free
-rx.sizes
-rx.n <- (rx.disturb %>% filter(stratlayer %in% rx.strat) %>% pull(n))
-rx.n
-rx.sampled_obs <- mapply(sample, group_sizes, rx.n) # I'm floating free too!
 
-
-#Sample the low severity control pixels
+#Sample the Wildfire Control control pixels
 frap.sample <- pixel.data %>%
-  filter(treatment == 'Control' & fire.type.bin == 'Wildfire' & stratlayer %in% frap.strat) %>% #Get just the unchanged control stratification layers
+  filter(treatment == 'Control' & fire.type.bin == 'Wildfire' & stratlayer %in% (frap.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
   ungroup() %>% #Un group the data
-  mutate(n = (frap.disturb %>% filter(stratlayer %in% frap.strat) %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-data) %>% #Get rid of the data column
   unnest(samp) #unnest the data
@@ -197,8 +195,8 @@ frap.sample <- pixel.data %>%
 #Sample the moderate severity control pixels
 
 #Make sure the stratlayer bins match with the sampled control bins
-pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire.type.bin) %>% filter(case_when(fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat,
-                                                                                                            fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat))
+pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire.type.bin) %>% filter(case_when(fire.type.bin == 'Rxfire' ~ stratlayer %in% (rx.strat %>% pull(stratlayer)),
+                                                                                                            fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
 
 #Combine the sampled data back together
 pixel.sample <- rbind(pixel.disturb, rx.sample, frap.sample)

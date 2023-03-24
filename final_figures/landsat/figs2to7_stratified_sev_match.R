@@ -16,23 +16,23 @@ lapply(p,require,character.only=TRUE)
 
 # library(purrr)
 #Set the working directory
-# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
-setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
-# dir_in <- "D:\\Fire_Dieoff"
+dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
-dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+# dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 
 #Add the data
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_200mm_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 # summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_200mm_5tree_ts16_300m_20230320_v2.csv"), header = TRUE, na.strings = "NaN")
+raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 # unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
 # low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
 # med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
@@ -65,34 +65,15 @@ sev.control.data$fire_year_2020 <- -9999
 sev.control.data$fire_ID_2020 <- -9999
 sev.control.data$fire_count_2020 <- -9999
 
-#Add buffer dummy columns for fire.data
-# sev.data$buffer_type_2010 <- -9999
-# sev.data$buffer_type_2019 <- -9999
-# sev.data$buffer_year_2010 <- -9999
-# sev.data$buffer_year_2019 <- -9999
-
-# summary(control.data)
-#Get a  of the data
-# summary(pixel.data)
-# pixel.data <- pixel.data %>% filter(fire.year >= 1919 & !is.na(stand.age) & !is.na(NDMI))
-# control.data$fire.year <- control.data$perimeter_year
+#Add Control treatment column
 sev.control.data$treatment <- 'Control' #Try making this 1-km versus, 2-km
 
 #Combine the data together
 sev.pixel.data <- rbind(sev.data, sev.control.data)
 # pixel.data <- rbind(combine.data, control.data.2km)
-summary(sev.pixel.data)
+# summary(sev.pixel.data)
 
 `%notin%` <- Negate(`%in%`)
-
-#Convert data to long format
-sev.pixel.data <- sev.pixel.data %>% #dplyr::select(-c('latitude', 'longitude')) %>% 
-               pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
-
-sev.pixel.data$year <- as.numeric(sev.pixel.data$year) + 1984 
-
-#Convert missing TPA data to NAs
-sev.pixel.data[sev.pixel.data$tpa_max < 0,]$tpa_max <- NA
 
 #Convert fire data -9999 to NAs
 sev.pixel.data[sev.pixel.data$fire_sev_2010 == -9999,]$fire_sev_2010 <- NA
@@ -108,47 +89,13 @@ sev.pixel.data[sev.pixel.data$fire_year_2020 == -9999,]$fire_year_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2020 == -9999,]$fire_ID_2020 <- NA
 sev.pixel.data[sev.pixel.data$fire_count_2020 == -9999,]$fire_count_2020 <- NA
 
-#Convert to trees per hectare
-sev.pixel.data$tpa_max <- sev.pixel.data$tpa_max * 2.47105
-
-#Make the dates into date time format for R
-sev.pixel.data$date <- as.Date(as.character(sev.pixel.data$year), format = '%Y')
-# sev.pixel.data$vi.year <- format(sev.pixel.data$date , '%Y')
-sev.pixel.data$vi.year <- sev.pixel.data$year
 #Use the FRAP fire perimeter year
 sev.pixel.data$fire.year <- sev.pixel.data$fire_year_2010
-sev.pixel.data$stand.age <- as.numeric(sev.pixel.data$year) - as.numeric(sev.pixel.data$fire.year) 
 
-#Update Cover data to 100% scale
-sev.pixel.data$Tree_Cover <- sev.pixel.data$Tree_Cover / 100
-sev.pixel.data$Shrub_Cover <- sev.pixel.data$Shrub_Cover / 100
-sev.pixel.data$Herb_Cover <- sev.pixel.data$Herb_Cover / 100
-sev.pixel.data$Bare_Cover <- sev.pixel.data$Bare_Cover / 100
-
-#Convert the SPI48 scale back to decimal
-sev.pixel.data$SPI48 <- sev.pixel.data$SPI48 / 100
-
-#Try to fix soil moisture by dividing by 10
-sev.pixel.data$Soil_Moisture <- sev.pixel.data$Soil_Moisture / 10
-
-#Rename ppt and Water Stress
-sev.pixel.data$Water_Stress <- sev.pixel.data$Water_Stress
-sev.pixel.data$ppt <- sev.pixel.data$ppt
-sev.pixel.data$AET <- sev.pixel.data$AET
-sev.pixel.data$GPP <- sev.pixel.data$GPP
-sev.pixel.data$elevation <- sev.pixel.data$elevation
-sev.pixel.data$PrET <- sev.pixel.data$ppt - sev.pixel.data$AET
-# 
-
-summary(sev.pixel.data %>% filter(fire_sev_2010 != 243))
+#Do categorical treatments
 sev.pixel.data <- sev.pixel.data %>% mutate(treat = case_when(treatment == 'Disturb' ~ 1, treatment == 'Control' ~ 0))
-# match0 <- matchit(data = sev.pixel.data %>% filter(fire_sev_2010 != 243), formula = treat ~ Tree_Cover + clm_precip_sum, method = NULL, distance = "glm")
-# summary(match0)
-# 
-# match1 <- matchit(data = sev.pixel.data %>% filter(fire_sev_2010 != 243), formula = treat ~ clm_precip_sum, 
-#                   method = "nearest", distance = "glm")
-# summary(match1)
 
+#Create Fire Year Bins
 sev.pixel.data <- sev.pixel.data %>% mutate(fire.year.bin = case_when(
   fire.year >= 1985 & fire.year <= 2010 ~ '1985-2010',
   # fire.year >= 2001 & fire.year <= 2010 ~ '2001-2010',
@@ -172,9 +119,9 @@ sev.pixel.data$fire.year.bin = with(sev.pixel.data, factor(fire.year.bin, levels
 sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Unchanged', 'Low','Mid', 'High')))#c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
 
 #Recode the veg type data
-sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
-                              '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
-                              '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
+# sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
+#                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
+#                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
 # sev.pixel.data %>% summary()
 
@@ -197,7 +144,7 @@ lo.strat <- inner_join(lo.disturb, lo.control, by = 'stratlayer') %>%
 mid.strat <- inner_join(mid.disturb, mid.control, by = 'stratlayer') %>%
              group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
 hi.strat <- inner_join(hi.disturb, hi.control, by = 'stratlayer') %>%
-  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
+              group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
 
 #Set the random number seed
 set.seed(4561)
@@ -294,10 +241,58 @@ hi.disturb <- sev.pixel.data %>%
 #Combine the sampled data back together
 sev.pixel.sample <- rbind(un.disturb, lo.disturb, mid.disturb, hi.disturb, un.sample, lo.sample, mid.sample, hi.sample)
 
+sev.pixel.sample <- sev.pixel.sample %>% 
+  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
+
+#Convert the year outputs to actual years
+sev.pixel.sample$year <- as.numeric(sev.pixel.sample$year) + 1984 
+
+#Convert missing TPA data to NAs
+sev.pixel.sample[sev.pixel.sample$tpa_max < 0,]$tpa_max <- NA
+
+#Convert to trees per hectare
+sev.pixel.sample$tpa_max <- sev.pixel.sample$tpa_max * 2.47105
+
+#Make the dates into date time format for R
+sev.pixel.sample$date <- as.Date(as.character(sev.pixel.sample$year), format = '%Y')
+
+#Add VI Year
+sev.pixel.sample$vi.year <- sev.pixel.sample$year
+
+#Caluclate Stand AGe
+sev.pixel.sample$stand.age <- as.numeric(sev.pixel.sample$year) - as.numeric(sev.pixel.sample$fire.year) 
+
+#Update Cover data to 100% scale
+sev.pixel.sample$Tree_Cover.2 <- sev.pixel.sample$Tree_Cover / 100
+sev.pixel.sample$Shrub_Cover.2 <- sev.pixel.sample$Shrub_Cover / 100
+sev.pixel.sample$Herb_Cover.2 <- sev.pixel.sample$Herb_Cover / 100
+sev.pixel.sample$Bare_Cover.2 <- sev.pixel.sample$Bare_Cover / 100
+
+#Add Montana Veg Cover
+sev.pixel.sample$Tree_Cover <- sev.pixel.sample$TRE
+sev.pixel.sample$Shrub_Cover <- sev.pixel.sample$SHR
+sev.pixel.sample$Herb_Cover <- sev.pixel.sample$AFG + pixel.sample$PFG
+sev.pixel.sample$Bare_Cover <- sev.pixel.sample$BGR 
+
+#Convert the SPI48 scale back to decimal
+sev.pixel.sample$SPI48 <- sev.pixel.sample$SPI48 / 100
+
+#Try to fix soil moisture by dividing by 10
+sev.pixel.sample$Soil_Moisture <- sev.pixel.sample$Soil_Moisture / 10
+
+#Rename ppt and Water Stress
+sev.pixel.sample$Water_Stress <- sev.pixel.sample$Water_Stress
+sev.pixel.sample$ppt <- sev.pixel.sample$ppt
+sev.pixel.sample$AET <- sev.pixel.sample$AET
+sev.pixel.sample$GPP <- sev.pixel.sample$GPP
+sev.pixel.sample$elevation <- sev.pixel.sample$elevation
+sev.pixel.sample$PrET <- sev.pixel.sample$ppt - sev.pixel.sample$AET
+
+summary(sev.pixel.sample)
 
 #Testing out the control matches...
 pa <- ggplot(data = sev.pixel.sample %>% 
-         filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1987 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
+         filter(fire.year <= 2010 & fire.year > 1986 & sev.bin != 'No Fire' & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
          #Match the controls to the disturbed based on the stratified sampling bins
          # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
          #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
@@ -316,7 +311,7 @@ pa <- ggplot(data = sev.pixel.sample %>%
 pa
 
 pb <- ggplot(data = sev.pixel.sample %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
+               filter(fire.year <= 2010 & fire.year > 1986 & sev.bin != 'No Fire' & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
                #Match the controls to the disturbed based on the stratified sampling bins
                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
@@ -335,7 +330,7 @@ pb <- ggplot(data = sev.pixel.sample %>%
 pb
 
 pc <- ggplot(data = sev.pixel.sample %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
+               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
                #Match the controls to the disturbed based on the stratified sampling bins
                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
@@ -356,7 +351,7 @@ pc <- ggplot(data = sev.pixel.sample %>%
 pc
 
 pd <- ggplot(data = sev.pixel.sample %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
+               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
                #Match the controls to the disturbed based on the stratified sampling bins
                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
@@ -377,7 +372,7 @@ pd <- ggplot(data = sev.pixel.sample %>%
 pd
 
 pe <- ggplot(data = sev.pixel.sample %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
+               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | is.na(fire_year_2019))) %>% # &
                #Match the controls to the disturbed based on the stratified sampling bins
                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
@@ -401,114 +396,137 @@ pe
 #Tree Cover versus Elevation versus Latitude
 p1 <- ggplot() +
   #Data Summary
-  geom_bin2d(data = sev.pixel.data %>% #sev.bin != 'Unchanged' & 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+  geom_bin2d(data = sev.pixel.sample %>% #sev.bin != 'Unchanged' & 
+               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                #Match the controls to the disturbed based on the stratified sampling bins
-               filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-                                sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-                                sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-                                sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
+               # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
+               #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
+               #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
+               #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
                dplyr::group_by(system.index, treatment, sev.bin) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
-                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2013, 2014)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2016, 2017)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+                         Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
+                         Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2011, 2012)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(y = latitude, x = elevation, fill = Tree_Cover, group = Tree_Cover), binwidth = c(500, 0.25)) + 
+             mapping = aes(y = Water_Stress, x = Tree_Cover, fill = dTree, group = dTree), binwidth = c(5, 500)) + 
   theme_bw() +
-  scale_fill_gradient(name = "Tree Cover (%)", limits = c(0, 100), low = "brown", high = "forest green", na.value = 'transparent') +
+  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", limits = c(-15, 5), midpoint = 0, na.value = 'transparent') + 
+  # scale_fill_gradient(name = "Tree Cover (%)", limits = c(0, 100), low = "brown", high = "forest green", na.value = 'transparent') +
   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-  ylab('Latitude')
+  ylab('Water Stress') + xlab('Tree Cover (%)')
 p1
 
-# pixel.data %>% summary()
-p2<- ggplot() +
+p2 <- ggplot() +
   #Data Summary
-  geom_bin2d(data = sev.pixel.data %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+  geom_bin2d(data = sev.pixel.sample %>% #sev.bin != 'Unchanged' & 
+               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                #Match the controls to the disturbed based on the stratified sampling bins
-               filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-                                sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-                                sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-                                sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
+               # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
+               #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
+               #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
+               #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
                dplyr::group_by(system.index, treatment, sev.bin) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
-                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2017, 2018)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2016, 2017)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+                         Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
+                         tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE),
+                         Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2011, 2012)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(y = latitude, x = elevation, fill = dTree, group = dTree), binwidth = c(500, 0.25)) + 
+             mapping = aes(y = Water_Stress, x = Tree_Cover, fill = tpa_max, group = tpa_max), binwidth = c(5, 500)) + 
   theme_bw() +
-  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", limits = c(-10, 5), midpoint = 0, na.value = 'transparent') +  #  
-  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-  ylab('Latitude')
-p2
-
-#ADS die-off
-p3 <- ggplot() +
-  geom_bin2d(data = sev.pixel.data %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
-               #Match the controls to the disturbed based on the stratified sampling bins
-               filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-                                sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-                                sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-                                sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
-               dplyr::group_by(system.index, treatment, sev.bin) %>%
-               summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015], elevation = elevation[vi.year == 2015],
-                         latitude = latitude[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(y = latitude, x = elevation, fill = tpa_max, group = tpa_max), binwidth = c(500, 0.25)) + 
   scale_fill_gradient(name = "Die-off \n(trees per hectare)", low = "white", high = "red", na.value = 'transparent') +
-  theme_bw() +
+  # scale_fill_gradient(name = "Tree Cover (%)", limits = c(0, 100), low = "brown", high = "forest green", na.value = 'transparent') +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-  ylab('Latitude') + xlab('Elevation (m)')
-p3             
+  ylab('Water Stress') + xlab('Tree Cover (%)')
+p2
+# # pixel.data %>% summary()
+# p2<- ggplot() +
+#   #Data Summary
+#   geom_bin2d(data = sev.pixel.sample %>% 
+#                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+#                #Match the controls to the disturbed based on the stratified sampling bins
+#                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
+#                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
+#                #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
+#                #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
+#                dplyr::group_by(system.index, treatment, sev.bin) %>% 
+#                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2016, 2017)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
+#                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2017, 2018)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
+#                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
+#              mapping = aes(y = latitude, x = elevation, fill = dTree, group = dTree), binwidth = c(500, 0.25)) + 
+#   theme_bw() +
+#   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+#   scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", limits = c(-15, 5), midpoint = 0, na.value = 'transparent') +  #  
+#   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+#         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
+#   ylab('Latitude')
+# p2
+# 
+# #ADS die-off
+# p3 <- ggplot() +
+#   geom_bin2d(data = sev.pixel.sample %>% 
+#                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+#                #Match the controls to the disturbed based on the stratified sampling bins
+#                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
+#                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
+#                #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
+#                #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
+#                dplyr::group_by(system.index, treatment, sev.bin) %>%
+#                summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015], elevation = elevation[vi.year == 2015],
+#                          latitude = latitude[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
+#              mapping = aes(y = latitude, x = elevation, fill = tpa_max, group = tpa_max), binwidth = c(500, 0.25)) + 
+#   scale_fill_gradient(name = "Die-off \n(trees per hectare)", low = "white", high = "red", na.value = 'transparent') +
+#   theme_bw() +
+#   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+#         axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
+#   ylab('Latitude') + xlab('Elevation (m)')
+# p3             
+# 
+# p4<- ggplot() +
+#   #Data Summary
+#   geom_bin2d(data = sev.pixel.sample %>% 
+#                filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+#                #Match the controls to the disturbed based on the stratified sampling bins
+#                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
+#                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
+#                #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
+#                #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
+#                dplyr::group_by(system.index, sev.bin) %>% 
+#                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+#                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2018, 2019)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
+#                          latitude = latitude[vi.year == 2015], count = sum(elevation[vi.year == 2015]), n = n(), SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
+#              mapping = aes(y = latitude, x = elevation), binwidth = c(500, 0.25)) + 
+#   theme_bw() +
+#   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+#   # scale_fill_gradient2(name = "Die-off (% Tree Cover)", limits = c(-50, 20), midpoint = 0, low = "red", mid = "white", high = "blue", na.value = 'transparent') +
+#   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
+#         axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ sev.bin) +
+#   ylab('Latitude') + xlab('Elevation (m)')
+# p4
 
-p4<- ggplot() +
-  #Data Summary
-  geom_bin2d(data = sev.pixel.data %>% 
-               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
-               #Match the controls to the disturbed based on the stratified sampling bins
-               filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-                                sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-                                sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-                                sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
-               dplyr::group_by(system.index, sev.bin) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
-                         Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2018, 2019)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
-                         latitude = latitude[vi.year == 2015], count = sum(elevation[vi.year == 2015]), n = n(), SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(y = latitude, x = elevation), binwidth = c(500, 0.25)) + 
-  theme_bw() +
-  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  # scale_fill_gradient2(name = "Die-off (% Tree Cover)", limits = c(-50, 20), midpoint = 0, low = "red", mid = "white", high = "blue", na.value = 'transparent') +
-  theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ sev.bin) +
-  ylab('Latitude') + xlab('Elevation (m)')
-p4
-
-f1 <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+f1 <- ggarrange(p1, p2, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f1
 #Save the data
-ggsave(filename = 'Fig2c_sev_fire_dieoff_tree_cover_fireyear_geographic_distribution.png', height=28, width= 24, units = 'cm', dpi=900)
+ggsave(filename = 'Fig2c_sev_fire_dieoff_tree_cover_fireyear_geographic_distribution.png', height=20, width= 24, units = 'cm', dpi=900)
 
 #Figure of Dead Trees per acre separated by fire years with time series
 p5 <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = sev.pixel.sample %>%
               filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # & 
-              #Match the controls to the disturbed based on the stratified sampling bins
-              # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-              #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-              #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-              #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
               filter(vi.year >= 2010) %>%
               # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & 
               # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% 
@@ -516,16 +534,11 @@ p5 <- ggplot() +
               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), # %>%
             # filter(if_else(sev.bin == '1985-2010', tpa_max.n >= 6000, tpa_max.n >= 0)), 
             mapping = aes(x = date, y = tpa_max.mean, color = treatment, linetype = treatment), 
-            linewidth = 1
+            size = 1
   ) +
   #Dead Trees 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
-                #Match the controls to the disturbed based on the stratified sampling bins
-                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-                #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-                #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
                 filter(vi.year >= 2010) %>%
                 # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower &
                 # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
@@ -557,7 +570,7 @@ p6 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = sev.pixel.sample %>%
-              filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+              filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
               #Match the controls to the disturbed based on the stratified sampling bins
               # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
               #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
@@ -573,7 +586,7 @@ p6 <- ggplot() +
             size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
-                filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                 #Match the controls to the disturbed based on the stratified sampling bins
                 # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
                 #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
@@ -1199,15 +1212,7 @@ p20 <- ggplot() +
             mapping = aes(x = stand.age, y = AET.mean), size = 1) + 
   #Tree Cover 95% CI
   geom_errorbar(data = sev.pixel.sample %>%
-                  filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year > 1986 & fire.year <= 2010 & !is.na(sev.bin) & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
-                  #Match the controls to the disturbed based on the stratified sampling bins
-                  # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-                  #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-                  #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-                  #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
-                  # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
-                  # elevation <= elev.upper &  clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower & #Filter to make the later fires for similar to the earlier fires
-                  # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>% #Only include places where the fire
+                  filter(stand.age >= -5 & stand.age <= 12 & !is.na(Shrub_Cover) & vi.year <= 2014 & fire.year > 1986 & fire.year <= 2010 & !is.na(sev.bin) & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
                   group_by(stand.age, sev.bin) %>%
                   summarize(AET.mean = mean(AET[treatment == 'Disturb']) - mean(AET[treatment == 'Control']),
                             AET.sd = sd(AET[treatment == 'Disturb'])^2 + sd(AET[treatment == 'Control'])^2, 

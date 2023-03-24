@@ -19,18 +19,18 @@ lapply(p,require,character.only=TRUE)
 setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
-# dir_in <- "D:\\Fire_Dieoff"
+dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
-# dir_in <- "D:\\Fire_Dieoff"
-dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+# dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -49,13 +49,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5tree_ts16_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -72,61 +72,24 @@ rx.control.data$treatment <- 'Control' #Try making this 1-km versus, 2-km
 
 #Combine the data together
 rx.pixel.data <- rbind(rx.data, rx.control.data)
-# pixel.data <- rbind(combine.data, control.data.2km)
-summary(rx.pixel.data)
 
-#Combine the wildfire and Rx fire data together
-pixel.data <- combine(frap.pixel.data, rx.pixel.data)
-
-summary(pixel.data)
+#Combine all the data together
+pixel.data <- rbind(frap.pixel.data, rx.pixel.data)
 
 `%notin%` <- Negate(`%in%`)
-
-#Convert data to long format
-pixel.data <- pixel.data %>% 
-  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
-
-pixel.data$year <- as.numeric(pixel.data$year) + 1984 
-
-#Convert missing TPA data to NAs
-pixel.data[pixel.data$tpa_max < 0,]$tpa_max <- NA
-
+# summary(pixel.data)
 #Convert fire data -9999 to NAs
-pixel.data[pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
-pixel.data[pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
+# pixel.data[pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
+# pixel.data[pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
 pixel.data[pixel.data$fire_type_2019 == -9999,]$fire_type_2019 <- NA
 pixel.data[pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
 pixel.data[pixel.data$fire_type_2020 == -9999,]$fire_type_2020 <- NA
 pixel.data[pixel.data$fire_year_2020 == -9999,]$fire_year_2020 <- NA
 
-#Convert to trees per hectare
-pixel.data$tpa_max <- pixel.data$tpa_max * 2.47105
-
-#Make the dates into date time format for R
-pixel.data$date <- as.Date(as.character(pixel.data$year), format = '%Y')
-# pixel.data$vi.year <- format(pixel.data$date , '%Y')
-pixel.data$vi.year <- pixel.data$year
 #Use the FRAP fire perimeter year (use fire year 2010)
 pixel.data$fire.year <- pixel.data$fire_year_2010
-pixel.data$stand.age <- as.numeric(pixel.data$year) - as.numeric(pixel.data$fire.year) 
 
-#Update Cover data to 100% scale
-pixel.data$Tree_Cover <- pixel.data$Tree_Cover / 100
-pixel.data$Shrub_Cover <- pixel.data$Shrub_Cover / 100
-pixel.data$Herb_Cover <- pixel.data$Herb_Cover / 100
-pixel.data$Bare_Cover <- pixel.data$Bare_Cover / 100
-
-#Convert the SPI48 scale back to decimal
-pixel.data$SPI48 <- pixel.data$SPI48 / 100
-
-#Try to fix soil moisture by dividing by 10
-pixel.data$Soil_Moisture <- pixel.data$Soil_Moisture / 10
-
-#Calculate Pr-ET
-pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
-
-pixel.data %>% summary()
-
+#Add the fire year bins
 pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   treatment == 'Control' | fire.year < 1980 ~ 'Control',
   fire.year >= 1980 & fire.year <= 2010 ~ 'Disturb',
@@ -143,11 +106,11 @@ summary(pixel.data)
 pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Control', 'Disturb')))#
 
 #Recode the veg type data
-pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
-                              '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
-                              '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
+# pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
+#                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
+#                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
-
+#Select strat categories for fire treatments
 #Select strat categories for fire treatments
 frap.disturb <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) 
 rx.disturb <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) 
@@ -158,26 +121,24 @@ rx.control <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Co
 
 #Get final stratlayers and numbers to sample from each
 frap.strat <- inner_join(frap.disturb, frap.control, by = 'stratlayer') %>% 
-              group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
 
 rx.strat <- inner_join(rx.disturb, rx.control, by = 'stratlayer') %>% #Inner Join the disturb and control data sets
-            group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) #Take the minimum of the number of pixels as the sample number
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) #Take the minimum of the number of pixels as the sample number
 
-rx.strat %>% pull(n)
+# rx.strat %>% pull(n)
 
 #Set the random number seed
 set.seed(4561)
-
+# colnames(pixel.data %>% dplyr::select(-'AET':'tpa_max'))
 #Sample the prescribed fire control pixels
 rx.sample <- pixel.data %>%
   filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
-  # pivot_wider(names_from = c('vi.year','system.index'), values_from = colnames(pixel.data %>% dplyr::select(-stratlayer))) %>% #This still needs to be fixed
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
-  # pivot_longer()
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
@@ -196,11 +157,51 @@ frap.sample <- pixel.data %>%
 
 #Make sure the stratlayer bins match with the sampled control bins
 pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire.type.bin) %>% filter(case_when(fire.type.bin == 'Rxfire' ~ stratlayer %in% (rx.strat %>% pull(stratlayer)),
-                                                                                                            fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
+                                                                                                                fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
 
 #Combine the sampled data back together
 pixel.sample <- rbind(pixel.disturb, rx.sample, frap.sample)
 
+#Convert data to long format
+#This should be moved later
+pixel.sample <- pixel.sample %>% 
+  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
+
+#Convert the year outputs to actual years
+pixel.sample$year <- as.numeric(pixel.sample$year) + 1984 
+
+#Convert missing TPA data to NAs
+pixel.sample[pixel.sample$tpa_max < 0,]$tpa_max <- NA
+
+#Convert to trees per hectare
+pixel.sample$tpa_max <- pixel.sample$tpa_max * 2.47105
+
+#Make the dates into date time format for R
+pixel.sample$date <- as.Date(as.character(pixel.sample$year), format = '%Y')
+pixel.sample$vi.year <- pixel.sample$year
+pixel.sample$stand.age <- as.numeric(pixel.sample$year) - as.numeric(pixel.sample$fire.year) 
+
+#Update Cover data to 100% scale
+pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover / 100
+pixel.sample$Shrub_Cover.2 <- pixel.sample$Shrub_Cover / 100
+pixel.sample$Herb_Cover.2 <- pixel.sample$Herb_Cover / 100
+pixel.sample$Bare_Cover.2 <- pixel.sample$Bare_Cover / 100
+# pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover
+
+#Rename Montana Tree Cover
+pixel.sample$Tree_Cover <- pixel.sample$TRE
+pixel.sample$Shrub_Cover <- pixel.sample$SHR
+pixel.sample$Herb_Cover <- pixel.sample$AFG + pixel.sample$PFG
+pixel.sample$Bare_Cover <- pixel.sample$BGR 
+
+#Convert the SPI48 scale back to decimal
+pixel.sample$SPI48 <- pixel.sample$SPI48 / 100
+
+#Try to fix soil moisture by dividing by 10
+pixel.sample$Soil_Moisture <- pixel.sample$Soil_Moisture / 10
+
+#Calculate Pr-ET
+pixel.sample$PrET <- pixel.sample$ppt - pixel.sample$AET
 
 #Tree Cover versus Elevation versus Latitude
 p1 <- ggplot() +
@@ -228,7 +229,7 @@ p1
 # pixel.data %>% summary()
 p2<- ggplot() +
   #Data Summary
-  geom_bin2d(data = pixel.data %>% 
+  geom_bin2d(data = pixel.sample %>% 
                filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                                 fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
@@ -250,7 +251,7 @@ p2
 
 #ADS die-off
 p3 <- ggplot() +
-  geom_bin2d(data = pixel.data %>% 
+  geom_bin2d(data = pixel.sample %>% 
                filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                                 fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
@@ -270,7 +271,7 @@ p3
 
 p4<- ggplot() +
   #Data Summary
-  geom_bin2d(data = pixel.data %>% 
+  geom_bin2d(data = pixel.sample %>% 
                #Did a filter by elevation (less than or equal to 3000), but one by pixel sample would probably be better.
                filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
@@ -299,10 +300,10 @@ ggsave(filename = 'Fig2a_frap_wildfire_dieoff_tree_cover_geographic_distribution
 #Figure 5: Bar Chats, this could be for statistics
 p11 <- ggplot() +
   #Calculate the Mean
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
                          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
@@ -310,10 +311,10 @@ p11 <- ggplot() +
              mapping = aes(x = fire.type.bin, fill = fire.year.bin, y = dTree), 
              fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
   #Calculate the Standard Error
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                   filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>% 
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>% 
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>% 
                   summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
                             RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
@@ -333,19 +334,19 @@ p11
 #RdTree Plot
 p12 <- ggplot() +
   #Data Summary
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>% 
                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
                          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), Water_Stress = Water_Stress[vi.year == 2015]),
              mapping = aes(x = fire.type.bin, fill = fire.year.bin, y = RdTree * 100), 
              fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                   filter(fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>% 
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>% 
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>% 
                   summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])), 
                             RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), Water_Stress = Water_Stress[vi.year == 2015]),
@@ -364,18 +365,18 @@ p12
 #ADS die-off
 p13 <- ggplot() +
   #Create bars and error bars
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]),
              mapping = aes(x = fire.type.bin, y = tpa_max, fill = fire.year.bin), 
              fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                   filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>% 
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>% 
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                   summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]),
                 mapping = aes(x = fire.type.bin, y = tpa_max, color = fire.year.bin), 
@@ -395,18 +396,18 @@ p13
 #Pre-Die-off Tree Cover
 p14 <- ggplot() +
   #Create the Error Bars
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)])),
                mapping = aes(x = fire.type.bin, y = Tree_Cover, fill = fire.year.bin), 
                fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)])),
                mapping = aes(x = fire.type.bin, y = Tree_Cover, color = fire.year.bin), 
@@ -424,19 +425,19 @@ p14
 #Water Stress
 p15 <- ggplot() +
   #Create the Error Bars
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], 
                            Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)])),
                mapping = aes(x = fire.type.bin, y = Water_Stress, fill = fire.year.bin), 
                fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
-  stat_summary(data = pixel.data %>% 
+  stat_summary(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], 
                            Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)])),
@@ -457,36 +458,25 @@ f4 <- ggarrange(p11, p12, p13, p14, p15,  ncol = 1, nrow = 5, common.legend = FA
 f4
 
 ggsave(filename = 'Fig5a_wild_fire_bar_chart_comparison.png', height=24, width = 18, units = 'cm', dpi=900)
-# summary(pixel.data)
+# summary(pixel.sample)
 
-# pixel.data %>% 
-#   filter(!is.na(tpa_max) & tpa_max > 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-#   filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-#                    fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
-#   dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
-#   summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]) %>%
-#   ungroup() %>%
-#   group_by(fire.type.bin, system.index) %>%
-#   summarize(dADS.mean = mean((tpa_max[fire.year.bin == 'Disturb'] - tpa_max[fire.year.bin == 'Control'])/ tpa_max[fire.year.bin == 'Control']))
-
-#Figure 12: Bar Chats, this could be for statistics
 #ADS die-off
 p16 <- ggplot() +
   #Create bars and error bars
-  geom_point(data = pixel.data %>% 
+  geom_point(data = pixel.sample %>% 
                  filter(!is.na(tpa_max) & tpa_max > 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]) %>%
                  ungroup() %>%
                  group_by(fire.type.bin) %>%
                  summarize(dADS.mean = (mean(tpa_max[fire.year.bin == 'Disturb']) - mean(tpa_max[fire.year.bin == 'Control']))/ mean(tpa_max[fire.year.bin == 'Control'])),
                mapping = aes(x = fire.type.bin, y = dADS.mean * 100), position = position_dodge(width = 0.5)) +  
-  geom_errorbar(data = pixel.data %>%
+  geom_errorbar(data = pixel.sample %>%
                  filter(!is.na(tpa_max) & tpa_max > 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015]) %>%
                  ungroup() %>%
@@ -512,20 +502,20 @@ p16
 #Pre-Die-off Tree Cover
 p17 <- ggplot() +
   #Create the Error Bars
-  geom_point(data = pixel.data %>% 
+  geom_point(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)])) %>%
                  ungroup() %>%
                  group_by(fire.type.bin) %>%
                  summarize(dTree.mean = (mean(Tree_Cover[fire.year.bin == 'Disturb']) - mean(Tree_Cover[fire.year.bin == 'Control']))/ mean(Tree_Cover[fire.year.bin == 'Control'])),
                mapping = aes(x = fire.type.bin, y = dTree.mean * 100), position = position_dodge(width = 0.5)) +  
-  geom_errorbar(data = pixel.data %>% 
+  geom_errorbar(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(Tree_Cover = mean(Tree_Cover[vi.year %in% c(2013, 2014)]))%>%
                  ungroup() %>%
@@ -549,10 +539,10 @@ p17
 #Water Stress
 p18 <- ggplot() +
   #Create the Error Bars
-  geom_point(data = pixel.data %>% 
+  geom_point(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(#tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], 
                            Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)])) %>%
@@ -560,10 +550,10 @@ p18 <- ggplot() +
                group_by(fire.type.bin) %>%
                summarize(dWater_Stress.mean = (mean(Water_Stress[fire.year.bin == 'Disturb']) - mean(Water_Stress[fire.year.bin == 'Control']))/ mean(Water_Stress[fire.year.bin == 'Control'])),
              mapping = aes(x = fire.type.bin, y = dWater_Stress.mean * 100), position = position_dodge(width = 0.5)) + 
-  geom_errorbar(data = pixel.data %>% 
+  geom_errorbar(data = pixel.sample %>% 
                  filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                 filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                  dplyr::group_by(system.index, fire.year.bin, fire.type.bin) %>%
                  summarize(#tpa_max = max(tpa_max[vi.year %in% c(2012, 2013, 2014, 2015, 2016, 2017, 2017, 2018, 2019)], na.rm = TRUE), fire.year.bin = fire.year.bin[vi.year == 2010], 
                            Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)])) %>%
@@ -837,7 +827,7 @@ p22
 #Save the data
 ggsave(filename = 'Fig11a_frap_stand_age_shrub.png', height=8, width= 20, units = 'cm', dpi=900)
 
-pixel.data %>% summary()
+# pixel.data %>% summary()
 
 #Do stand age versus die-off
 p23 <- ggplot(data = pixel.sample %>% filter(tpa_max >= 0 & fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &

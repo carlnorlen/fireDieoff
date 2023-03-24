@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 24, 2022
-#Date Updated: March 15, 2023
+#Date Updated: March 23, 2023
 #Purpose: Create figures for chapter 2 manuscript
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -15,22 +15,22 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 lapply(p,require,character.only=TRUE)
 # library(zoo)
 #Set the working directory
-# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
-setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
-# dir_in <- "D:\\Fire_Dieoff"
+dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
-dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+# dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mmt_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -49,13 +49,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5tree_ts8_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5tree_ts16_300m_20230320.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -72,61 +72,24 @@ rx.control.data$treatment <- 'Control' #Try making this 1-km versus, 2-km
 
 #Combine the data together
 rx.pixel.data <- rbind(rx.data, rx.control.data)
-# pixel.data <- rbind(combine.data, control.data.2km)
-summary(rx.pixel.data)
 
-#Combine the wildfire and Rx fire data together
-pixel.data <- combine(frap.pixel.data, rx.pixel.data)
-
-summary(pixel.data)
+#Combine all the data together
+pixel.data <- rbind(frap.pixel.data, rx.pixel.data)
 
 `%notin%` <- Negate(`%in%`)
-
-#Convert data to long format
-pixel.data <- pixel.data %>% 
-  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
-
-pixel.data$year <- as.numeric(pixel.data$year) + 1984 
-
-#Convert missing TPA data to NAs
-pixel.data[pixel.data$tpa_max < 0,]$tpa_max <- NA
-
+# summary(pixel.data)
 #Convert fire data -9999 to NAs
-pixel.data[pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
-pixel.data[pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
+# pixel.data[pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
+# pixel.data[pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
 pixel.data[pixel.data$fire_type_2019 == -9999,]$fire_type_2019 <- NA
 pixel.data[pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
 pixel.data[pixel.data$fire_type_2020 == -9999,]$fire_type_2020 <- NA
 pixel.data[pixel.data$fire_year_2020 == -9999,]$fire_year_2020 <- NA
 
-#Convert to trees per hectare
-pixel.data$tpa_max <- pixel.data$tpa_max * 2.47105
-
-#Make the dates into date time format for R
-pixel.data$date <- as.Date(as.character(pixel.data$year), format = '%Y')
-# pixel.data$vi.year <- format(pixel.data$date , '%Y')
-pixel.data$vi.year <- pixel.data$year
 #Use the FRAP fire perimeter year (use fire year 2010)
 pixel.data$fire.year <- pixel.data$fire_year_2010
-pixel.data$stand.age <- as.numeric(pixel.data$year) - as.numeric(pixel.data$fire.year) 
 
-#Update Cover data to 100% scale
-pixel.data$Tree_Cover <- pixel.data$Tree_Cover / 100
-pixel.data$Shrub_Cover <- pixel.data$Shrub_Cover / 100
-pixel.data$Herb_Cover <- pixel.data$Herb_Cover / 100
-pixel.data$Bare_Cover <- pixel.data$Bare_Cover / 100
-
-#Convert the SPI48 scale back to decimal
-pixel.data$SPI48 <- pixel.data$SPI48 / 100
-
-#Try to fix soil moisture by dividing by 10
-pixel.data$Soil_Moisture <- pixel.data$Soil_Moisture / 10
-
-#Calculate Pr-ET
-pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
-
-pixel.data %>% summary()
-
+#Add the fire year bins
 pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   treatment == 'Control' | fire.year < 1980 ~ 'Control',
   fire.year >= 1980 & fire.year <= 2010 ~ 'Disturb',
@@ -143,10 +106,9 @@ summary(pixel.data)
 pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Control', 'Disturb')))#
 
 #Recode the veg type data
-pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
-                              '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
-                              '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
-
+# pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
+#                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
+#                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
 #Select strat categories for fire treatments
 #Select strat categories for fire treatments
@@ -164,21 +126,19 @@ frap.strat <- inner_join(frap.disturb, frap.control, by = 'stratlayer') %>%
 rx.strat <- inner_join(rx.disturb, rx.control, by = 'stratlayer') %>% #Inner Join the disturb and control data sets
   group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) #Take the minimum of the number of pixels as the sample number
 
-rx.strat %>% pull(n)
+# rx.strat %>% pull(n)
 
 #Set the random number seed
 set.seed(4561)
-
+# colnames(pixel.data %>% dplyr::select(-'AET':'tpa_max'))
 #Sample the prescribed fire control pixels
 rx.sample <- pixel.data %>%
   filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
-  # pivot_wider(names_from = c('vi.year','system.index'), values_from = colnames(pixel.data %>% dplyr::select(-stratlayer))) %>% #This still needs to be fixed
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
-  # pivot_longer()
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
@@ -201,6 +161,45 @@ pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire
 
 #Combine the sampled data back together
 pixel.sample <- rbind(pixel.disturb, rx.sample, frap.sample)
+
+#Convert data to long format
+#This should be moved later
+pixel.sample <- pixel.sample %>% 
+  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
+
+#Convert the year outputs to actual years
+pixel.sample$year <- as.numeric(pixel.sample$year) + 1984 
+
+#Convert missing TPA data to NAs
+pixel.sample[pixel.sample$tpa_max < 0,]$tpa_max <- NA
+
+#Convert to trees per hectare
+pixel.sample$tpa_max <- pixel.sample$tpa_max * 2.47105
+
+#Make the dates into date time format for R
+pixel.sample$date <- as.Date(as.character(pixel.sample$year), format = '%Y')
+pixel.sample$vi.year <- pixel.sample$year
+pixel.sample$stand.age <- as.numeric(pixel.sample$year) - as.numeric(pixel.sample$fire.year) 
+
+#Update Cover data to 100% scale
+pixel.sample$Tree_Cover <- pixel.sample$Tree_Cover / 100
+pixel.sample$Shrub_Cover <- pixel.sample$Shrub_Cover / 100
+pixel.sample$Herb_Cover <- pixel.sample$Herb_Cover / 100
+pixel.sample$Bare_Cover <- pixel.sample$Bare_Cover / 100
+pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover
+
+#Rename Montana Tree Cover
+pixel.sample$Tree_Cover <- pixel.sample$TRE
+
+#Convert the SPI48 scale back to decimal
+pixel.sample$SPI48 <- pixel.sample$SPI48 / 100
+
+#Try to fix soil moisture by dividing by 10
+pixel.sample$Soil_Moisture <- pixel.sample$Soil_Moisture / 10
+
+#Calculate Pr-ET
+pixel.sample$PrET <- pixel.sample$ppt - pixel.sample$AET
+
 
 #Figure of Dead Trees per acre separated by fire years with time series
 p5 <- ggplot() + 

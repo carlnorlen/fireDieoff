@@ -21,13 +21,13 @@ setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
 fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5C_5tree_ts8_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5C_5tree_ts16_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -46,13 +46,13 @@ frap.control.data$treatment <- 'Control'
 frap.pixel.data <- rbind(frap.fire.data, frap.control.data)
 
 #Add the Rx fire data
-rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5C_5tree_ts8_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+rx.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_rxfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 rx.data$treatment <- 'Disturb'
 
 #Add teh Rx fire buffer data
-rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5C_5tree_ts16_300m_20230228.csv"), header = TRUE, na.strings = "NaN")
+rx.control.data <- read.csv(file.path(dir_in, "control_south_sierra_Rx_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 rx.control.data$fire_count_2010 <- -9999
@@ -69,61 +69,24 @@ rx.control.data$treatment <- 'Control' #Try making this 1-km versus, 2-km
 
 #Combine the data together
 rx.pixel.data <- rbind(rx.data, rx.control.data)
-# pixel.data <- rbind(combine.data, control.data.2km)
-summary(rx.pixel.data)
 
-#Combine the wildfire and Rx fire data together
-pixel.data <- combine(frap.pixel.data, rx.pixel.data)
-
-summary(pixel.data)
+#Combine all the data together
+pixel.data <- rbind(frap.pixel.data, rx.pixel.data)
 
 `%notin%` <- Negate(`%in%`)
-
-#Convert data to long format
-pixel.data <- pixel.data %>% 
-  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
-
-pixel.data$year <- as.numeric(pixel.data$year) + 1984 
-
-#Convert missing TPA data to NAs
-pixel.data[pixel.data$tpa_max < 0,]$tpa_max <- NA
-
+# summary(pixel.data)
 #Convert fire data -9999 to NAs
-pixel.data[pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
-pixel.data[pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
+# pixel.data[pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
+# pixel.data[pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
 pixel.data[pixel.data$fire_type_2019 == -9999,]$fire_type_2019 <- NA
 pixel.data[pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
 pixel.data[pixel.data$fire_type_2020 == -9999,]$fire_type_2020 <- NA
 pixel.data[pixel.data$fire_year_2020 == -9999,]$fire_year_2020 <- NA
 
-#Convert to trees per hectare
-pixel.data$tpa_max <- pixel.data$tpa_max * 2.47105
-
-#Make the dates into date time format for R
-pixel.data$date <- as.Date(as.character(pixel.data$year), format = '%Y')
-# pixel.data$vi.year <- format(pixel.data$date , '%Y')
-pixel.data$vi.year <- pixel.data$year
 #Use the FRAP fire perimeter year (use fire year 2010)
 pixel.data$fire.year <- pixel.data$fire_year_2010
-pixel.data$stand.age <- as.numeric(pixel.data$year) - as.numeric(pixel.data$fire.year) 
 
-#Update Cover data to 100% scale
-pixel.data$Tree_Cover <- pixel.data$Tree_Cover / 100
-pixel.data$Shrub_Cover <- pixel.data$Shrub_Cover / 100
-pixel.data$Herb_Cover <- pixel.data$Herb_Cover / 100
-pixel.data$Bare_Cover <- pixel.data$Bare_Cover / 100
-
-#Convert the SPI48 scale back to decimal
-pixel.data$SPI48 <- pixel.data$SPI48 / 100
-
-#Try to fix soil moisture by dividing by 10
-pixel.data$Soil_Moisture <- pixel.data$Soil_Moisture / 10
-
-#Calculate Pr-ET
-pixel.data$PrET <- pixel.data$ppt - pixel.data$AET
-
-pixel.data %>% summary()
-
+#Add the fire year bins
 pixel.data <- pixel.data %>% mutate(fire.year.bin = case_when(
   treatment == 'Control' | fire.year < 1980 ~ 'Control',
   fire.year >= 1980 & fire.year <= 2010 ~ 'Disturb',
@@ -140,19 +103,107 @@ summary(pixel.data)
 pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Control', 'Disturb')))#
 
 #Recode the veg type data
-pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
-                              '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
-                              '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
-
+# pixel.data$veg_name <- recode(.x=pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
+#                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
+#                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
 #Select strat categories for fire treatments
-frap.strat <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 40) %>% pull(stratlayer) 
-rx.strat <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n() /35) %>% filter(n >= 20) %>% pull(stratlayer)
+#Select strat categories for fire treatments
+frap.disturb <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) 
+rx.disturb <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n()) 
+# print(frap.strat)
+
+frap.control <- pixel.data %>% filter(fire.type.bin == 'Wildfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n())
+rx.control <- pixel.data %>% filter(fire.type.bin == 'Rxfire' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n()) 
+
+#Get final stratlayers and numbers to sample from each
+frap.strat <- inner_join(frap.disturb, frap.control, by = 'stratlayer') %>% 
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
+
+rx.strat <- inner_join(rx.disturb, rx.control, by = 'stratlayer') %>% #Inner Join the disturb and control data sets
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) #Take the minimum of the number of pixels as the sample number
+
+# rx.strat %>% pull(n)
+
+#Set the random number seed
+set.seed(4561)
+# colnames(pixel.data %>% dplyr::select(-'AET':'tpa_max'))
+#Sample the prescribed fire control pixels
+rx.sample <- pixel.data %>%
+  filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
+  dplyr::select(-c(data, n)) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#Sample the Wildfire Control control pixels
+frap.sample <- pixel.data %>%
+  filter(treatment == 'Control' & fire.type.bin == 'Wildfire' & stratlayer %in% (frap.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#Sample the moderate severity control pixels
+
+#Make sure the stratlayer bins match with the sampled control bins
+pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire.type.bin) %>% filter(case_when(fire.type.bin == 'Rxfire' ~ stratlayer %in% (rx.strat %>% pull(stratlayer)),
+                                                                                                                fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
+
+#Combine the sampled data back together
+pixel.sample <- rbind(pixel.disturb, rx.sample, frap.sample)
+
+#Convert data to long format
+#This should be moved later
+pixel.sample <- pixel.sample %>% 
+  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
+
+#Convert the year outputs to actual years
+pixel.sample$year <- as.numeric(pixel.sample$year) + 1984 
+
+#Convert missing TPA data to NAs
+pixel.sample[pixel.sample$tpa_max < 0,]$tpa_max <- NA
+
+#Convert to trees per hectare
+pixel.sample$tpa_max <- pixel.sample$tpa_max * 2.47105
+
+#Make the dates into date time format for R
+pixel.sample$date <- as.Date(as.character(pixel.sample$year), format = '%Y')
+pixel.sample$vi.year <- pixel.sample$year
+pixel.sample$stand.age <- as.numeric(pixel.sample$year) - as.numeric(pixel.sample$fire.year) 
+
+#Update Cover data to 100% scale
+pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover / 100
+pixel.sample$Shrub_Cover.2 <- pixel.sample$Shrub_Cover / 100
+pixel.sample$Herb_Cover.2 <- pixel.sample$Herb_Cover / 100
+pixel.sample$Bare_Cover.2 <- pixel.sample$Bare_Cover / 100
+# pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover
+
+#Rename Montana Tree Cover
+pixel.sample$Tree_Cover <- pixel.sample$TRE
+pixel.sample$Shrub_Cover <- pixel.sample$SHR
+pixel.sample$Herb_Cover <- pixel.sample$AFG + pixel.sample$PFG
+pixel.sample$Bare_Cover <- pixel.sample$BGR 
+
+#Convert the SPI48 scale back to decimal
+pixel.sample$SPI48 <- pixel.sample$SPI48 / 100
+
+#Try to fix soil moisture by dividing by 10
+pixel.sample$Soil_Moisture <- pixel.sample$Soil_Moisture / 10
+
+#Calculate Pr-ET
+pixel.sample$PrET <- pixel.sample$ppt - pixel.sample$AET
 
 #Filter the data into subsets for modeling
-pixel.filter <- pixel.data %>% filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
-                    filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                                     fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1921 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+                    # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                    #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 dplyr::group_by(system.index) %>% 
                 summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
                     RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
@@ -221,8 +272,8 @@ r2.text <- data.frame(
   ),
   fire.year.bin = c('Control', 'Disturb', 'Control', 'Disturb'),
   fire.type.bin = c('Wildfire', 'Wildfire', 'Rxfire', 'Rxfire'),
-  x = c(3500, 3500, 3500, 3500),
-  y = c(-20, -20, -20, -20)
+  x = c(2500, 2500, 2500, 2500),
+  y = c(20, 20, 20, 20)
 )
 
 # letter.text <- data.frame(label = c("a)", "b)", "c)", "d)"),
@@ -235,7 +286,7 @@ r2.text <- data.frame(
 #Create the figure
 p1 <- ggplot(data = all.models) +
   #Create the density layer
-  geom_bin2d(binwidth = c(200, 1), mapping = aes(x = Water_Stress, y = dTree, group = ..count..)) +
+  geom_bin2d(binwidth = c(200, 2), mapping = aes(x = Water_Stress, y = dTree, group = ..count..)) +
   #Piecewise linear regression fit line
   geom_line(mapping = aes(x=Water_Stress, y=dTree.fit), size=2, color = 'black', linetype = 'dotdash') +
   #Piecewise fit uncertainty
@@ -256,7 +307,7 @@ p1
 p2 <- p1 + theme(
   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
   legend.justification = c(1, 0),
-  legend.position = c(0.15, 0.55),
+  legend.position = c(0.45, 0.55),
   legend.text = element_text(size = 10),
   legend.title = element_text(size = 10),
   legend.direction = "vertical") +

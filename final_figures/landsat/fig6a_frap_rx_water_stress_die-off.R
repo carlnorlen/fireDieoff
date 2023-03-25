@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 23, 2023
-#Date Updated: February 15, 2023
+#Date Updated: March 25, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -8,9 +8,10 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'segmented')
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'segmented', 'purrr')
 # install.packages(p,repo='https://cran.r-project.org/')
 
+# library(purrr)
 # install.packages(c('zoo'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 # library(segmented)
@@ -98,7 +99,7 @@ pixel.data <- pixel.data %>% mutate(fire.type.bin = case_when(
   fire_type_2010 == 2 ~ 'Rxfire'
 ))
 
-summary(pixel.data)
+# summary(pixel.data)
 
 pixel.data$fire.year.bin = with(pixel.data, factor(fire.year.bin, levels = c('2019-2020', '2011-2018', 'Control', 'Disturb')))#
 
@@ -147,17 +148,35 @@ frap.sample <- pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
-
+setdiff(colnames(frap.sample), colnames(rx.sample))
 #Sample the moderate severity control pixels
 
-#Make sure the stratlayer bins match with the sampled control bins
-pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire.type.bin) %>% filter(case_when(fire.type.bin == 'Rxfire' ~ stratlayer %in% (rx.strat %>% pull(stratlayer)),
-                                                                                                                fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
+#Make sure the stratlayer disturb bins match with the sampled control bins
+rx.disturb <- pixel.data %>%
+  filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
+  dplyr::select(-c(data, n)) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#Sample the Wildfire Disturb pixels
+frap.disturb <- pixel.data %>%
+  filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire' & stratlayer %in% (frap.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-c(data, n)) %>% #Get rid of the data column
+  unnest(samp) #unnest the data                                                                                                                 fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
 
 #Combine the sampled data back together
-pixel.sample <- rbind(pixel.disturb, rx.sample, frap.sample)
+pixel.sample <- rbind(frap.disturb, rx.disturb, rx.sample, frap.sample)
 
 #Convert data to long format
 #This should be moved later
@@ -322,3 +341,15 @@ ggsave(filename = 'Fig6a_frap_rx_water_stress_dTree_300m.png', height=16, width=
 
 # ggplot(data = pixel.filter, mapping = aes(x = ADS, y = dNDMI)) + geom_point() +
 # geom_smooth(method = 'lm') + stat_cor(arg = 'pearson')
+
+p3 <- ggplot(data = pixel.filter %>% filter) +
+  #Create the density layer
+  geom_bin2d(binwidth = c(5, 20), mapping = aes(x = dTree, y = ADS, group = ..count..)) +
+  scale_fill_gradient2(limits = c(0,3400), breaks = c(0,1000, 2000, 3000), midpoint = 1700, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  geom_smooth(method = 'lm', mapping = aes(x = dTree, y = ADS), color = 'black', size = 2, linetype = 'dashed') +
+  stat_cor(mapping = aes(x = dTree, y = ADS)) +
+  theme_bw() +
+  xlab('Die-off (%)') + ylab(expression('Die-off (trees ha'^-1*')'))
+p3
+
+ggsave(filename = 'Fig13_frap_rx_water_stress_dTree_300m.png', height=16, width= 16, units = 'cm', dpi=900)

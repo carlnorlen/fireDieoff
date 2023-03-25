@@ -408,16 +408,16 @@ p1 <- ggplot() +
                          Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
                          Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2011, 2012)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(y = Water_Stress, x = Tree_Cover, fill = dTree, group = dTree), binwidth = c(5, 500)) + 
+             mapping = aes(x = Water_Stress, y = Tree_Cover, fill = dTree, group = dTree), binwidth = c(500, 10)) + 
   theme_bw() +
-  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", limits = c(-15, 5), midpoint = 0, na.value = 'transparent') + 
+  scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", limits = c(-25, 25), midpoint = 0, na.value = 'transparent') + 
   # scale_fill_gradient(name = "Tree Cover (%)", limits = c(0, 100), low = "brown", high = "forest green", na.value = 'transparent') +
   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-  ylab('Water Stress') + xlab('Tree Cover (%)')
+  xlab('Water Stress') + ylab('Tree Cover (%)')
 p1
 
 p2 <- ggplot() +
@@ -435,7 +435,7 @@ p2 <- ggplot() +
                          tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE),
                          Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2011, 2012)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-             mapping = aes(y = Water_Stress, x = Tree_Cover, fill = tpa_max, group = tpa_max), binwidth = c(5, 500)) + 
+             mapping = aes(x = Water_Stress, y = Tree_Cover, fill = tpa_max, group = tpa_max), binwidth = c(500, 10)) + 
   theme_bw() +
   scale_fill_gradient(name = "Die-off \n(trees per hectare)", low = "white", high = "red", na.value = 'transparent') +
   # scale_fill_gradient(name = "Tree Cover (%)", limits = c(0, 100), low = "brown", high = "forest green", na.value = 'transparent') +
@@ -444,78 +444,8 @@ p2 <- ggplot() +
         axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-  ylab('Water Stress') + xlab('Tree Cover (%)')
+  xlab('Water Stress') + ylab('Tree Cover (%)')
 p2
-# # pixel.data %>% summary()
-# p2<- ggplot() +
-#   #Data Summary
-#   geom_bin2d(data = sev.pixel.sample %>% 
-#                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
-#                #Match the controls to the disturbed based on the stratified sampling bins
-#                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-#                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-#                #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-#                #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
-#                dplyr::group_by(system.index, treatment, sev.bin) %>% 
-#                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2016, 2017)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]), 
-#                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2017, 2018)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
-#                          latitude = latitude[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-#              mapping = aes(y = latitude, x = elevation, fill = dTree, group = dTree), binwidth = c(500, 0.25)) + 
-#   theme_bw() +
-#   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-#   scale_fill_gradient2(name = "Die-off \n(% Tree Cover)", low = "firebrick1", mid = "lightgoldenrodyellow", high = "dodgerblue", limits = c(-15, 5), midpoint = 0, na.value = 'transparent') +  #  
-#   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
-#         axis.title.x = element_blank(), legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-#   ylab('Latitude')
-# p2
-# 
-# #ADS die-off
-# p3 <- ggplot() +
-#   geom_bin2d(data = sev.pixel.sample %>% 
-#                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
-#                #Match the controls to the disturbed based on the stratified sampling bins
-#                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-#                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-#                #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-#                #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
-#                dplyr::group_by(system.index, treatment, sev.bin) %>%
-#                summarize(tpa_max = max(tpa_max[vi.year %in% c(2015, 2016, 2017)], na.rm = TRUE), SPI48 = SPI48[vi.year == 2015], elevation = elevation[vi.year == 2015],
-#                          latitude = latitude[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015], SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-#              mapping = aes(y = latitude, x = elevation, fill = tpa_max, group = tpa_max), binwidth = c(500, 0.25)) + 
-#   scale_fill_gradient(name = "Die-off \n(trees per hectare)", low = "white", high = "red", na.value = 'transparent') +
-#   theme_bw() +
-#   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
-#         axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(treatment ~ sev.bin) +
-#   ylab('Latitude') + xlab('Elevation (m)')
-# p3             
-# 
-# p4<- ggplot() +
-#   #Data Summary
-#   geom_bin2d(data = sev.pixel.sample %>% 
-#                filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
-#                #Match the controls to the disturbed based on the stratified sampling bins
-#                # filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-#                #                  sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-#                #                  sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-#                #                  sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
-#                dplyr::group_by(system.index, sev.bin) %>% 
-#                summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
-#                          Water_Stress = Water_Stress[vi.year == 2015], Tree_Cover = (mean(Tree_Cover[vi.year %in% c(2018, 2019)])), elevation = elevation[vi.year == 2015], clm_precip_sum = clm_precip_sum[vi.year == 2015],
-#                          latitude = latitude[vi.year == 2015], count = sum(elevation[vi.year == 2015]), n = n(), SPI48 = SPI48[vi.year == 2015]), # filter for drought areas
-#              mapping = aes(y = latitude, x = elevation), binwidth = c(500, 0.25)) + 
-#   theme_bw() +
-#   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-#   # scale_fill_gradient2(name = "Die-off (% Tree Cover)", limits = c(-50, 20), midpoint = 0, low = "red", mid = "white", high = "blue", na.value = 'transparent') +
-#   theme(axis.text.y = element_text(size = 8), legend.position = "right", axis.title.y = element_text(size = 10),
-#         axis.title.x = element_text(size = 10), legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) + facet_grid(. ~ sev.bin) +
-#   ylab('Latitude') + xlab('Elevation (m)')
-# p4
 
 f1 <- ggarrange(p1, p2, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
 f1
@@ -550,11 +480,12 @@ p5 <- ggplot() +
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             x = date, fill = treatment), alpha = 0.3) +
   #Do the Formating
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() +
+  #Pick the plot theme
+  theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = c(0.1, 0.6), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -603,11 +534,12 @@ p6 <- ggplot() +
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(count)),
                             x = date, fill = treatment), alpha = 0.3) +
   #Do the Formating
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() +
+  #Pick the plot theme
+  theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
@@ -659,12 +591,13 @@ p7 <- ggplot() +
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
                             x = date, fill = treatment), alpha = 0.3) +
-  #Do the Formatting
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() +
+  #Pick the plot theme
+  theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -711,12 +644,13 @@ p8 <- ggplot() +
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
                             ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date, fill = treatment), alpha = 0.3) +
-  #Do the Formatting
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() +
+  #Pick the plot theme
+  theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -765,12 +699,13 @@ p10 <- ggplot() +
               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
                             ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
                             x = date, fill = treatment), alpha = 0.3) +
-  #Do the Formatting
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() +
+  #Pick the plot theme
+  theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = c(0.15, 0.35), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
@@ -800,7 +735,7 @@ p11 <- ggplot() +
                  # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, sev.bin, treatment) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                          Water_Stress = Water_Stress[vi.year == 2015]),
              mapping = aes(x = sev.bin, y = dTree, fill = treatment), 
              fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
@@ -815,7 +750,7 @@ p11 <- ggplot() +
                  # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                   dplyr::group_by(system.index, sev.bin, treatment) %>% 
-                  summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
+                  summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), 
                             Water_Stress = Water_Stress[vi.year == 2015]),
                 mapping = aes(x = sev.bin, y = dTree, color = treatment), 
                 fun.data = mean_se, geom = "errorbar", size = 1, position = 'dodge') + 
@@ -843,8 +778,8 @@ p12 <- ggplot() +
                  # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, sev.bin, treatment) %>% 
-               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), 
-                         RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), Water_Stress = Water_Stress[vi.year == 2015]),
+               summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), 
+                         RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]), Water_Stress = Water_Stress[vi.year == 2015]),
              mapping = aes(x = sev.bin, y = RdTree * 100, fill = treatment), 
              fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
   stat_summary(data = sev.pixel.sample %>% 
@@ -858,7 +793,7 @@ p12 <- ggplot() +
                  # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                   dplyr::group_by(system.index, sev.bin, treatment) %>% 
-                  summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014,2015)])) / mean(Tree_Cover[vi.year %in% c(2014, 2015)]), Water_Stress = Water_Stress[vi.year == 2015]),
+                  summarize(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]), Water_Stress = Water_Stress[vi.year == 2015]),
                 mapping = aes(x = sev.bin, y = RdTree * 100, color = treatment), 
                 fun.data = mean_se, geom = "errorbar", size = 1, position = 'dodge') + 
   theme_bw() +
@@ -926,7 +861,7 @@ p14 <- ggplot() +
                  # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                dplyr::group_by(system.index, sev.bin, treatment) %>%
-               summarize(sev.bin = sev.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014, 2015)])),
+               summarize(sev.bin = sev.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011, 2012)])),
              mapping = aes(x = sev.bin, y = Tree_Cover, fill = treatment), 
              fun = mean, geom = "bar", position = 'dodge', alpha = 0.7) + 
   stat_summary(data = sev.pixel.sample %>% 
@@ -940,7 +875,7 @@ p14 <- ggplot() +
                  # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower & #elevation >= elev.lower &
                   # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                   dplyr::group_by(system.index, sev.bin, treatment) %>%
-                  summarize(sev.bin = sev.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014, 2015)])),
+                  summarize(sev.bin = sev.bin[vi.year == 2010], Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011, 2012)])),
                 mapping = aes(x = sev.bin, y = Tree_Cover, color = treatment), 
                 fun.data = mean_se, geom = "errorbar", size = 1, position = 'dodge') + 
   theme_bw() +

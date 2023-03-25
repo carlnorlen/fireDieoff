@@ -156,11 +156,30 @@ frap.sample <- pixel.data %>%
 #Sample the moderate severity control pixels
 
 #Make sure the stratlayer bins match with the sampled control bins
-pixel.disturb <- pixel.data %>% filter(treatment == 'Disturb') %>% group_by(fire.type.bin) %>% filter(case_when(fire.type.bin == 'Rxfire' ~ stratlayer %in% (rx.strat %>% pull(stratlayer)),
-                                                                                                                fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
+#Make sure the stratlayer disturb bins match with the sampled control bins
+rx.disturb <- pixel.data %>%
+  filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
+  dplyr::select(-c(data, n)) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
+
+#Sample the Wildfire Disturb pixels
+frap.disturb <- pixel.data %>%
+  filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire' & stratlayer %in% (frap.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  ungroup() %>% #Un group the data
+  mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-c(data, n)) %>% #Get rid of the data column
+  unnest(samp) #unnest the data                                                                                                                 fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
 
 #Combine the sampled data back together
-pixel.sample <- rbind(pixel.disturb, rx.sample, frap.sample)
+pixel.sample <- rbind(frap.disturb, rx.disturb, rx.sample, frap.sample)
 
 #Convert data to long format
 #This should be moved later
@@ -205,7 +224,7 @@ pixel.sample$PrET <- pixel.sample$ppt - pixel.sample$AET
 p5 <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
-              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list  & stratlayer %in% strat.list
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list  & stratlayer %in% strat.list
               # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
               #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               group_by(date, fire.year.bin, fire.type.bin) %>%
@@ -216,7 +235,7 @@ p5 <- ggplot() +
   ) +
   #Dead Trees 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list  & stratlayer %in% strat.list
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list  & stratlayer %in% strat.list
                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 group_by(date, fire.year.bin, fire.type.bin) %>%
@@ -227,11 +246,14 @@ p5 <- ggplot() +
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             x = date, fill = fire.year.bin), alpha = 0.3) +
   #Do the Formating
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() + facet_grid(. ~ fire.type.bin) +
+  #Pick the plot theme
+  theme_bw() + 
+  #Do the faceting
+  facet_grid(. ~ fire.type.bin) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = c(0.1, 0.6), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -247,7 +269,7 @@ p6 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = pixel.sample %>%
-              filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
+              filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
               # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
               #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               group_by(date, fire.year.bin, fire.type.bin) %>%
@@ -257,7 +279,7 @@ p6 <- ggplot() +
             size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+                filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 group_by(date, fire.year.bin, fire.type.bin) %>%
@@ -268,11 +290,14 @@ p6 <- ggplot() +
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             x = date, fill = fire.year.bin), alpha = 0.3) +
   #Do the Formating
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() + facet_grid(. ~ fire.type.bin) +
+  #Pick the plot theme
+  theme_bw() + 
+  #Do the faceting
+  facet_grid(. ~ fire.type.bin) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
@@ -293,7 +318,7 @@ ggsave(filename = 'Fig3a_frap_rx_dieoff_tree_cover_stand_age_time_series.png', h
 p7 <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              filter(fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
               # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
               #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -305,7 +330,7 @@ p7 <- ggplot() +
             size = 1) +
   #AET 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                filter(fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -317,12 +342,15 @@ p7 <- ggplot() +
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
                             x = date, fill = fire.year.bin), alpha = 0.3) +
-  #Do the Formatting
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() + facet_grid(. ~ fire.type.bin) +
+  #Pick the plot theme
+  theme_bw() + 
+  #Do the faceting
+  facet_grid(. ~ fire.type.bin) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
@@ -337,7 +365,7 @@ p7
 p8 <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              filter(fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
               # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
               #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -349,7 +377,7 @@ p8 <- ggplot() +
             size = 1) +
   #AET 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                filter(fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -361,19 +389,22 @@ p8 <- ggplot() +
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
                             ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date, fill = fire.year.bin), alpha = 0.3) +
-  #Do the Formatting
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() + facet_grid(. ~ fire.type.bin) +
+  #Pick the plot theme
+  theme_bw() + 
+  #Do the faceting
+  facet_grid(. ~ fire.type.bin) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(250, 800) +
+  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(300, 700) +
   #facet_grid(. ~ fire.year.bin) +
   ylab(expression('AET (mm yr'^-1*')')) + xlab('Year')
 p8
@@ -383,7 +414,7 @@ p10 <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              filter(fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
               # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
               #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -395,7 +426,7 @@ p10 <- ggplot() +
             size = 1) +
   #Water Stress 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year >= 1921 & Tree_Cover > 0 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                filter(fire.year <= 2010 & fire.year >= 1980 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -407,14 +438,17 @@ p10 <- ggplot() +
               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
                             ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
                             x = date, fill = fire.year.bin), alpha = 0.3) +
-  #Do the Formatting
-  scale_color_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Spectral', name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-  theme_dark() + facet_grid(. ~ fire.type.bin) +
+  #Pick the plot theme
+  theme_bw() + 
+  #Do the faceting
+  facet_grid(. ~ fire.type.bin) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = c(0.15, 0.35), legend.background = element_rect(colour = NA, fill = NA),
+        axis.title.x = element_text(size = 10), legend.position = c(0.15, 0.6), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),

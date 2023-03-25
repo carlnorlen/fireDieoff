@@ -201,11 +201,17 @@ pixel.sample$vi.year <- pixel.sample$year
 pixel.sample$stand.age <- as.numeric(pixel.sample$year) - as.numeric(pixel.sample$fire.year) 
 
 #Update Cover data to 100% scale
-pixel.sample$Tree_Cover <- pixel.sample$Tree_Cover / 100
-pixel.sample$Shrub_Cover <- pixel.sample$Shrub_Cover / 100
-pixel.sample$Herb_Cover <- pixel.sample$Herb_Cover / 100
-pixel.sample$Bare_Cover <- pixel.sample$Bare_Cover / 100
-pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover
+#Update Cover data to 100% scale
+pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover / 100
+pixel.sample$Shrub_Cover.2 <- pixel.sample$Shrub_Cover / 100
+pixel.sample$Herb_Cover.2 <- pixel.sample$Herb_Cover / 100
+pixel.sample$Bare_Cover.2 <- pixel.sample$Bare_Cover / 100
+
+#Add Montana Veg Cover
+pixel.sample$Tree_Cover <- pixel.sample$TRE
+pixel.sample$Shrub_Cover <- pixel.sample$SHR
+pixel.sample$Herb_Cover <- pixel.sample$AFG + pixel.sample$PFG
+pixel.sample$Bare_Cover <- pixel.sample$BGR 
 
 #Rename Montana Tree Cover
 pixel.sample$Tree_Cover <- pixel.sample$TRE

@@ -1,18 +1,19 @@
 #Author: Carl A. Norlen
 #Created Date: May 20, 2022
-#Updated Date: October 11, 2022
+#Updated Date: March 26, 2023
 #Analyzing fire trends in teh South Sierra Region
 
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 'tigris', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'lubridate')
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'lubridate', 'units')
 # install.packages(p,repo='https://cran.r-project.org/')
 
+library(units)
 #Load the packages
 lapply(p,require,character.only=TRUE)
 
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/fire_trends')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fire_trends')
 
 #The data directory
 dir_in <- "D:\\Large_Files\\CECS"
@@ -44,15 +45,23 @@ ca_20m <- us_states_20m[us_states_20m$NAME == "California", ]
 ca_20m <- st_as_sf(ca_20m)
 ca_20m <- st_transform(ca_20m, frap.crs)
 
+#Setting variable for ESPG 5070, proj4 crs
+c <- crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
+
 #Select the Sierra Polygon
-# sierra <- eco.region[eco.region$US_L3NAME == 'Sierra Nevada', ]
-# sierra
+#Add USFS EcoRegion maps
+# usfs_in <- "D:\\Large_Files\\USFS\\data\\subsections"
+# usfs_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\USFS\\data\\subsections"
+usfs.regions <- st_read(file.path(usfs_in, 'S_USA.EcomapSubsections.shp'))
 
 #Select USFS EcoRegion for South Sierra Nevada
-usfs.regions <- st_read(file.path(usfs_in, 'S_USA.EcomapSubsections.shp'))
-# usfs.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S == 'M261Eq' | MAP_UNIT_S == 'M261Es' | MAP_UNIT_S == 'M261Eu' | MAP_UNIT_S == 'M261Er' | MAP_UNIT_S == 'M261Eo') # | MAP_UNIT_S == 'M261Ev') #MAP_UNIT_S == 'M261Et' | 
+usfs.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S =='M261Eq' | MAP_UNIT_S =='M261Eu' | MAP_UNIT_S =='M261Er'  | MAP_UNIT_S =='M261Eo'  | MAP_UNIT_S =='M261Es' | 
+                        #North Sierra
+                        MAP_UNIT_S == 'M261Ea'  | MAP_UNIT_S =='M261Eb'  | MAP_UNIT_S =='M261Ec'  | MAP_UNIT_S =='M261Ed'  | MAP_UNIT_S =='M261Ef'  | MAP_UNIT_S =='M261Eg'  | MAP_UNIT_S =='M261Eh'  | MAP_UNIT_S =='M261Ej'  | MAP_UNIT_S =='M261Ek'  | MAP_UNIT_S =='M261El'  | MAP_UNIT_S =='M261Em'  | MAP_UNIT_S =='M261Et')
 
-south.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S =='M261Eq' | MAP_UNIT_S =='M261Eu' | MAP_UNIT_S =='M261Es') #MAP_UNIT_S =='M261Er'  | MAP_UNIT_S =='M261Eo'  | 
+#North Sierra Union
+south.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S =='M261Eq' | MAP_UNIT_S =='M261Eu' | MAP_UNIT_S =='M261Er'  | MAP_UNIT_S =='M261Eo'  | MAP_UNIT_S =='M261Es') 
+# south.sierra.merge <- south.sierra %>% st_union()
 
 #South Sierra Union
 north.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ea'  | MAP_UNIT_S =='M261Eb'  | MAP_UNIT_S =='M261Ec'  | MAP_UNIT_S =='M261Ed'  | MAP_UNIT_S =='M261Ef'  | MAP_UNIT_S =='M261Eg' | 
@@ -111,9 +120,9 @@ p1 <- ggplot() +
       coord_sf() + 
       theme_bw() + 
       #Add the California perimeter
-      geom_sf(data = ca_20m, color = 'black', alpha = 0.0, size = 0.5) +
+      geom_sf(data = ca_20m %>% st_transform(c), color = 'black', alpha = 0.0, size = 0.5) +
       #Add the South Sierra Perimeter
-      geom_sf(data = south.sierra.sf,  color='black', fill = 'black', alpha = 1, size = 0.1) +
+      geom_sf(data = south.sierra.sf %>% st_transform(c),  color='black', fill = 'black', alpha = 1, size = 0.1) +
       #Add a scale bar
       annotation_scale(location = "bl", height = unit(0.1, "cm"), width_hint = 0.2) +
       #Add a North Arrow
@@ -123,7 +132,7 @@ p1 <- ggplot() +
                          style = north_arrow_minimal) + theme_bw() + guides(fill = guide_legend(title.position = "top"))
 p1
 
-ggsave(filename = 'Fig1_Ecoregion_map.png', height=12, width=9, units = 'cm', dpi=900)
+# ggsave(filename = 'Fig1_Ecoregion_map.png', height=12, width=9, units = 'cm', dpi=900)
 
 #Add Fire colors
 cols <- c("Wild"="black", "Prescribed" = "gray")
@@ -132,9 +141,10 @@ lines <- c("Wild" = "dashed", "Prescribed" = "solid")
 #Create a time series of FRAP burned area
 #Some issue with the labels
 #It doesn't seem to be actually filtering by the ecoregion.
+summary(frap.south.sierra)
 p2 <- ggplot() +
   #Line of total FRAP burned area in the South Sierra
-  geom_line(data = as.data.frame(frap.south.sierra[frap.south.sierra$year >= 1921 & frap.south.sierra$year <= 2010, ]) %>% #) %>% #
+  geom_line(data = as.data.frame(frap.south.sierra[frap.south.sierra$year >= 1986 & frap.south.sierra$year <= 2010, ]) %>% #) %>% #
               group_by(year, .groups = 'keep') %>% summarize(Area = sum(Shape_Area)), 
             mapping = aes(x = as.Date(as.character(year), format = "%Y"), y = Area / 10000, color = "Wild", linetype = "Wild"), size = 1) +  #, color = 'South Wildfire', linetype = 'South Wildfire'), size = 1) + 
   #Line of total FRAP burned area in the North Sierra
@@ -142,7 +152,7 @@ p2 <- ggplot() +
   #             group_by(year, .groups = 'keep') %>% summarize(Area = sum(GIS_ACRES)),
   #           mapping = aes(x = as.Date(as.character(year), format = "%Y"), y = Area * 1/2.471), size = 1, color = 'gray') +  #, color = 'North Wildfire', linetype = 'North Wildfire'), size = 1) +
   #Line of total RxBurn burned area in the South Sierra
-  geom_line(data = as.data.frame(rxburn.south.sierra[rxburn.south.sierra$year >= 1921 & rxburn.south.sierra$year <= 2010, ]) %>% #) %>% #
+  geom_line(data = as.data.frame(rxburn.south.sierra[rxburn.south.sierra$year >= 1986 & rxburn.south.sierra$year <= 2010, ]) %>% #) %>% #
               group_by(year, .groups = 'keep') %>% summarize(Area = sum(Shape_Area)),
             mapping = aes(x = as.Date(as.character(year), format = "%Y"), y = Area /10000, color = "Prescribed", linetype = "Prescribed"), size = 1) +
   # #Line of total RxBurn burned area in the North Sierra
@@ -155,18 +165,50 @@ p2 <- ggplot() +
   theme(legend.position = c(0.15, 0.8), legend.background = element_rect(colour = NA, fill = NA),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6), axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.text.x = element_blank(), axis.title.x = element_blank()) +
-  scale_colour_manual(name="Fire Type (FRAP)",values=cols, aesthetics = 'color') +
-  scale_linetype_manual(name="Fire Type (FRAP)", values = lines) +
-  ylab('FRAP Burned Area (ha)') + xlab(NULL)
+  scale_colour_manual(name="Fire Type",values=cols, aesthetics = 'color') +
+  scale_linetype_manual(name="Fire Type", values = lines) +
+  ylab('Burned Area (ha)') + xlab(NULL)
 p2
 
+# summary(frap.south.sierra)
+# frap.south.sierra$Area.sf
+#Create a time series of Fire Severity burned area
+fire.sev.south.sierra %>% summary()
 p3 <- ggplot() +
+  #Line of total USFS burned area in the South Sierra
+  geom_line(data = as.data.frame(fire.sev.south.sierra) %>% filter(!is.na(BURNSEV) & BURNSEV != 255 & fire.sev.south.sierra$FIRE_YEAR >= 1986 & fire.sev.south.sierra$FIRE_YEAR <= 2010) %>%
+              group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% summarize(Area = sum(Shape_Area)), 
+            mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area / 10000, 
+                          color = as.factor(BURNSEV), linetype = as.factor(BURNSEV)), size = 1) + 
+  #Line of total USFS burned area in the South Sierra
+  # geom_line(data = as.data.frame(fire.sev.south.sierra) %>% filter(!is.na(BURNSEV) & BURNSEV != 255) %>%
+  #             group_by(FIRE_YEAR, .groups = 'keep') %>% summarize(Area = sum(Shape_Area)), 
+  #           mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000), 
+  #           color = 'black', alpha = 0.4, size = 1.5) + 
+  #Do the black and white theme
+  theme_bw() + 
+  #Figure
+  theme(legend.position = c(0.15, 0.7), legend.background = element_rect(colour = NA, fill = NA),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  scale_color_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High'), aesthetics = 'color') +
+  scale_linetype_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High')) +
+  ylab('Burned Area (ha)') + xlab('Year')
+p3
+
+f1 <- p1 | (p2 / p3) 
+f1 + plot_annotation(tag_levels = 'a')
+ggsave(filename = 'Fig1_South_Sierra_map_and_fire_areas.png', height=16, width=24, units = 'cm', dpi=900)
+
+
+
+#FRAP # of Fires
+p4 <- ggplot() +
   #Line of total FRAP burned area in the South Sierra
-  geom_line(data = as.data.frame(frap.south.sierra[frap.south.sierra$year >= 1921 & frap.south.sierra$year <= 2010 & frap.south.sierra$Shape_Area >= 900000, ]) %>% #& frap.south.sierra$Shape_Area >= 900000
+  geom_line(data = as.data.frame(frap.south.sierra[frap.south.sierra$year >= 1986 & frap.south.sierra$year <= 2010 & frap.south.sierra$Area.sf >= as_units(90000,"m^2"), ]) %>% #& frap.south.sierra$Shape_Area >= 900000
               group_by(year, .groups = 'keep') %>% summarize(count = n()), 
             mapping = aes(x = as.Date(as.character(year), format = "%Y"), y = count, color = "Wild", linetype = "Wild"), size = 1) +  #, color = 'South Wildfire', linetype = 'South Wildfire'), size = 1) + 
   #Line of total RxBurn burned area in the South Sierra
-  geom_line(data = as.data.frame(rxburn.south.sierra[rxburn.south.sierra$year >= 1921 & rxburn.south.sierra$year <= 2010 & rxburn.south.sierra$Shape_Area >= 900000, ]) %>% #& rxburn.south.sierra$Shape_Area >= 900000
+  geom_line(data = as.data.frame(rxburn.south.sierra[rxburn.south.sierra$year >= 1986 & rxburn.south.sierra$year <= 2010 & rxburn.south.sierra$Area.sf >= as_units(90000,"m^2"), ]) %>% #& rxburn.south.sierra$Shape_Area >= 900000
               group_by(year, .groups = 'keep') %>% summarize(count = n()),
             mapping = aes(x = as.Date(as.character(year), format = "%Y"), y = count, color = "Prescribed", linetype = "Prescribed"), size = 1) +
   #Do the black and white theme
@@ -176,35 +218,8 @@ p3 <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6), axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10)) + #ylim(0, 20) +
   scale_colour_manual(name="Fire Type (FRAP)",values=cols, aesthetics = 'color') +
-  scale_linetype_manual(name="Fire Type (FRAP)", values = lines) +
+  scale_linetype_manual(name="Fire Type", values = lines) +
   ylab('Number of Fires (>= 9 ha)') + xlab('Year')
-p3
-
-f1 <- ggarrange(p2, p3, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a)', 'b)'))
-f1
-
-ggsave(filename = 'Fig2_FRAP_time_series_South_Sierra.png', height=20, width=16, units = 'cm', dpi=900)
-
-#Create a time series of Fire Severity burned area
-p4 <- ggplot() +
-  #Line of total USFS burned area in the South Sierra
-  geom_line(data = as.data.frame(fire.sev.sierra) %>% filter(!is.na(BURNSEV) & BURNSEV != 255) %>%
-              group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% summarize(Area = sum(Shape_Area)), 
-            mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
-                          color = as.factor(BURNSEV), linetype = as.factor(BURNSEV)), size = 1) + 
-  #Line of total USFS burned area in the South Sierra
-  geom_line(data = as.data.frame(fire.sev.sierra) %>% filter(!is.na(BURNSEV) & BURNSEV != 255) %>%
-              group_by(FIRE_YEAR, .groups = 'keep') %>% summarize(Area = sum(Shape_Area)), 
-            mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000), 
-            color = 'black', alpha = 0.4, size = 1.5) + 
-  #Do the black and white theme
-  theme_bw() + 
-  #Figure
-  theme(legend.position = c(0.15, 0.8), legend.background = element_rect(colour = NA, fill = NA),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  scale_color_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High'), aesthetics = 'color') +
-  scale_linetype_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High')) +
-  ylab('Burned Area (ha)') + xlab('Year')
 p4
 
 ggsave(filename = 'Fig3_USFS_Fire_Severity_time_series_South_Sierra.png', height=10, width=16, units = 'cm', dpi=900)

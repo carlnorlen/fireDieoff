@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: June 29, 2022
+#Date Update: March 28, 2023
 #Purpose: Explore pixel sampling data with rgee.
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -76,7 +76,10 @@ usfs.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S == 'M261
 
 #Merge Sierra Nevada polygons into one larger polygon
 usfs.sierra.union <- usfs.sierra %>% st_union()
-
+st_bbox(usfs.sierra.union)
+usfs.sierra.union$bbox
+sierra.extent <- st_bbox(usfs.sierra.union)
+# crs(sierra.extent) <- c
 #Export the FRAP raster
 # frap.raster <- ee_as_raster(image = frap.year, via = 'drive', container = 'Fire_Dieoff')
 
@@ -92,82 +95,46 @@ files
 # frap.year.2 <- raster::raster(file.path(data_in, files[5]))
 
 #Select the frap year layers
-frap.year.1990 <- raster::raster(file.path(data_in, files[16]))
-frap.year.1990.m <- frap.year.1990 == 0
-frap.year.1990.mask <-  raster::mask(frap.year.1990, mask = frap.year.1990.m, maskvalue = 1)
-
-frap.year.2000 <- raster::raster(file.path(data_in, files[17]))
-frap.year.2000.m <- frap.year.2000 == 0
-frap.year.2000.mask <-  raster::mask(frap.year.2000, mask = frap.year.2000.m, maskvalue = 1)
-
-frap.year.2010 <- raster::raster(file.path(data_in, files[18]))
+# frap.year.1990 <- raster::raster(file.path(data_in, files[16]))
+# frap.year.1990.m <- frap.year.1990 == 0
+# frap.year.1990.mask <-  raster::mask(frap.year.1990, mask = frap.year.1990.m, maskvalue = 1)
+# 
+# frap.year.2000 <- raster::raster(file.path(data_in, files[17]))
+# frap.year.2000.m <- frap.year.2000 == 0
+# frap.year.2000.mask <-  raster::mask(frap.year.2000, mask = frap.year.2000.m, maskvalue = 1)
+#FRAP Wildfire layer
+frap.year.2010 <- raster::raster(file.path(data_in, 'FRAP_wildfire_2010_300m.tif'))
 frap.year.2010.m <- frap.year.2010== 0
 frap.year.2010.mask <-  raster::mask(frap.year.2010, mask = frap.year.2010.m, maskvalue = 1)
+frap.year.2010.mask
+frap.year.2010.mask.crop <- crop(frap.year.2010.mask, sierra.extent)
 
-frap.year.2020 <- raster::raster(file.path(data_in, files[19]))
-frap.year.2020.m <- frap.year.2020== 0
-frap.year.2020.mask <-  raster::mask(frap.year.2020, mask = frap.year.2020.m, maskvalue = 1)
+frap.buffer.year.2010 <- raster::raster(file.path(data_in, 'FRAP_wildfire_buffer_2010_300m.tif'))
+frap.buffer.year.2010.m <- frap.buffer.year.2010== 0
+frap.buffer.year.2010.mask <-  raster::mask(frap.buffer.year.2010, mask = frap.buffer.year.2010.m, maskvalue = 1)
 
-#Select the FRAP type layer
-frap.type.1990 <- raster::raster(file.path(data_in, files[12]))
-frap.type.1990.m <- frap.type.1990 == 0
-frap.type.1990.mask <-  raster::mask(frap.type.1990, mask = frap.type.1990.m, maskvalue = 1)
+#FRAP Rx Wildfire layer
+rx.year.2010 <- raster::raster(file.path(data_in, 'FRAP_Rxfire_2010_300m.tif'))
+rx.year.2010.m <- rx.year.2010== 0
+rx.year.2010.mask <-  raster::mask(rx.year.2010, mask = rx.year.2010.m, maskvalue = 1)
 
-frap.type.2000 <- raster::raster(file.path(data_in, files[13]))
-frap.type.2000.m <- frap.type.2000 == 0
-frap.type.2000.mask <-  raster::mask(frap.type.2000, mask = frap.type.2000.m, maskvalue = 1)
+rx.buffer.year.2010 <- raster::raster(file.path(data_in, 'FRAP_Rxfire_buffer_2010_300m.tif'))
+rx.buffer.year.2010.m <- rx.buffer.year.2010== 0
+rx.buffer.year.2010.mask <-  raster::mask(rx.year.buffer.2010, mask = rx.year.buffer.2010.m, maskvalue = 1)
 
-frap.type.2010 <- raster::raster(file.path(data_in, files[14]))
-frap.type.2010.m <- frap.type.2010== 0
-frap.type.2010.mask <-  raster::mask(frap.type.2010, mask = frap.type.2010.m, maskvalue = 1)
+#USFS Sev fire layer
+sev.year.2010 <- raster::raster(file.path(data_in, 'USFS_fire_severity_2010_300m.tif'))
+sev.year.2010.m <- sev.year.2010 == 0
+sev.year.2010.mask <-  raster::mask(sev.year.2010, mask = sev.year.2010.m, maskvalue = 1)
 
-frap.type.2020 <- raster::raster(file.path(data_in, files[15]))
-frap.type.2020.m <- frap.type.2020== 0
-frap.type.2020.mask <-  raster::mask(frap.type.2020, mask = frap.type.2020.m, maskvalue = 1)
+sev.buffer.year.2010 <- raster::raster(file.path(data_in, 'USFS_fire_severity_buffer_2010_300m.tif'))
+sev.buffer.year.2010.m <- sev.buffer.year.2010 == 0
+sev.buffer.year.2010.mask <-  raster::mask(sev.buffer.year.2010, mask = sev.buffer.year.2010.m, maskvalue = 1)
 
-#Select FRAP 1990 raster
-frap.count.1990 <- raster::raster(file.path(data_in, files[8]))
-frap.count.1990.m <- frap.count.1990 == 0
-frap.count.1990.mask <-  raster::mask(frap.count.1990, mask = frap.count.1990.m, maskvalue = 1)
-
-frap.count.2000 <- raster::raster(file.path(data_in, files[9]))
-frap.count.2000.m <- frap.count.2000 == 0
-frap.count.2000.mask <-  raster::mask(frap.count.2000, mask = frap.count.2000.m, maskvalue = 1)
-
-frap.count.2010 <- raster::raster(file.path(data_in, files[10]))
-frap.count.2010.m <- frap.count.2010== 0
-frap.count.2010.mask <-  raster::mask(frap.count.2010, mask = frap.count.2010.m, maskvalue = 1)
-
-frap.count.2020 <- raster::raster(file.path(data_in, files[11]))
-frap.count.2020.m <- frap.count.2020== 0
-frap.count.2020.mask <-  raster::mask(frap.count.2020, mask = frap.count.2020.m, maskvalue = 1)
-
-#ADS Data
-#2007
-ads.2007.1 <- raster::raster(file.path(data_in, files [1]))
-ads.2007.2 <- raster::raster(file.path(data_in, files [2]))
-ads.2007 <- raster::merge(ads.2007.1, ads.2007.2)
-ads.2007.m <- ads.2007 == 0
-ads.2007.mask <-  raster::mask(ads.2007, mask = ads.2007.m, maskvalue = 1)
-
-#2011
-ads.2011.1 <- raster::raster(file.path(data_in, files [3]))
-ads.2011.2 <- raster::raster(file.path(data_in, files [4]))
-ads.2011 <- raster::merge(ads.2011.1, ads.2011.2)
-ads.2011.m <- ads.2011 == 0
-ads.2011.mask <-  raster::mask(ads.2011, mask = ads.2011.m, maskvalue = 1)
-
-#2018
-ads.2018.1 <- raster::raster(file.path(data_in, files [5]))
-ads.2018.2 <- raster::raster(file.path(data_in, files [6]))
-ads.2018 <- raster::merge(ads.2018.1, ads.2018.2)
-ads.2018.m <- ads.2018 == 0
-ads.2018.mask <-  raster::mask(ads.2018, mask = ads.2018.m, maskvalue = 1)
-
-
-#FRAP 1990
+#FRAP 2010
 p1 <- ggplot() + 
-  ggR(img = frap.year.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
+  ggR(img = frap.buffer.year.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, alpha = 0.2) +
+  ggR(img = frap.year.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
   geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('longitude') + ylab('latitude') +
@@ -181,7 +148,7 @@ p1 <- ggplot() +
 
 p1
 
-ggsave(filename = 'Fig36_FRAP_year_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig1a_frap_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
 
 #Make a figure of the raster
 p2 <- ggplot() + 

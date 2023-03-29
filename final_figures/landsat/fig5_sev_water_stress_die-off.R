@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 23, 2023
-#Date Updated: February 14, 2023
+#Date Updated: March 28, 2023
 #Purpose: Create Pr-ET four-year versus dTree figures
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -30,7 +30,7 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 lapply(p,require,character.only=TRUE)
 
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
 dir_in <- "D:\\Fire_Dieoff"
@@ -163,7 +163,7 @@ un.sample <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (un.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #Sample the low severity control pixels
@@ -174,7 +174,7 @@ lo.sample <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (lo.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #Sample the moderate severity control pixels
@@ -185,7 +185,7 @@ mid.sample <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (mid.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #High Severity Samples
@@ -196,7 +196,7 @@ hi.sample <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (hi.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #Make sure the stratlayer bins match with the sampled control bins
@@ -208,7 +208,7 @@ un.disturb <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (un.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #Sample the low severity control pixels
@@ -219,7 +219,7 @@ lo.disturb <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (lo.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #Sample the moderate severity control pixels
@@ -230,7 +230,7 @@ mid.disturb <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (mid.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #High Severity Samples
@@ -241,7 +241,7 @@ hi.disturb <- sev.pixel.data %>%
   ungroup() %>% #Un group the data
   mutate(n = (hi.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
-  dplyr::select(-data) %>% #Get rid of the data column
+  dplyr::select(-c(data,n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #Combine the sampled data back together
@@ -301,9 +301,12 @@ sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & (fire_year_2
                    # sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
                    # sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
                 dplyr::group_by(system.index) %>% 
-                summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
-                    RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2013,2014)])) / mean(Tree_Cover[vi.year %in% c(2013, 2014)]),
-                    Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
+                summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+                    RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+                    Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
+                    ADS = mean(tpa_max[vi.year %in% c(2015, 2016, 2017)]),
+                    Water_Stress = Water_Stress[vi.year == 2015],
+                    PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
                     sev.bin = sev.bin[vi.year == 2010],
                     treatment = treatment[vi.year == 2010])
 
@@ -387,39 +390,130 @@ r2.text <- data.frame(
 )
 
 #Create the figure
-p1 <- ggplot(data = sev.all.models) +
+p1 <- ggplot(data = sev.pixel.filter %>% filter(sev.bin != 'Unchanged')) +
+  geom_bin2d(binwidth = c(200, 2), mapping = aes(x = PrET_4yr, y = dTree, group = ..count.., alpha = ..count..)) +
+  scale_fill_gradient2(limits = c(0,340), breaks = c(5,100,200,300), midpoint = 170, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_alpha(range = c(1, 1), limits = c(5, 340), na.value = 0.4) +labs(fill = "Grid Cells") +
   #Create the density layer
-  geom_bin2d(binwidth = c(200, 2), mapping = aes(x = Water_Stress, y = dTree, group = ..count..)) +
+  new_scale_fill() +
   #Piecewise linear regression fit line
-  geom_line(mapping = aes(x=Water_Stress, y=dTree.fit), size=2, color = 'black', linetype = 'dotdash') +
-  #Piecewise fit uncertainty
-  geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
-  guides(alpha = "none") +
-  scale_fill_gradient2(limits = c(0,360), breaks = c(5,90,180,270), midpoint = 180, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-  scale_alpha(range = c(1, 1), limits = c(5, 360), na.value = 0.4) +
-  # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +
-  labs(fill = "Grid Cells") +
+  stat_cor(mapping = aes(x = PrET_4yr, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
+  geom_smooth(method = 'lm', mapping = aes(x = PrET_4yr, y = dTree, color = treatment, linetype = treatment, fill = treatment), se = TRUE, show.legend = FALSE, size = 2) +
+  # geom_line(mapping = aes(x=Water_Stress, y=ADS.fit, color = treatment, linetype = treatment), size=2) +
+  # #Piecewise fit uncertainty
+  # geom_ribbon(mapping = aes(x = Water_Stress, y = ADS.fit, ymax = ADS.fit + 1.96*ADS.se.fit, ymin = ADS.fit - 1.96*ADS.se.fit, fill = treatment), alpha = 0.4) +
+  #Do the Formating
+  scale_linetype(name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
+  facet_grid(sev.bin ~ .) +
+  scale_y_reverse() +
   #Add the R^2 values
-  geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
+  # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
   #Add the R^2 text
   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
   theme_bw() +
-  facet_grid(factor(sev.bin, levels = c('Low', 'Mid', 'High')) ~ treatment) +
-  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (dTree %)')
+  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (% Tree Cover)')
 p1
 
 p2 <- p1 + theme(
   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
   legend.justification = c(1, 0),
-  legend.position = c(0.5, 0.4),
+  legend.position = c(0.9, 0.83),
   legend.text = element_text(size = 10),
   legend.title = element_text(size = 10),
   legend.direction = "vertical") +
   guides(fill = guide_colorbar(barwidth = 1, barheight = 3,
-                               title.position = "top", 
-                               title.hjust = 0.5, 
+                               title.position = "top",
+                               title.hjust = 0.5,
                                ticks.colour = "black"))
 
 p2
 
-ggsave(filename = 'Fig6c_sev_water_stress_dTree_300m.png', height=24, width= 16, units = 'cm', dpi=900)
+# ggsave(filename = 'Fig4_frap_rx_water_stress_dTree_300m.png', height=16, width= 8, units = 'cm', dpi=900)
+
+#Create the figure
+p3 <- ggplot(data = sev.pixel.filter %>% filter(sev.bin != 'Unchanged')) +
+  geom_bin2d(binwidth = c(2, 3), mapping = aes(x = Tree_Cover, y = dTree, group = ..count.., alpha = ..count..)) +
+  scale_fill_gradient2(limits = c(0,340), breaks = c(5,100, 200, 300), midpoint = 170, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent', guide = 'none') +
+  scale_alpha(range = c(1, 1), limits = c(5, 340), na.value = 0.4) +labs(fill = "Grid Cells") +
+  labs(fill = "Grid Cells") +
+  #Create the density layer
+  new_scale_fill() +
+  #Piecewise linear regression fit line
+  # geom_line(mapping = aes(x=Water_Stress, y=dTree, color = treatment, linetype = treatment), size=2) +
+  #Piecewise fit uncertainty
+  # geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit, fill = treatment), alpha = 0.4) +
+  stat_cor(mapping = aes(x = Tree_Cover, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
+  geom_smooth(method = 'lm', mapping = aes(x = Tree_Cover, y = dTree, color = treatment, linetype = treatment, fill = treatment),show.legend = TRUE, size = 2) +
+  
+  #Do the Formating
+  scale_linetype(name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
+  facet_grid(sev.bin ~ .) +
+  
+  #Add the R^2 values
+  # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
+  #Add the R^2 text
+  # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(), axis.text.y = element_blank()) +
+  scale_y_reverse() +
+  xlab(expression('Tree Cover (%)')) + ylab(expression('Die-off (trees ha'^-1*')'))
+p3
+
+p4 <- p3 + theme(
+  legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+  legend.justification = c(1, 0),
+  legend.position = c(0.7, 0.9),
+  legend.text = element_text(size = 10),
+  legend.title = element_text(size = 10),
+  legend.direction = "vertical")
+
+p4
+
+
+f1 <- ggarrange(p2, p4, ncol = 2, nrow = 1, common.legend = FALSE, widths = c(1, 0.9), align = "h")
+f1
+
+ggsave(filename = 'Fig5_fire_sev_dieoff_predictors.png', height=24, width= 16, units = 'cm', dpi=900)
+#Create the figure
+# p1 <- ggplot(data = sev.all.models) +
+#   #Create the density layer
+#   geom_bin2d(binwidth = c(200, 2), mapping = aes(x = Water_Stress, y = dTree, group = ..count..)) +
+#   #Piecewise linear regression fit line
+#   geom_line(mapping = aes(x=Water_Stress, y=dTree.fit), size=2, color = 'black', linetype = 'dotdash') +
+#   #Piecewise fit uncertainty
+#   geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +  
+#   guides(alpha = "none") +
+#   scale_fill_gradient2(limits = c(0,360), breaks = c(5,90,180,270), midpoint = 180, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+#   scale_alpha(range = c(1, 1), limits = c(5, 360), na.value = 0.4) +
+#   # stat_cor( mapping = aes(x = Water_Stress, y = dTree), color = 'black') + facet_grid(fire.type.bin ~ treatment) +
+#   labs(fill = "Grid Cells") +
+#   #Add the R^2 values
+#   geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
+#   #Add the R^2 text
+#   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
+#   theme_bw() +
+#   facet_grid(factor(sev.bin, levels = c('Low', 'Mid', 'High')) ~ treatment) +
+#   xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (dTree %)')
+# p1
+# 
+# p2 <- p1 + theme(
+#   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+#   legend.justification = c(1, 0),
+#   legend.position = c(0.5, 0.4),
+#   legend.text = element_text(size = 10),
+#   legend.title = element_text(size = 10),
+#   legend.direction = "vertical") +
+#   guides(fill = guide_colorbar(barwidth = 1, barheight = 3,
+#                                title.position = "top", 
+#                                title.hjust = 0.5, 
+#                                ticks.colour = "black"))
+# 
+# p2
+# 
+# ggsave(filename = 'Fig6c_sev_water_stress_dTree_300m.png', height=24, width= 16, units = 'cm', dpi=900)

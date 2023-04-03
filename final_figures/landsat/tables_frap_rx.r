@@ -7,13 +7,13 @@
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/chrono
 #Run the script: R < stand_age.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggplot2', 'magrittr', 'stats', 'patchwork','ggpmisc', 'raster', 'RStoolbox', 'quantreg','segmented', 'RColorBrewer',
-	   'gt', 'gtsummary', 'webshot', 'stargazer', 'kableExtra', 'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable')
+	   'gt', 'gtsummary', 'webshot', 'stargazer', 'kableExtra', 'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'purrr')
 # install.packages('quantreg',repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 
 # dir <- "C:\\Users\\Carl\\mystuff\\Large_Files\\CECS"
 dir <- "D:\\Large_Files\\CECS"
-memory.limit(32000)
+# memory.limit(32000)
 
 #Set the working directory
 # setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
@@ -137,8 +137,9 @@ rx.sample <- pixel.data %>%
   filter(treatment == 'Control' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
+  inner_join(rx.strat) %>%
   ungroup() %>% #Un group the data
-  mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  # mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
@@ -148,8 +149,9 @@ frap.sample <- pixel.data %>%
   filter(treatment == 'Control' & fire.type.bin == 'Wildfire' & stratlayer %in% (frap.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
+  inner_join(frap.strat) %>%
   ungroup() %>% #Un group the data
-  mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  # mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
@@ -158,29 +160,39 @@ frap.sample <- pixel.data %>%
 
 #Make sure the stratlayer bins match with the sampled control bins
 #Make sure the stratlayer disturb bins match with the sampled control bins
-rx.disturb <- pixel.data %>%
+rx.disturb.sample <- pixel.data %>%
   filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
+  inner_join(rx.strat) %>%
   ungroup() %>% #Un group the data
-  mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  # mutate(n = (rx.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work, .y = n
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
 #Sample the Wildfire Disturb pixels
-frap.disturb <- pixel.data %>%
+#Weird bug the alignment between frap.strat and the pixel.data seems to be off by one so the stratlayer and n-values don't match
+frap.disturb.sample <- pixel.data %>%
   filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire' & stratlayer %in% (frap.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
   nest() %>% #Nest the data
+  inner_join(frap.strat) %>% #Add the sample sizes for the stratlayers in the disturbed data
   ungroup() %>% #Un group the data
-  mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  # mutate(n = (frap.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
   mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data                                                                                                                 fire.type.bin == 'Wildfire' ~ stratlayer %in% (frap.strat %>% pull(stratlayer))))
 
+# print(frap.disturb.sample[39, ])
+# frap.strat %>% pull(n)
+# frap.strat %>% pull(stratlayer)
+# frap.disturb.sample %>% pull(stratlayer)
+# print(frap.disturb %>% dplyr::filter(stratlayer == 19900600))
+# print(frap.control %>% dplyr::filter(stratlayer == 19900600))
+# print(frap.strat %>% dplyr::filter(stratlayer == 19900600))
 #Combine the sampled data back together
-pixel.sample <- rbind(frap.disturb, rx.disturb, rx.sample, frap.sample)
+pixel.sample <- rbind(frap.disturb.sample, rx.disturb.sample, rx.sample, frap.sample)
 
 #Convert data to long format
 #This should be moved later
@@ -226,6 +238,21 @@ pixel.sample$Soil_Moisture <- pixel.sample$Soil_Moisture / 10
 #Calculate Pr-ET
 pixel.sample$PrET <- pixel.sample$ppt - pixel.sample$AET
 
+#Filter the data into subsets for modeling
+pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+  # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+  #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+  dplyr::group_by(system.index) %>% 
+  summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+            RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+            Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
+            PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
+            Water_Stress = Water_Stress[vi.year == 2015],
+            ADS = mean(tpa_max[vi.year %in% c(2015, 2016, 2017)]), 
+            dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)]),
+            fire.year.bin = fire.year.bin[vi.year == 2010],
+            treatment = treatment[vi.year == 2010],
+            fire.type.bin = fire.type.bin[vi.year == 2010])
 
 age.dNDMI.rq <- rq(dNDMI_2015_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
 print(age.dNDMI.rq %>% tidy())

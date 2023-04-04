@@ -12,17 +12,17 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggplot2', 'magrittr', 'stats', 'p
 lapply(p,require,character.only=TRUE)
 
 # dir <- "C:\\Users\\Carl\\mystuff\\Large_Files\\CECS"
-dir <- "D:\\Large_Files\\CECS"
+# dir <- "D:\\Large_Files\\CECS"
 # memory.limit(32000)
 
 #Set the working directory
-# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
-setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
-# dir_in <- "D:\\Fire_Dieoff"
+dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
-dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+# dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
 frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_fire_year_5tree_ts8_300m_20230403.csv"), header = TRUE, na.strings = "NaN")
@@ -254,97 +254,103 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & 
             treatment = treatment[vi.year == 2010],
             fire.type.bin = fire.type.bin[vi.year == 2010])
 
-age.dNDMI.rq <- rq(dNDMI_2015_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
-print(age.dNDMI.rq %>% tidy())
-tb1 <- age.dNDMI.rq %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 1: Quantile Regression, Die-off(dNDMI) ~ f(Stand Age)") %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb1, width = 5, file = "T1_dNDMI_stand_age_quantile_regression_results.png", zoom = 4.0)  
+# age.dNDMI.rq <- rq(dNDMI_2015_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
+# print(age.dNDMI.rq %>% tidy())
+# tb1 <- age.dNDMI.rq %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 1: Quantile Regression, Die-off(dNDMI) ~ f(Stand Age)") %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb1, width = 5, file = "T1_dNDMI_stand_age_quantile_regression_results.png", zoom = 4.0)  
 
 
-age.ADS.rq <- rq(ADS_2017_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
-print(age.ADS.rq %>% tidy())
-tb2 <- age.ADS.rq %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 2: Quantile Regression, Die-off(ADS) ~ f(Stand Age)") %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb2, width = 5, file = "T2_ADS_stand_age_quantile_regression_results.png", zoom = 4.0)  
+# age.ADS.rq <- rq(ADS_2017_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
+# print(age.ADS.rq %>% tidy())
+# tb2 <- age.ADS.rq %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 2: Quantile Regression, Die-off(ADS) ~ f(Stand Age)") %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb2, width = 5, file = "T2_ADS_stand_age_quantile_regression_results.png", zoom = 4.0)  
 
-stand.age.lm <- lm(dNDMI_2015_mean ~ stand_age_mean + I(stand_age_mean^2), data = stand.age)
-
-summary(stand.age.lm)
+# stand.age.lm <- lm(dNDMI_2015_mean ~ stand_age_mean + I(stand_age_mean^2), data = stand.age)
+# 
+# summary(stand.age.lm)
 #Treatment Grid Cells
-aov.dNDMI.stand.age.treatment <- aov(dNDMI_2015_mean ~ agegroup, data = stand.age.sample)
-summary(aov.dNDMI.stand.age.treatment)
+aov.dTree.treatment <- aov(dTree ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.dTree.treatment)
 
-aov.PET4yr.stand.age.treatment <- aov(PET_4yr_2015_mean ~ agegroup, data = stand.age.sample)
-summary(aov.PET4yr.stand.age.treatment)
+aov.ADS.treatment <- aov(ADS ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.ADS.treatment)
 
-aov.biomass.stand.age.treatment <- aov(biomass_2012_mean ~ agegroup, data = stand.age.sample)
-summary(aov.biomass.stand.age.treatment)
+aov.PrET4yr.treatment <- aov(PrET_4yr ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.PrET4yr.treatment)
 
-tukey.dNDMI.stand.age.treatment <- TukeyHSD(aov.dNDMI.stand.age.treatment)
-print(tukey.dNDMI.stand.age.treatment)
+aov.tree.treatment <- aov(Tree_Cover ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.tree.treatment)
 
-tukey.PET4yr.stand.age.treatment <- TukeyHSD(aov.PET4yr.stand.age.treatment)
-print(tukey.PET4yr.stand.age.treatment)
+tukey.dTree.treatment <- TukeyHSD(aov.dTree.treatment)
+print(tukey.dTree.treatment)
 
-tukey.biomass.stand.age.treatment <- TukeyHSD(aov.biomass.stand.age.treatment)
-print(tukey.biomass.stand.age.treatment)
+tukey.ADS.treatment <- TukeyHSD(aov.ADS.treatment)
+print(tukey.ADS.treatment)
+
+tukey.PrET4yr.treatment <- TukeyHSD(aov.PrET4yr.treatment)
+print(tukey.PrET4yr.treatment)
+
+tukey.tree.treatment <- TukeyHSD(aov.tree.treatment)
+print(tukey.tree.treatment)
 
 # anovas.treament <- anova(aov.dNDMI.stand.age.treatment, aov.PET4yr.stand.age.treatment, aov.biomass.stand.age.treatment)
 # print(anovas.treatment) 
 
 #Control Grid Cells
-aov.dNDMI.stand.age.control <- aov(dNDMI_2015_mean ~ agegroup, data = stand.age.control)
-summary(aov.dNDMI.stand.age.control)
+# aov.dNDMI.stand.age.control <- aov(dNDMI_2015_mean ~ agegroup, data = stand.age.control)
+# summary(aov.dNDMI.stand.age.control)
+# 
+# aov.PET4yr.stand.age.control <- aov(PET_4yr_2015_mean ~ agegroup, data = stand.age.control)
+# summary(aov.PET4yr.stand.age.control)
+# 
+# aov.biomass.stand.age.control <- aov(biomass_2012_mean ~ agegroup, data = stand.age.control)
+# summary(aov.biomass.stand.age.control)
+# 
+# tukey.dNDMI.stand.age.control <- TukeyHSD(aov.dNDMI.stand.age.control)
+# print(tukey.dNDMI.stand.age.control)
+# 
+# tukey.PET4yr.stand.age.control <- TukeyHSD(aov.PET4yr.stand.age.control)
+# print(tukey.PET4yr.stand.age.control)
+# 
+# tukey.biomass.stand.age.control <- TukeyHSD(aov.biomass.stand.age.control)
+# print(tukey.biomass.stand.age.control)
 
-aov.PET4yr.stand.age.control <- aov(PET_4yr_2015_mean ~ agegroup, data = stand.age.control)
-summary(aov.PET4yr.stand.age.control)
+tb1 <- tukey.dTree.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 1: Tukey HSD, Die-off (dTree) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb1, width = 5, file = "Table1_dTree_dieoff_FRAP_Tukey_HSD.png", zoom = 4.0) 
 
-aov.biomass.stand.age.control <- aov(biomass_2012_mean ~ agegroup, data = stand.age.control)
-summary(aov.biomass.stand.age.control)
+tb2 <- tukey.ADS.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 2: Tukey HSD, Die-off (ADS) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb2, width = 5, file = "Table2_ADS_dieoff_FRAP_Tukey_HSD.png", zoom = 4.0) 
 
-tukey.dNDMI.stand.age.control <- TukeyHSD(aov.dNDMI.stand.age.control)
-print(tukey.dNDMI.stand.age.control)
+tb3 <- tukey.PrET4yr.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 3: four-year Pr-ET ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb3, width = 5, file = "Table3_PrET_4yr_FRAP_Tukey_HSD_.png", zoom = 4.0) 
 
-tukey.PET4yr.stand.age.control <- TukeyHSD(aov.PET4yr.stand.age.control)
-print(tukey.PET4yr.stand.age.control)
+tb4 <- tukey.tree.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 4: Pre-Fire Tree Cover ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb4, width = 5, file = "Table4_Tree_Cover_FRAP_Tukey_HSD_.png", zoom = 4.0) 
 
-tukey.biomass.stand.age.control <- TukeyHSD(aov.biomass.stand.age.control)
-print(tukey.biomass.stand.age.control)
-
-tb1 <- tukey.dNDMI.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 1: Not Exposed, Tukey HSD, dNDMI ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb1, width = 5, file = "Table1_Not_Exposed_Mortality_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
-
-tb2 <- tukey.dNDMI.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 2: Exposed, Tukey HSD, dNDMI ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb2, width = 5, file = "Table2_Exposed_Mortality_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
-
-tb3 <- tukey.PET4yr.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 3: Not Exposed, Tukey HSD, four-year Pr-ET ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb3, width = 5, file = "Table3_Not_Exposed_Water_Deficit_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
-
-tb4 <- tukey.PET4yr.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 4: Exposed, Tukey HSD, four-year Pr-ET ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb4, width = 5, file = "Table4_Exposed_Water_Deficit_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
-
-tb5 <- tukey.biomass.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 5: Not Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb5, width = 5, file = "Table5_Not_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
-
-tb6 <- tukey.biomass.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 6: Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb6, width = 5, file = "Table6_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+# tb5 <- tukey.biomass.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 5: Not Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb5, width = 5, file = "Table5_Not_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+# 
+# tb6 <- tukey.biomass.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 6: Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb6, width = 5, file = "Table6_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
 
 #Summary Statistics
-summary.control <- stand.age.control %>% 
-  group_by(agegroup) %>% 
-  summarize(dNDMI_mean = mean(dNDMI_2015_mean),
-            dNDMI_sd = sd(dNDMI_2015_mean),
-			biomass_mean = mean(biomass_2012_mean),
-			biomass_sd = sd(biomass_2012_mean))
-
-print(summary.control)
-
-summary.treatment <- stand.age.sample %>% 
-  group_by(agegroup) %>% 
-  summarize(dNDMI_mean = mean(dNDMI_2015_mean),
-            dNDMI_sd = sd(dNDMI_2015_mean),
-			biomass_mean = mean(biomass_2012_mean),
-			biomass_sd = sd(biomass_2012_mean))
-
-print(summary.treatment)
+# summary.control <- stand.age.control %>% 
+#   group_by(agegroup) %>% 
+#   summarize(dNDMI_mean = mean(dNDMI_2015_mean),
+#             dNDMI_sd = sd(dNDMI_2015_mean),
+# 			biomass_mean = mean(biomass_2012_mean),
+# 			biomass_sd = sd(biomass_2012_mean))
+# 
+# print(summary.control)
+# 
+# summary.treatment <- stand.age.sample %>% 
+#   group_by(agegroup) %>% 
+#   summarize(dNDMI_mean = mean(dNDMI_2015_mean),
+#             dNDMI_sd = sd(dNDMI_2015_mean),
+# 			biomass_mean = mean(biomass_2012_mean),
+# 			biomass_sd = sd(biomass_2012_mean))
+# 
+# print(summary.treatment)
 
 # stand.age.lm2 <- lm(dNDMI_2015_mean ~ stand_age_mean, data = stand.age)
 
@@ -358,7 +364,7 @@ print(summary.treatment)
 
 # summary(stand.age.norcal.lm)
 
-nrow(stand.age)
+# nrow(stand.age)
 # summary(stand.age)
 # nrow(stand.age.norcal)
 # nrow(stand.age.socal)

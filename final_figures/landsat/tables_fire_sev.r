@@ -12,117 +12,347 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggplot2', 'magrittr', 'stats', 'p
 lapply(p,require,character.only=TRUE)
 
 # dir <- "C:\\Users\\Carl\\mystuff\\Large_Files\\CECS"
-dir <- "D:\\Large_Files\\CECS"
-memory.limit(32000)
+# dir <- "D:\\Large_Files\\CECS"
+# memory.limit(32000)
+
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
+
+#The data directory
+dir_in <- "D:\\Fire_Dieoff"
+# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
+# dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
+
+#Add the data
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_fire_year_5tree_ts8_300m_20230403.csv"), header = TRUE, na.strings = "NaN")
+# fire.data$fire.year <- fire.data$perimeter_year
+sev.data$treatment <- 'Disturb'
+# summary(sev.data)
+# list.files(fire_in)
+# list.files(fire_in)
+raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_fire_year_5tree_ts16_300m_20230403.csv"), header = TRUE, na.strings = "NaN")
+# unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
+# low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
+# med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
+# high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
+
+#Duplicate and add the fire severity columns
+unchanged.control.data <- raw.sev.control.data
+unchanged.control.data$fire_sev_2010 <- 1
+low.control.data <- raw.sev.control.data
+low.control.data$fire_sev_2010 <- 2
+med.control.data <- raw.sev.control.data
+med.control.data$fire_sev_2010 <- 3
+high.control.data <- raw.sev.control.data
+high.control.data$fire_sev_2010 <- 4
+# unchanged.control.data
+# raw.sev.control.data
+# sev.data
+sev.control.data <- rbind(unchanged.control.data, low.control.data, med.control.data, high.control.data)
+#Add Fire Columns
+# control.data$fire_sev_2010 <- -9999
+# control.data$fire_year_2010 <- -9999
+# control.data$fire_ID_2010 <- -9999
+sev.control.data$fire_count_2010 <- -9999
+sev.control.data$fire_sev_2019 <- -9999
+sev.control.data$fire_year_2019 <- -9999
+sev.control.data$fire_ID_2019 <- -9999
+sev.control.data$fire_count_2019 <- -9999
+sev.control.data$fire_sev_2020 <- -9999
+sev.control.data$fire_year_2020 <- -9999
+sev.control.data$fire_ID_2020 <- -9999
+sev.control.data$fire_count_2020 <- -9999
+
+#Add Control treatment column
+sev.control.data$treatment <- 'Control' #Try making this 1-km versus, 2-km
+
+#Combine the data together
+sev.pixel.data <- rbind(sev.data, sev.control.data)
+# pixel.data <- rbind(combine.data, control.data.2km)
+# summary(sev.pixel.data)
+
+`%notin%` <- Negate(`%in%`)
+
+#Convert fire data -9999 to NAs
+sev.pixel.data[sev.pixel.data$fire_sev_2010 == -9999,]$fire_sev_2010 <- NA
+sev.pixel.data[sev.pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
+sev.pixel.data[sev.pixel.data$fire_ID_2010 == -9999,]$fire_ID_2010 <- NA
+sev.pixel.data[sev.pixel.data$fire_count_2010 == -9999,]$fire_count_2010 <- NA
+sev.pixel.data[sev.pixel.data$fire_sev_2019 == -9999,]$fire_sev_2019 <- NA
+sev.pixel.data[sev.pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
+sev.pixel.data[sev.pixel.data$fire_ID_2019 == -9999,]$fire_ID_2019 <- NA
+sev.pixel.data[sev.pixel.data$fire_count_2019 == -9999,]$fire_count_2019 <- NA
+sev.pixel.data[sev.pixel.data$fire_sev_2020 == -9999,]$fire_sev_2020 <- NA
+sev.pixel.data[sev.pixel.data$fire_year_2020 == -9999,]$fire_year_2020 <- NA
+sev.pixel.data[sev.pixel.data$fire_ID_2020 == -9999,]$fire_ID_2020 <- NA
+sev.pixel.data[sev.pixel.data$fire_count_2020 == -9999,]$fire_count_2020 <- NA
+
+#Use the FRAP fire perimeter year
+sev.pixel.data$fire.year <- sev.pixel.data$fire_year_2010
+
+#Do categorical treatments
+sev.pixel.data <- sev.pixel.data %>% mutate(treat = case_when(treatment == 'Disturb' ~ 1, treatment == 'Control' ~ 0))
+
+#Create Fire Year Bins
+#Separate the data
+
+#Fire Severity Bins
+#With re-export type needs to be converted to sev
+sev.pixel.data <- sev.pixel.data %>% mutate(sev.bin = case_when(
+  fire_sev_2010 == '0' ~ 'No Fire',
+  fire_sev_2010 == '1' ~ 'Unchanged',
+  fire_sev_2010 == '2' ~ 'Low',
+  fire_sev_2010 == '3' ~ 'Mid',
+  fire_sev_2010 == '4' ~ 'High',
+  fire_sev_2010 == '255' ~ 'Masked')) # end function
+# sev.pixel.data %>% summary()
 
 
+#Make the years bin lables in the correct order
+sev.pixel.data$sev.bin = with(sev.pixel.data, factor(sev.bin, levels = c('No Fire','Unchanged', 'Low','Mid', 'High')))#c('No Fire','Masked', 'Unchanged or Low','Mid or High')))
 
+#Recode the veg type data
+# sev.pixel.data$veg_name <- recode(.x=sev.pixel.data$lf_evt_2001, .default = NA_character_, '2015' = 'Redwood', '2019' = 'Pinyon Juniper', '2020' = 'Bristlecone Pine', '2027' = 'Mixed Conifer', '2028' = 'White Fir', '2031' = 'Jeffrey Pine',
+#                               '2032' = 'Red Fir', '2033' = 'Subalpine', '2034' = 'Knobcone Pine', '2043' = 'Mixed Conifer', '2044' = 'Subalpine', '2045' = 'Mixed Conifer', 
+#                               '2053' = 'Ponderosa Pine', '2058' = 'Lodgepole Pine', '2061' = 'Mixed Conifer', '2112' = 'Blue Oak Woodland', '2172' = 'White Fir', '2173' = 'Lodgepole Pine', '2201' = 'Oregon White Oak', '2230' = 'Blue Oak - Digger Pine')
 
-age.dNDMI.rq <- rq(dNDMI_2015_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
-print(age.dNDMI.rq %>% tidy())
-tb1 <- age.dNDMI.rq %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 1: Quantile Regression, Die-off(dNDMI) ~ f(Stand Age)") %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb1, width = 5, file = "T1_dNDMI_stand_age_quantile_regression_results.png", zoom = 4.0)  
+# sev.pixel.data %>% summary()
 
+#Select strat categories for fire treatments
+un.disturb <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n())
+lo.disturb <- sev.pixel.data %>% filter(sev.bin == 'Low' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n())
+mid.disturb <- sev.pixel.data %>% filter(sev.bin == 'Mid' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n())
+hi.disturb <- sev.pixel.data %>% filter(sev.bin == 'High' & treatment == 'Disturb') %>% group_by(stratlayer) %>% summarize(n = n())
 
-age.ADS.rq <- rq(ADS_2017_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
-print(age.ADS.rq %>% tidy())
-tb2 <- age.ADS.rq %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 2: Quantile Regression, Die-off(ADS) ~ f(Stand Age)") %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb2, width = 5, file = "T2_ADS_stand_age_quantile_regression_results.png", zoom = 4.0)  
+un.control <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n())  
+un.test <- un.control <- sev.pixel.data %>% filter(sev.bin == 'Unchanged' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n())
+lo.control <- sev.pixel.data %>% filter(sev.bin == 'Low' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n())
+mid.control <- sev.pixel.data %>% filter(sev.bin == 'Mid' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n())
+hi.control <- sev.pixel.data %>% filter(sev.bin == 'High' & treatment == 'Control') %>% group_by(stratlayer) %>% summarize(n = n())
 
-stand.age.lm <- lm(dNDMI_2015_mean ~ stand_age_mean + I(stand_age_mean^2), data = stand.age)
+un.strat <- inner_join(un.disturb, un.control, by = 'stratlayer') %>%
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
+lo.strat <- inner_join(lo.disturb, lo.control, by = 'stratlayer') %>%
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
+mid.strat <- inner_join(mid.disturb, mid.control, by = 'stratlayer') %>%
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
+hi.strat <- inner_join(hi.disturb, hi.control, by = 'stratlayer') %>%
+  group_by(stratlayer) %>% summarize(n = min(n.x,n.y)) 
 
-summary(stand.age.lm)
-#Treatment Grid Cells
-aov.dNDMI.stand.age.treatment <- aov(dNDMI_2015_mean ~ agegroup, data = stand.age.sample)
-summary(aov.dNDMI.stand.age.treatment)
+#Set the random number seed
+set.seed(4561)
 
-aov.PET4yr.stand.age.treatment <- aov(PET_4yr_2015_mean ~ agegroup, data = stand.age.sample)
-summary(aov.PET4yr.stand.age.treatment)
+#Sample the unchanged control pixels
+un.sample <- sev.pixel.data %>%
+  filter(treatment == 'Control' & sev.bin == 'Unchanged' & stratlayer %in% (un.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(un.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (un.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-aov.biomass.stand.age.treatment <- aov(biomass_2012_mean ~ agegroup, data = stand.age.sample)
-summary(aov.biomass.stand.age.treatment)
+#Sample the low severity control pixels
+lo.sample <- sev.pixel.data %>%
+  filter(treatment == 'Control' & sev.bin == 'Low' & stratlayer %in% (lo.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(lo.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (lo.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-tukey.dNDMI.stand.age.treatment <- TukeyHSD(aov.dNDMI.stand.age.treatment)
-print(tukey.dNDMI.stand.age.treatment)
+#Sample the moderate severity control pixels
+mid.sample <- sev.pixel.data %>%
+  filter(treatment == 'Control' & sev.bin == 'Mid' & stratlayer %in% (mid.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(mid.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (mid.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-tukey.PET4yr.stand.age.treatment <- TukeyHSD(aov.PET4yr.stand.age.treatment)
-print(tukey.PET4yr.stand.age.treatment)
+#High Severity Samples
+hi.sample <- sev.pixel.data %>%
+  filter(treatment == 'Control' & sev.bin == 'High' & stratlayer %in% (hi.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(hi.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (hi.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-tukey.biomass.stand.age.treatment <- TukeyHSD(aov.biomass.stand.age.treatment)
-print(tukey.biomass.stand.age.treatment)
+#Make sure the stratlayer bins match with the sampled control bins
+#Sample the unchanged control pixels
+un.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'Unchanged' & stratlayer %in% (un.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(un.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (un.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-# anovas.treament <- anova(aov.dNDMI.stand.age.treatment, aov.PET4yr.stand.age.treatment, aov.biomass.stand.age.treatment)
-# print(anovas.treatment) 
+#Sample the low severity control pixels
+lo.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'Low' & stratlayer %in% (lo.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(lo.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (lo.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-#Control Grid Cells
-aov.dNDMI.stand.age.control <- aov(dNDMI_2015_mean ~ agegroup, data = stand.age.control)
-summary(aov.dNDMI.stand.age.control)
+#Sample the moderate severity control pixels
+mid.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'Mid' & stratlayer %in% (mid.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(mid.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (mid.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-aov.PET4yr.stand.age.control <- aov(PET_4yr_2015_mean ~ agegroup, data = stand.age.control)
-summary(aov.PET4yr.stand.age.control)
+#High Severity Samples
+hi.disturb <- sev.pixel.data %>%
+  filter(treatment == 'Disturb' & sev.bin == 'High' & stratlayer %in% (hi.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
+  group_by(stratlayer) %>% #Group by Stratification layer
+  nest() %>% #Nest the data
+  inner_join(hi.strat) %>%
+  ungroup() %>% #Un group the data
+  # mutate(n = (hi.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
+  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  dplyr::select(-data) %>% #Get rid of the data column
+  unnest(samp) #unnest the data
 
-aov.biomass.stand.age.control <- aov(biomass_2012_mean ~ agegroup, data = stand.age.control)
-summary(aov.biomass.stand.age.control)
+#Combine the sampled data back together
+sev.pixel.sample <- rbind(un.disturb, lo.disturb, mid.disturb, hi.disturb, un.sample, lo.sample, mid.sample, hi.sample)
 
-tukey.dNDMI.stand.age.control <- TukeyHSD(aov.dNDMI.stand.age.control)
-print(tukey.dNDMI.stand.age.control)
+sev.pixel.sample <- sev.pixel.sample %>% 
+  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
 
-tukey.PET4yr.stand.age.control <- TukeyHSD(aov.PET4yr.stand.age.control)
-print(tukey.PET4yr.stand.age.control)
+#Convert the year outputs to actual years
+sev.pixel.sample$year <- as.numeric(sev.pixel.sample$year) + 1984 
 
-tukey.biomass.stand.age.control <- TukeyHSD(aov.biomass.stand.age.control)
-print(tukey.biomass.stand.age.control)
+#Convert missing TPA data to NAs
+sev.pixel.sample[sev.pixel.sample$tpa_max < 0,]$tpa_max <- NA
 
-tb1 <- tukey.dNDMI.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 1: Not Exposed, Tukey HSD, dNDMI ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb1, width = 5, file = "Table1_Not_Exposed_Mortality_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+#Convert to trees per hectare
+sev.pixel.sample$tpa_max <- sev.pixel.sample$tpa_max * 2.47105
 
-tb2 <- tukey.dNDMI.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 2: Exposed, Tukey HSD, dNDMI ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb2, width = 5, file = "Table2_Exposed_Mortality_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+#Make the dates into date time format for R
+sev.pixel.sample$date <- as.Date(as.character(sev.pixel.sample$year), format = '%Y')
 
-tb3 <- tukey.PET4yr.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 3: Not Exposed, Tukey HSD, four-year Pr-ET ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb3, width = 5, file = "Table3_Not_Exposed_Water_Deficit_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+#Add VI Year
+sev.pixel.sample$vi.year <- sev.pixel.sample$year
 
-tb4 <- tukey.PET4yr.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 4: Exposed, Tukey HSD, four-year Pr-ET ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb4, width = 5, file = "Table4_Exposed_Water_Deficit_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+#Caluclate Stand AGe
+sev.pixel.sample$stand.age <- as.numeric(sev.pixel.sample$year) - as.numeric(sev.pixel.sample$fire.year) 
 
-tb5 <- tukey.biomass.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 5: Not Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb5, width = 5, file = "Table5_Not_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+#Update Cover data to 100% scale
+sev.pixel.sample$Tree_Cover.2 <- sev.pixel.sample$Tree_Cover / 100
+sev.pixel.sample$Shrub_Cover.2 <- sev.pixel.sample$Shrub_Cover / 100
+sev.pixel.sample$Herb_Cover.2 <- sev.pixel.sample$Herb_Cover / 100
+sev.pixel.sample$Bare_Cover.2 <- sev.pixel.sample$Bare_Cover / 100
 
-tb6 <- tukey.biomass.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 6: Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb6, width = 5, file = "Table6_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+#Add Montana Veg Cover
+sev.pixel.sample$Tree_Cover <- sev.pixel.sample$TRE
+sev.pixel.sample$Shrub_Cover <- sev.pixel.sample$SHR
+sev.pixel.sample$Herb_Cover <- sev.pixel.sample$AFG + sev.pixel.sample$PFG
+sev.pixel.sample$Bare_Cover <- sev.pixel.sample$BGR 
 
-#Summary Statistics
-summary.control <- stand.age.control %>% 
-  group_by(agegroup) %>% 
-  summarize(dNDMI_mean = mean(dNDMI_2015_mean),
-            dNDMI_sd = sd(dNDMI_2015_mean),
-			biomass_mean = mean(biomass_2012_mean),
-			biomass_sd = sd(biomass_2012_mean))
+#Convert the SPI48 scale back to decimal
+sev.pixel.sample$SPI48 <- sev.pixel.sample$SPI48 / 100
 
-print(summary.control)
+#Try to fix soil moisture by dividing by 10
+sev.pixel.sample$Soil_Moisture <- sev.pixel.sample$Soil_Moisture / 10
 
-summary.treatment <- stand.age.sample %>% 
-  group_by(agegroup) %>% 
-  summarize(dNDMI_mean = mean(dNDMI_2015_mean),
-            dNDMI_sd = sd(dNDMI_2015_mean),
-			biomass_mean = mean(biomass_2012_mean),
-			biomass_sd = sd(biomass_2012_mean))
+#Rename ppt and Water Stress
+sev.pixel.sample$Water_Stress <- sev.pixel.sample$Water_Stress
+sev.pixel.sample$ppt <- sev.pixel.sample$ppt
+sev.pixel.sample$AET <- sev.pixel.sample$AET
+sev.pixel.sample$GPP <- sev.pixel.sample$GPP
+sev.pixel.sample$elevation <- sev.pixel.sample$elevation
+sev.pixel.sample$PrET <- sev.pixel.sample$ppt - sev.pixel.sample$AET
 
-print(summary.treatment)
+summary(sev.pixel.sample)
 
-# stand.age.lm2 <- lm(dNDMI_2015_mean ~ stand_age_mean, data = stand.age)
+#Do Fire year bins
+sev.pixel.sample <- sev.pixel.sample %>% mutate(fire.year.bin = case_when(
+  # fire.year < 1980 ~ '< 1980',
+  fire.year >= 1985 & fire.year <= 1990 ~ '1985-1990',
+  fire.year >= 1991 & fire.year <= 1995 ~ '1991-1995',
+  fire.year >= 1996 & fire.year <= 2000 ~ '1996-2000',
+  fire.year >= 2001 & fire.year <= 2005 ~ '2001-2005',
+  fire.year >= 2006 & fire.year <= 2010 ~ '2006-2010'))
 
-# summary(stand.age.lm2)
+#Fire year bins for Fire Severity Data
+sev.pixel.sample$fire.year.bin = with(sev.pixel.sample, factor(fire.year.bin, levels = c('2006-2010', '2001-2005','1996-2000', '1991-1995','1985-1990')))
 
-# stand.age.socal.lm <- lm(dNDMI_2015_mean ~ stand_age_mean + I(stand_age_mean^2), data = stand.age.socal)
+sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+  #  filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
+  # sev.bin == 'Low' ~ stratlayer %in% lo.strat,
+  # sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
+  # sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
+  dplyr::group_by(system.index) %>% 
+  summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+            RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+            Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
+            ADS = mean(tpa_max[vi.year %in% c(2015, 2016, 2017)]),
+            Water_Stress = Water_Stress[vi.year == 2015],
+            PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
+            sev.bin = sev.bin[vi.year == 2010],
+            treatment = treatment[vi.year == 2010])
 
-# summary(stand.age.socal.lm)
+aov.dTree.treatment.sev <- aov(dTree ~ treatment * sev.bin, data = sev.pixel.filter)
+summary(aov.dTree.treatment.sev)
 
-# stand.age.norcal.lm <- lm(dNDMI_2015_mean ~ stand_age_mean + I(stand_age_mean^2), data = stand.age.norcal)
+aov.ADS.treatment.sev <- aov(ADS ~ treatment * sev.bin, data = sev.pixel.filter)
+summary(aov.ADS.treatment.sev)
 
-# summary(stand.age.norcal.lm)
+aov.PrET4yr.treatment.sev <- aov(PrET_4yr ~ treatment * sev.bin, data = sev.pixel.filter)
+summary(aov.PrET4yr.treatment.sev)
 
-nrow(stand.age)
-# summary(stand.age)
-# nrow(stand.age.norcal)
-# nrow(stand.age.socal)
+aov.tree.treatment.sev <- aov(Tree_Cover ~ treatment * sev.bin, data = sev.pixel.filter)
+summary(aov.tree.treatment.sev)
+
+tukey.dTree.treatment.sev <- TukeyHSD(aov.dTree.treatment.sev)
+print(tukey.dTree.treatment.sev)
+
+tukey.ADS.treatment.sev <- TukeyHSD(aov.ADS.treatment.sev)
+print(tukey.ADS.treatment.sev)
+
+tukey.PrET4yr.treatment.sev <- TukeyHSD(aov.PrET4yr.treatment.sev)
+print(tukey.PrET4yr.treatment.sev)
+
+tukey.tree.treatment.sev <- TukeyHSD(aov.tree.treatment.sev)
+print(tukey.tree.treatment.sev)
+
+#Create the tables!
+tb5 <- tukey.dTree.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 5: Tukey HSD, Die-off (dTree) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb5, width = 5, file = "Table5_dTree_dieoff_fire_sev_Tukey_HSD.png", zoom = 4.0) 
+
+tb6 <- tukey.ADS.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 6: Tukey HSD, Die-off (ADS) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb6, width = 5, file = "Table6_ADS_dieoff_fire_sev_Tukey_HSD.png", zoom = 4.0) 
+
+tb7 <- tukey.PrET4yr.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 7: four-year Pr-ET ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb7, width = 5, file = "Table7_PrET_4yr_fire_sev_Tukey_HSD_.png", zoom = 4.0) 
+
+tb8 <- tukey.tree.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 8: Pre-Fire Tree Cover ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb8, width = 5, file = "Table8_Tree_Cover_fire_sev_Tukey_HSD_.png", zoom = 4.0) 
+

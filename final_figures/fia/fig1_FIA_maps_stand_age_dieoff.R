@@ -1,15 +1,16 @@
 #Author: Carl Norlen
 #Date Created: August 23, 2022
-#Date Edited: January 31, 2023
+#Date Edited: April 12, 2023
 #Purpose: Create maps of FIA data for the Sierra Nevada (and SoCal Mountains?) with average StandAge total Basal Area and Dead Basal Area?
 
 # Specify necessary packages
 p <- c("RSQLite","dbplyr","ggplot2","dplyr","tidyr", "ggpubr", "RColorBrewer",  
-       'gt', 'gtsummary', 'webshot', 'kableExtra', 'broom', 'sf')
+       'gt', 'gtsummary', 'webshot', 'kableExtra', 'broom', 'sf', 'raster', 'terra')
 
+# library('terra')
 # If necessary: install/update packages
 # install.packages('rlang',repo='https://cloud.r-project.org/')
-# library("agricolae")
+# library("raster")
 # Load packages
 lapply(p,require,character.only=TRUE)
 
@@ -125,6 +126,43 @@ spat.join <- st_as_sf(spat.join, coords=c("longitude", "latitude"), crs="EPSG:43
 # spat.join <- spat.join %>% st_as_sf()
 # crs(spat.join) <- 
 # plot(spat.join)
+#Link the FIA data to SPI48 data
+#Add SPI48 layers for different years and a combined layer based on SPI48 exposure
+wrcc.dir <- 'D://Large_Files//WRCC//SPI48'
+spi48.2015 <- raster(file.path(wrcc.dir, 'spi48_2015_9_PRISM.tif'))
+
+#Setting variable for ESPG 5070, proj4 crs
+c <- crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
+
+#Read in a raster of general WGS 84 crs in PROJ4 code format
+wg <- crs("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs+ towgs84=0,0,0")
+
+#Create a Sierra Nevada Extent bounding box
+# sierra.ext <- st_bbox(usfs.sierra %>% st_union())
+# # crs(sierra.ext) <- c
+# sierra.ext
+# terra::ext(vector(sierra.ext))
+# #Crop the SPI48 data
+# spi48.2015.crop <- raster::crop(spi48.2015, extent(sierra.ext))
+spi48.2015.m <- spi48.2015 == -9999
+spi48.2015.mask <- raster::mask(spi48.2015, mask = spi48.2015.m, maskvalue = 1)
+# spi48.2015.mask@crs
+# spi48.2015.mask
+#Extract the raster data
+#How to I add it back to the spat join data?
+# SpatialPointsDataFrame(coordinates(spat.join))
+# spat.join
+#Extract SPI48 from the FIA plots
+extract.spi48 <- raster::extract(x = spi48.2015.mask, y = spat.join, fun = mean, buffer = 0.02, metho = 'simple', df = TRUE)
+
+#Get the PLOT#s from the original data
+extract.spi48$plotID <- spat.join$PLOT
+# extract.spi48
+
+#Merge the two datasets
+plots <- merge(spat.join, extract.spi48, by.x = 'PLOT', by.y = 'plotID')
+plots
+
 #Create the ecoregion summaries
 ecosubcd.summary <- join %>% filter(INVYR %in% c(2015,2016,2017,2018,2019) & (!is.na(STDAGE) & STDAGE != 9999) & STDAGE > 0) %>% group_by(ECOSUBCD) %>% summarize(BAA.all = mean(basal_area.all), BAA.dead = mean(basal_area.dead), stdage.mean = mean(STDAGE), tpa.all = mean(tpa.all), tpa.dead = mean(tpa.dead))
 

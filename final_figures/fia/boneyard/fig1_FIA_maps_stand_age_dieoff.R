@@ -1,15 +1,15 @@
 #Author: Carl Norlen
 #Date Created: August 23, 2022
-#Date Edited: April 12, 2023
+#Date Edited: April 17, 2023
 #Purpose: Create maps of FIA data for the Sierra Nevada (and SoCal Mountains?) with average StandAge total Basal Area and Dead Basal Area?
 
 # Specify necessary packages
 p <- c("RSQLite","dbplyr","ggplot2","dplyr","tidyr", "ggpubr", "RColorBrewer",  
-       'gt', 'gtsummary', 'webshot', 'kableExtra', 'broom', 'sf', 'raster', 'terra')
+       'gt', 'gtsummary', 'webshot', 'kableExtra', 'broom', 'sf', 'raster')
 
 # library('terra')
 # If necessary: install/update packages
-# install.packages('rlang',repo='https://cloud.r-project.org/')
+install.packages('raster',repo='https://cloud.r-project.org/')
 # library("raster")
 # Load packages
 lapply(p,require,character.only=TRUE)

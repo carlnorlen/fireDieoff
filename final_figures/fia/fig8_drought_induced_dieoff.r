@@ -18,7 +18,9 @@ lapply(p,require,character.only=TRUE)
 #cd /C/Users/Carl/mystuff/Goulden_Lab/Forest_Dieback/dieback/figure_set/field_data
 #cd /C/Users/can02/mystuff/fireDieoff/FIA
 #Command for calling the script in the command line: R < stand_age_dieoff.r --vanilla
-#INstalling packages: install.packages('RColorBrewer',repo='https://cran.cnr.berkeley.edu/')
+
+
+#Home Computer Directory
 setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
 
 #Add Data Sets
@@ -102,10 +104,10 @@ join <- join %>% dplyr::mutate(tpa.dead.pct = replace(tpa.dead.pct, is.na(tpa.de
 
 # summary(join)
 #Region wide counts of dead and live trees (basal area)
-p1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+p1a<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #Mean Die-off
   geom_line(data = join %>% #filter(MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
-              group_by(INVYR) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead), color = 'black', size = 1) +
+              group_by(INVYR) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead), color = 'black', linewidth = 1) +
   #95% CI Die-off
   geom_ribbon(data = join %>% 
                 #filter( MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
@@ -118,13 +120,13 @@ p1<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all 
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
   xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
-p1
+p1a
 
-p2 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+p1b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #The data mean
   geom_line(data = join %>% #ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar')) %>%  
               group_by(INVYR) %>% summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100, BA.n = n()), 
-            mapping = aes(x = INVYR, y = BA.dead.pct.mean),  size = 1) +
+            mapping = aes(x = INVYR, y = BA.dead.pct.mean),  linewidth = 1) +
   #The error bars (95% CI)
   geom_ribbon(data = join %>% #ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar')) %>%   
                 group_by(INVYR) %>%
@@ -139,13 +141,13 @@ p2 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all
         axis.title.x = element_blank(), axis.text.y = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   xlab('Year') + ylab('Mortality (%)')
-p2
+p1b
 
 # join %>% filter(STDAGE <= 10) %>% count()
-p3 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+p1c <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
   #The data mean
   geom_line(data = join  %>% #filter( MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
-  group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), mapping = aes(x = INVYR, y = BA.all), color = 'black', size = 1) +
+  group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), mapping = aes(x = INVYR, y = BA.all), color = 'black', linewidth = 1) +
   #The error bars
   geom_ribbon(data = join %>% 
                 #filter( MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
@@ -157,75 +159,12 @@ p3 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all
                             x = INVYR), alpha = 0.3) +
   
   xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) + theme_bw()
-p3
+p1c
 
-f2 <- ggarrange(p1, p2, p3, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
-f2
+f1 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+f1
 
-ggsave(filename = 'FigS6_drought_basal_area_mortality_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
-
-#Region wide counts of dead and live trees (density)
-p4<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #Mean Die-off
-  geom_line(data = join %>% #filter(MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
-              group_by(INVYR) %>% summarize(TPA.dead = mean(tpa.dead)), mapping = aes(x = INVYR, y = TPA.dead), color = 'black', size = 1) +
-  #95% CI Die-off
-  geom_ribbon(data = join %>% 
-                #filter( MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
-                group_by(INVYR) %>%
-                summarize(TPA.dead = mean(tpa.dead),
-                          TPA.dead.sd = sd(tpa.dead), TPA.n = n()),
-              mapping = aes(ymin=TPA.dead - 1.96*(TPA.dead.sd / sqrt(TPA.n)),
-                            ymax=TPA.dead + 1.96*(TPA.dead.sd / sqrt(TPA.n)),
-                            x = INVYR), alpha = 0.3) +
-  theme_bw() +
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Year') + ylab(expression('Mortality (trees ha'^-1*')')) 
-p4
-
-p5 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #The data mean
-  geom_line(data = join %>% #ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar')) %>%  
-              group_by(INVYR) %>% summarize(TPA.dead.pct.mean = mean(tpa.dead.pct) * 100, TPA.n = n()), 
-            mapping = aes(x = INVYR, y = TPA.dead.pct.mean),  size = 1) +
-  #The error bars (95% CI)
-  geom_ribbon(data = join %>% #ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar')) %>%   
-                group_by(INVYR) %>%
-                summarize(TPA.dead.pct.mean = mean(tpa.dead.pct) * 100,
-                          TPA.dead.pct.sd = sd(tpa.dead.pct) * 100, 
-                          TPA.n = n()),
-              mapping = aes(ymin=TPA.dead.pct.mean - 1.96*(TPA.dead.pct.sd / sqrt(TPA.n)),
-                            ymax=TPA.dead.pct.mean + 1.96*(TPA.dead.pct.sd / sqrt(TPA.n)),
-                            x = INVYR), alpha = 0.2) +
-  theme_bw() +
-  theme(legend.position = 'none', axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), axis.text.y = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  xlab('Year') + ylab('Mortality (%)')
-p5
-
-# join %>% filter(STDAGE <= 10) %>% count()
-p6 <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #The data mean
-  geom_line(data = join  %>% #filter( MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
-              group_by(INVYR) %>% summarize(TPA.all = mean(tpa.all), TPA.n = n()), mapping = aes(x = INVYR, y = TPA.all), color = 'black', size = 1) +
-  #The error bars
-  geom_ribbon(data = join %>% 
-                #filter( MEANING %in% c('California mixed conifer', 'White fir', 'Pinyon / juniper woodland', 'Ponderosa pine', 'Jeffrey pine')) %>%
-                group_by(INVYR) %>%
-                summarize(TPA.mean = mean(tpa.all),
-                          TPA.sd = sd(tpa.all), TPA.n = n()),
-              mapping = aes(ymin=TPA.mean - 1.96*(TPA.sd / sqrt(TPA.n)),
-                            ymax=TPA.mean + 1.96*(TPA.sd / sqrt(TPA.n)),
-                            x = INVYR), alpha = 0.3) +
-  
-  xlab('Year') + ylab(expression('Density (trees ha'^-1*')')) + theme_bw()
-p6
-
-f3 <- ggarrange(p4, p5, p6, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
-f3
-
-ggsave(filename = 'FigS7_drought_tree_density_mortality_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
+ggsave(filename = 'Fig1_drought_basal_area_mortality_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
 
 #Figure 8
 p1_texta <- data.frame(label = c("a", "b", "b", "a"),
@@ -244,7 +183,7 @@ p1_textb <- data.frame(label = c("n = 47", "n = 31", "n = 206", "n = 188"),
 )
 
 #Summary of Total Dead Basal Area
-p1 <- ggbarplot(all.forest %>% filter(pltID %in% plots) %>% group_by(time.period, sequence, pltID) %>% summarize(BAA.all = sum(BAA.all), BAA.live = sum(BAA), BAA.dead.sum = sum(BAA.dead), BAA.mort = sum(BAA.dead) / sum(BAA.all) * 100), #%>% filter(COMMON_NAME %in% sp.both.2002[! sp.both.2002 %in% c('curlleaf mountain-mahogany', 'California live oak')]), #, (sequence == 'Both Droughts' & drought == '1999-2002') | (sequence == '2012-2015 Only' & drought == '2012-2015')), 
+p2a <- ggbarplot(all.forest %>% filter(pltID %in% plots) %>% group_by(time.period, sequence, pltID) %>% summarize(BAA.all = sum(BAA.all), BAA.live = sum(BAA), BAA.dead.sum = sum(BAA.dead), BAA.mort = sum(BAA.dead) / sum(BAA.all) * 100), #%>% filter(COMMON_NAME %in% sp.both.2002[! sp.both.2002 %in% c('curlleaf mountain-mahogany', 'California live oak')]), #, (sequence == 'Both Droughts' & drought == '1999-2002') | (sequence == '2012-2015 Only' & drought == '2012-2015')), 
                 x = "time.period", y = "BAA.dead.sum", position = position_dodge(), color = "sequence", fill = 'gray',
                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
                 ylab = expression('Mortality (m'^2*' ha'^-1*')'), 
@@ -265,7 +204,7 @@ p1 <- ggbarplot(all.forest %>% filter(pltID %in% plots) %>% group_by(time.period
   geom_text(data = data.frame(label = "Mean \n+/- SE", y = 3.5, x = 1.2, sequence = 'Both Droughts'), mapping = aes(x=x, y=y, label = label), size = 2) + 
   facet_grid(~ factor(sequence, levels = c('Both Droughts', '2nd Drought Only')), 
              labeller = as_labeller(c('Both Droughts' = "Exposed to Both Droughts", '2nd Drought Only' = "Exposed to 2nd Drought Only"))) 
-p1
+p2a
 
 #Create a tree_type factor variable and sort it to make the plots
 all.forest.type$tree_type.f <- all.forest.type$tree_type
@@ -288,7 +227,7 @@ p2_texta <- data.frame(label = c("a", "bc", "cd", "cd", "cd", "cd", "cd", "cd", 
 )
 
 #Die-off Mortality as a % of basal area
-p2 <- ggbarplot(all.forest.type %>% filter(pltID %in% plots & tree_type != 'other conifer' & tree_type != 'deciduous'), #%>% filter(COMMON_NAME %in% sp.both.2002[! sp.both.2002 %in% c('curlleaf mountain-mahogany', 'California live oak')]), #, (sequence == 'Both Droughts' & drought == '1999-2002') | (sequence == '2012-2015 Only' & drought == '2012-2015')), 
+p2b <- ggbarplot(all.forest.type %>% filter(pltID %in% plots & tree_type != 'other conifer' & tree_type != 'deciduous'), #%>% filter(COMMON_NAME %in% sp.both.2002[! sp.both.2002 %in% c('curlleaf mountain-mahogany', 'California live oak')]), #, (sequence == 'Both Droughts' & drought == '1999-2002') | (sequence == '2012-2015 Only' & drought == '2012-2015')), 
                 x = "time.period", y = "BAA.dead.sum", fill = 'tree_type.f', 
                 color = "sequence", 
                 position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
@@ -310,11 +249,11 @@ p2 <- ggbarplot(all.forest.type %>% filter(pltID %in% plots & tree_type != 'othe
   # geom_text(data = data.frame(label = "Mean \n+/- SE", y = 1.7, x = 1.5, sequence = 'Both Droughts'), mapping = aes(x=x, y=y, label = label), size = 2) + 
   facet_grid(~ factor(sequence, levels = c('Both Droughts', '2nd Drought Only')), 
              labeller = as_labeller(c('Both Droughts' = "Exposed to Both Droughts", '2nd Drought Only' = "Exposed to 2nd Drought Only"))) 
-p2
+p2b
 
 #Combine the two figure panels into one	  
-f1 <- ggarrange(p1, p2, ncol = 1, align = "v", labels = c("a)", "c)"), nrow = 2, heights = c(1, 0.95), common.legend = FALSE)
-f1
+f2 <- ggarrange(p2a, p2b, ncol = 1, align = "v", labels = c("a)", "c)"), nrow = 2, heights = c(1, 0.95), common.legend = FALSE)
+f2
 
 ggsave(filename = 'Fig4_FIA_mortality_by_tree_type.png', height=14, width=16, units = 'cm', dpi=900)
 

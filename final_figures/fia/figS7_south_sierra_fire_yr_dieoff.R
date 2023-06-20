@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: August 4, 2021
-#Date Edited: March 28, 2023
+#Date Edited: June 20, 2023
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -22,16 +22,16 @@ lapply(p,require,character.only=TRUE)
 
 #Home computer layout
 setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
+sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
+
+#Lab Computer layout
+# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/fia')
+# sql_dir <- 'C:\\Users\\Carl\\mystuff\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+# fiaCA <- file.path(sql_dir, 'SQLite_FIADB_CA.db')
 
 #Add Data Sets
-# sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
-# fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
-sql_dir <- 'C:\\Users\\Carl\\mystuff\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
-fiaCA <- file.path(sql_dir, 'SQLite_FIADB_CA.db')
 
-#Add Data Sets
-# sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
-# fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
 
 sqlite.driver <- dbDriver("SQLite")
 db <- dbConnect(sqlite.driver,
@@ -94,7 +94,8 @@ live <- all %>% filter(STATUSCD == 1) %>% group_by(INVYR, PLOT) %>% summarize(co
 # all %>% filter(STATUSCD == 1)
 all %>% summary()
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
-dead <- all %>% filter(case_when(DSTRBCD1 %in% c(30,31,32) ~ STATUSCD == 2, DSTRBCD1 %in% c(0,10,11,12,54,70) ~ STATUSCD == 2 & MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019"))) %>% 
+dead <- all %>% filter(case_when(DSTRBCD1 %in% c(30,31,32) ~ STATUSCD == 2 & AGENTCD %in% c(30,31,32) & INVYR %in% c(2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010), 
+                                 DSTRBCD1 %in% c(0,10,11,12,54,70) ~ STATUSCD == 2 & MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019")) & AGENTCD %in% c(10, 20, 50, 70)) %>% 
                 group_by(PLOT, INVYR) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
 # dead <- dead %>% mutate(INVYR = MORTYR) & MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019")
 # dead
@@ -213,8 +214,12 @@ live.sp <- all %>% filter(STATUSCD == 1) %>%
             basal_area.live = sum(basal_area), STDAGE = median(STDAGE), FORTYPCD = median (FORTYPCD), MEANING = first(MEANING), DSTRBCD1 = first(DSTRBCD1), 
             DSTRBYR1 = first(DSTRBYR1), OWNGRPCD = first(OWNGRPCD))
 live.sp
+all %>% select(AGENTCD) %>% unique()
+
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
-dead.sp <- all %>% filter(case_when(DSTRBCD1 %in% c(30,31,32) ~ STATUSCD == 2, DSTRBCD1 %in% c(0,10,11,12,54,70) ~ STATUSCD == 2 & MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019"))) %>% 
+dead.sp <- all %>% filter(case_when(DSTRBCD1 %in% c(30,31,32) ~ STATUSCD == 2 & AGENTCD == 30, 
+                                     DSTRBCD1 %in% c(0,10,11,12,54,70) ~ STATUSCD == 2 & 
+                                      MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019") & AGENTCD %in% c(10, 20, 50, 70))) %>% 
   group_by(PLOT, INVYR, tree_type, .drop = FALSE) %>% 
   summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
 
@@ -247,94 +252,94 @@ join.sp <- join.sp %>% mutate(disturb.bin = case_when(
   DSTRBCD1 %in% c(31) ~ 'Ground Fire',
   DSTRBCD1 %in% c(32) ~ 'Crown Fire',
   DSTRBCD1 == 0 ~'No Disturbance'))
-
-p3a <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #Mean Die-off
-  geom_line(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>% 
-              group_by(INVYR, tree_type) %>% summarize(BA.dead = mean(basal_area.dead)), 
-            mapping = aes(x = INVYR, y = BA.dead, color = tree_type, linetype = tree_type), linewidth = 1) +
-  #95% CI Die-off
-  geom_ribbon(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%  
-                group_by(INVYR, tree_type) %>%
-                summarize(BA.dead = mean(basal_area.dead),
-                          BA.dead.sd = sd(basal_area.dead), BA.n = n()),
-              mapping = aes(ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
-                            ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
-                            x = INVYR, fill = tree_type, linetype = tree_type), alpha = 0.2) +
-  theme_bw() +
-  theme(axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), legend.position = c(0.15, 0.62), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.y = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  scale_color_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
-  scale_fill_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
-  scale_linetype_discrete(name = "Tree\nSpecies") +
-  # scale_fill_viridis_d("Tree\nSpecies", option = 'B') +
-  # scale_color_viridis_d("Tree\nSpecies", option = 'B') +
-  # theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
-p3a
-
-p3b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #The data mean
-  geom_line(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%  
-              group_by(INVYR, tree_type) %>% summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100, BA.n = n()), 
-            mapping = aes(x = INVYR, y = BA.dead.pct.mean, color = tree_type, linetype = tree_type),  linewidth = 1) +
-  #The error bars
-  geom_ribbon(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%   
-                group_by(INVYR, tree_type) %>%
-                summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100,
-                          BA.dead.pct.sd = sd(basal_area.dead.pct) * 100, 
-                          BA.n = n()),
-              mapping = aes(ymin=BA.dead.pct.mean - 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
-                            ymax=BA.dead.pct.mean + 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
-                            x = INVYR, fill = tree_type), alpha = 0.2) +
-  scale_color_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
-  scale_fill_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
-  scale_linetype_discrete(name = "Tree\nSpecies") +
-  theme_bw() +
-  theme(legend.position = 'none', axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), axis.text.y = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  xlab('Year') + ylab('Mortality (%)')
-p3b
-
-# join %>% filter(STDAGE <= 10) %>% count()
-p3c <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #The data mean
-  geom_line(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%  
-              group_by(INVYR, tree_type) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), 
-            mapping = aes(x = INVYR, y = BA.all, color = tree_type, linetype = tree_type),  linewidth = 1) +
-  #The error bars
-  geom_ribbon(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%   
-                group_by(INVYR, tree_type) %>%
-                summarize(BA.mean = mean(basal_area.all),
-                          BA.sd = sd(basal_area.all), BA.n = n()),
-              mapping = aes(ymin=BA.mean - 1.96*(BA.sd / sqrt(BA.n)),
-                            ymax=BA.mean + 1.96*(BA.sd / sqrt(BA.n)),
-                            x = INVYR, fill = tree_type), alpha = 0.2) +
-  scale_color_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
-  scale_fill_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
-  scale_linetype_discrete(name = "Tree\nSpecies") +
-  theme_bw() +
-  theme(legend.position = 'none') +
-  xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')'))
-p3c
-
-f3 <- ggarrange(p3a, p3b, p3c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
-f3
-
-ggsave(filename = 'Fig3_FIA_bySpecies_fire_mortality_BA_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
+# summary(join.sp %>% group_by(disturb.bin))
+# p3a <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+#   #Mean Die-off
+#   geom_line(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>% 
+#               group_by(INVYR, tree_type) %>% summarize(BA.dead = mean(basal_area.dead)), 
+#             mapping = aes(x = INVYR, y = BA.dead, color = tree_type, linetype = tree_type), linewidth = 1) +
+#   #95% CI Die-off
+#   geom_ribbon(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%  
+#                 group_by(INVYR, tree_type) %>%
+#                 summarize(BA.dead = mean(basal_area.dead),
+#                           BA.dead.sd = sd(basal_area.dead), BA.n = n()),
+#               mapping = aes(ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
+#                             ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
+#                             x = INVYR, fill = tree_type, linetype = tree_type), alpha = 0.2) +
+#   theme_bw() +
+#   theme(axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
+#         axis.title.x = element_blank(), legend.position = c(0.15, 0.62), legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.y = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+#   scale_color_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
+#   scale_fill_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
+#   scale_linetype_discrete(name = "Tree\nSpecies") +
+#   # scale_fill_viridis_d("Tree\nSpecies", option = 'B') +
+#   # scale_color_viridis_d("Tree\nSpecies", option = 'B') +
+#   # theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+#   xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
+# p3a
+# 
+# p3b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+#   #The data mean
+#   geom_line(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%  
+#               group_by(INVYR, tree_type) %>% summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100, BA.n = n()), 
+#             mapping = aes(x = INVYR, y = BA.dead.pct.mean, color = tree_type, linetype = tree_type),  linewidth = 1) +
+#   #The error bars
+#   geom_ribbon(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%   
+#                 group_by(INVYR, tree_type) %>%
+#                 summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100,
+#                           BA.dead.pct.sd = sd(basal_area.dead.pct) * 100, 
+#                           BA.n = n()),
+#               mapping = aes(ymin=BA.dead.pct.mean - 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
+#                             ymax=BA.dead.pct.mean + 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
+#                             x = INVYR, fill = tree_type), alpha = 0.2) +
+#   scale_color_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
+#   scale_fill_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
+#   scale_linetype_discrete(name = "Tree\nSpecies") +
+#   theme_bw() +
+#   theme(legend.position = 'none', axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
+#         axis.title.x = element_blank(), axis.text.y = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+#   xlab('Year') + ylab('Mortality (%)')
+# p3b
+# 
+# # join %>% filter(STDAGE <= 10) %>% count()
+# p3c <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
+#   #The data mean
+#   geom_line(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%  
+#               group_by(INVYR, tree_type) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), 
+#             mapping = aes(x = INVYR, y = BA.all, color = tree_type, linetype = tree_type),  linewidth = 1) +
+#   #The error bars
+#   geom_ribbon(data = join.sp %>% ungroup() %>% filter(tree_type %in% c('pine', 'fir', 'oak', 'cedar', 'juniper')) %>%   
+#                 group_by(INVYR, tree_type) %>%
+#                 summarize(BA.mean = mean(basal_area.all),
+#                           BA.sd = sd(basal_area.all), BA.n = n()),
+#               mapping = aes(ymin=BA.mean - 1.96*(BA.sd / sqrt(BA.n)),
+#                             ymax=BA.mean + 1.96*(BA.sd / sqrt(BA.n)),
+#                             x = INVYR, fill = tree_type), alpha = 0.2) +
+#   scale_color_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
+#   scale_fill_brewer(name = "Tree\nSpecies", palette = 'Dark2') +
+#   scale_linetype_discrete(name = "Tree\nSpecies") +
+#   theme_bw() +
+#   theme(legend.position = 'none') +
+#   xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')'))
+# p3c
+# 
+# f3 <- ggarrange(p3a, p3b, p3c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
+# f3
+# 
+# ggsave(filename = 'Fig3_FIA_bySpecies_fire_mortality_BA_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
 
 #Create a tree_type factor variable and sort it to make the plots
 join.sp$tree_type.f <- join.sp$tree_type
 join.sp$tree_type.f <- factor(join.sp$tree_type.f, levels= c('pine', 'fir', 'oak', 'juniper', 'cedar'))
 join.sp$basal_area.dead.pct <-join.sp$basal_area.dead.pct * 100
 
-summary(join.sp)
+# summary(join.sp)
 #Die-off Mortality as a % of basal area
 p4a <- ggbarplot(join.sp %>% ungroup() %>%
-                  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Ground Fire', 'Crown Fire') & tree_type %in% c('pine', 'fir')),
+                  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Ground Fire', 'Crown Fire')& tree_type %in% c('pine', 'fir')),
                 x = "disturb.bin", y = "basal_area.dead", fill = 'tree_type.f', 
                 color = "tree_type.f", 
                 position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
@@ -361,22 +366,43 @@ p4b <- ggbarplot(join.sp %>% ungroup() %>%
   theme_bw() + guides(color = 'none', fill = guide_legend(title = "Tree Type", label.position = "bottom", title.position="top", title.hjust = 0.5)) +
   # scale_color_manual(values = c("black", "black"), aesthetics = "color") + labs(tag = 'd)') +
   scale_fill_discrete(labels = c("pine" = "Pine", "fir" = "Fir", "oak" = "Oak", "cedar" = "Cedar")) +
+  # theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+  #       legend.position = 'none', legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
+  #       legend.direction = "horizontal", axis.text.x = element_text(size = 8, color = 'black'), axis.title.x = element_text(size = 10, color = 'black'),
+  #       axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
+  #       strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
+  #       plot.tag.position = c(0.53, 0.96), 
+  #       plot.tag = element_text(face = "bold"))
+theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+      legend.position = 'none', legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
+      legend.direction = "horizontal", axis.text.x = element_blank(), axis.title.x = element_blank(),
+      axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
+      strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
+      plot.tag.position = c(0.2, 0.9), 
+      plot.tag = element_text(face = "bold"))
+p4b
+
+p4c <- ggbarplot(join.sp %>% ungroup() %>%
+                   filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Ground Fire', 'Crown Fire')& tree_type %in% c('pine', 'fir')),
+                 x = "disturb.bin", y = "basal_area.all", fill = 'tree_type.f', 
+                 color = "tree_type.f", 
+                 position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
+                 xlab = 'Disturbance Type', order = c('Die-off', "Ground Fire", "Crown Fire")) +
+  theme_bw() + guides(color = 'none', fill = guide_legend(title = "Tree Type", label.position = "bottom", title.position="top", title.hjust = 0.5)) +
+  scale_fill_discrete(labels = c("pine" = "Pine", "fir" = "Fir", "oak" = "Oak", "cedar" = "Cedar")) +
+
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
         legend.direction = "horizontal", axis.text.x = element_text(size = 8, color = 'black'), axis.title.x = element_text(size = 10, color = 'black'),
         axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
         strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
-        plot.tag.position = c(0.53, 0.96), #c(0.54, 0.96)
-        plot.tag = element_text(face = "bold")) #+
-# scale_x_discrete(labels = c("Response During\n1st Period", "Response During\n2nd Period")) +
-# geom_text(data = p2_texta, mapping = aes(x = x, y = y, label = label), size = 5) #+
-# geom_text(data = p1_textb, mapping = aes(x = x, y = y, label = label), size = 3) +
-# geom_text(data = data.frame(label = "Mean \n+/- SE", y = 1.7, x = 1.5, sequence = 'Both Droughts'), mapping = aes(x=x, y=y, label = label), size = 2) + 
-# facet_grid(~ factor(sequence, levels = c('Both Droughts', '2nd Drought Only')), 
-#            labeller = as_labeller(c('Both Droughts' = "Exposed to Both Droughts", '2nd Drought Only' = "Exposed to 2nd Drought Only"))) 
-p4b
+        plot.tag.position = c(0.53, 0.96), 
+        plot.tag = element_text(face = "bold")) +
+        ylab(expression('Basal Area (m'^2*' ha'^-1*')'))
+p4c
+
 #Combine the two figure panels into one	  
-f4 <- ggarrange(p4a, p4b, ncol = 1, align = "v", labels = c("a", "b"), nrow = 2, heights = c(1, 0.95), common.legend = FALSE)
+f4 <- ggarrange(p4a, p4b, p4c, ncol = 1, nrow = 3, align = "v", labels = c("a", "b", "c"),  heights = c(0.95, 0.95, 1), common.legend = FALSE)
 f4
 
-ggsave(filename = 'Fig8_fire_mortality_by_tree_type.png', height=14, width=16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig8_fire_mortality_by_tree_type.png', height=22, width=16, units = 'cm', dpi=900)

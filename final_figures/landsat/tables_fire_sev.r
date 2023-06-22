@@ -313,7 +313,7 @@ sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & (fire_year_2
   summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
             RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
             Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
-            ADS = mean(tpa_max[vi.year %in% c(2015, 2016, 2017)]),
+            ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]),
             Water_Stress = Water_Stress[vi.year == 2015],
             PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
             sev.bin = sev.bin[vi.year == 2010],

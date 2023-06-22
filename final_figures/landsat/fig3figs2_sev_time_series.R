@@ -295,6 +295,9 @@ sev.pixel.sample <- sev.pixel.sample %>% mutate(fire.year.bin = case_when(
 sev.pixel.sample$fire.year.bin = with(sev.pixel.sample, factor(fire.year.bin, levels = c('2006-2010', '2001-2005','1996-2000', '1991-1995','1985-1990')))
 
 
+#Create the palette
+mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
+
 #Figure of Dead Trees per acre separated by fire years with time series
 p1a <- ggplot() + 
   geom_hline(yintercept = 0) +
@@ -304,7 +307,7 @@ p1a <- ggplot() +
               group_by(date, sev.bin, treatment) %>%
               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), # %>%
             # filter(if_else(sev.bin == '1985-2010', tpa_max.n >= 6000, tpa_max.n >= 0)), 
-            mapping = aes(x = date, y = tpa_max.mean, color = treatment, linetype = treatment), 
+            mapping = aes(x = date, y = tpa_max.mean, color = sev.bin, linetype = treatment), 
             size = 1
   ) +
   #Dead Trees 95% CI
@@ -317,12 +320,13 @@ p1a <- ggplot() +
               # filter(if_else(sev.bin == '1985-2010', tpa_max.n >= 6000, tpa_max.n >= 0)),
               mapping = aes(ymin=tpa_max.mean - 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
-                            x = date, fill = treatment), alpha = 0.3) +
+                            x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
@@ -345,7 +349,7 @@ p1b <- ggplot() +
               group_by(date, sev.bin, treatment) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), count = n()), #%>%  
               # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-            mapping = aes(x = date, y = Tree_Cover.mean, color = treatment, linetype = treatment), 
+            mapping = aes(x = date, y = Tree_Cover.mean, color = sev.bin, linetype = treatment), 
             size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
@@ -357,12 +361,13 @@ p1b <- ggplot() +
                 # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(count)),
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(count)),
-                            x = date, fill = treatment), alpha = 0.3) +
+                            x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
@@ -376,15 +381,13 @@ p1b <- ggplot() +
 p1b
 
 p1c <- ggplot() + 
-  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+  geom_hline(yintercept = 0) + 
   geom_line(data = sev.pixel.sample %>%
               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>%  
               filter(vi.year >= 2010) %>%
               group_by(date, sev.bin, treatment) %>%
-              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()), #%>%  
-            # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-            mapping = aes(x = date, y = PrET.mean, color = treatment, linetype = treatment), 
+              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()), 
+            mapping = aes(x = date, y = PrET.mean, color = sev.bin, linetype = treatment), 
             size = 1) + 
   #Water Stress 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
@@ -395,12 +398,13 @@ p1c <- ggplot() +
                           PrET.sd = sd(PrET), PrET.n = n(), count = n()), #%>%  
               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
                             ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
-                            x = date, fill = treatment), alpha = 0.3) +
+                            x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
@@ -415,6 +419,7 @@ p1c
 
 f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
 f2
+
 #Save the data
 ggsave(filename = 'Fig3_dieoff_tree_cover_severity_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
 

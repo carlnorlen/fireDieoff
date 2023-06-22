@@ -248,7 +248,7 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & 
             Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
             PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
             Water_Stress = Water_Stress[vi.year == 2015],
-            ADS = mean(tpa_max[vi.year %in% c(2015, 2016, 2017)]), 
+            ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]), 
             dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)]),
             fire.year.bin = fire.year.bin[vi.year == 2010],
             treatment = treatment[vi.year == 2010],

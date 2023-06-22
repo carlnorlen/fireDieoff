@@ -8,13 +8,13 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'MatchIt', 'purrr')
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'MatchIt', 'purrr', 'scales')
 # install.packages(p,repo='https://cran.r-project.org/')
 
-# install.packages(c('ggmap'),repo='https://cran.r-project.org/')
+# install.packages(c('scales'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 
-# library(purrr)
+# library(scales)
 #Home Computer directories
 setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
 dir_in <- "D:\\Fire_Dieoff"
@@ -442,7 +442,10 @@ sev.pixel.sample <- sev.pixel.sample %>%
          dShrub_Cover = Shrub_Cover - mean(Shrub_Cover[stand.age %in% c(-1, -2)])) %>%
   ungroup()
 
-#River recover times
+#Create a unique palette
+mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
+# mypalette
+#Create fire recover curves
 p2a <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
@@ -451,7 +454,7 @@ p2a <- ggplot() +
               filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
               group_by(stand.age, sev.bin) %>%
               summarize(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control'])), 
-            mapping = aes(x = stand.age, y = Tree_Cover.mean, color = sev.bin, linetype = sev.bin), size = 1) + 
+            mapping = aes(x = stand.age, y = Tree_Cover.mean, color = sev.bin), linewidth = 1) + 
   #Tree Cover 95% CI
   geom_errorbar(data = sev.pixel.sample %>%
                   filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
@@ -459,17 +462,16 @@ p2a <- ggplot() +
                   summarize(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
                             Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
                             Tree_Cover.n = n()),
-                mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / Tree_Cover.n),
-                              ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / Tree_Cover.n),
-                              x = stand.age, color = sev.bin, linetype = sev.bin)) +
+                mapping = aes(ymin=Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+                              ymax=Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+                              x = stand.age, color = sev.bin)) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        axis.title.x = element_blank(), legend.position = c(0.06, 0.4), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  # scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') + facet_grid(. ~ sev.bin) +
-  scale_fill_manual(values = fills) + 
-  guides(fill = "none") +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  guides(color = guide_legend(), linetype = 'none', fill = 'none') +
   ylab(expression('Tree Cover Change (%)')) + xlab('Years Since Fire')
 p2a
 
@@ -482,7 +484,7 @@ p2b <- ggplot() +
               filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
               group_by(stand.age, sev.bin) %>%
               summarize(Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control'])), 
-            mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = sev.bin, linetype = sev.bin), size = 1) + 
+            mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = sev.bin), linewidth = 1) + 
   #Tree Cover 95% CI
   geom_errorbar(data = sev.pixel.sample %>%
                   filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
@@ -490,17 +492,17 @@ p2b <- ggplot() +
                   summarize(Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
                             Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
                             Shrub_Cover.n = n()),
-                mapping = aes(ymin=Shrub_Cover.mean - 1.96*(Shrub_Cover.sd / Shrub_Cover.n),
-                              ymax=Shrub_Cover.mean + 1.96*(Shrub_Cover.sd / Shrub_Cover.n),
-                              x = stand.age, color = sev.bin, linetype = sev.bin)) +
+                mapping = aes(ymin=Shrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+                              ymax=Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+                              x = stand.age, color = sev.bin)) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   # scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') + facet_grid(. ~ sev.bin) +
-  scale_fill_manual(values = fills) + 
-  guides(fill = "none") +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  guides(color = guide_legend(), linetype = 'none', fill = 'none') +
   ylab(expression('Shrub Cover Change (%)')) + xlab('Years Since Fire')
 p2b
 
@@ -513,7 +515,7 @@ p2c <- ggplot() +
               filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
               group_by(stand.age, sev.bin) %>%
               summarize(AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control'])), 
-            mapping = aes(x = stand.age, y = AET.mean, color = sev.bin, linetype = sev.bin), size = 1) + 
+            mapping = aes(x = stand.age, y = AET.mean, color = sev.bin), size = 1) + 
   #Tree Cover 95% CI
   geom_errorbar(data = sev.pixel.sample %>%
                   filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
@@ -521,21 +523,21 @@ p2c <- ggplot() +
                   summarize(AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
                             AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
                             AET.n = n()),
-                mapping = aes(ymin=AET.mean - 1.96*(AET.sd / AET.n),
-                              ymax=AET.mean + 1.96*(AET.sd / AET.n),
-                              x = stand.age, color = sev.bin, linetype = sev.bin)) +
+                mapping = aes(ymin=AET.mean - 1.96*(sqrt(AET.sd / AET.n)),
+                              ymax=AET.mean + 1.96*(sqrt(AET.sd / AET.n)),
+                              x = stand.age, color = sev.bin)) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = c(0.35, 0.8), legend.background = element_rect(colour = NA, fill = NA),
+        axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   # scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') + #facet_grid(. ~ sev.bin) +
-  scale_fill_manual(values = fills) + 
-  guides(fill = "none") +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  guides(color = guide_legend(), linetype = 'none', fill = 'none') +
   ylab(expression('AET Change (mm yr'^-1*')')) + xlab('Years Since Fire')
 p2c
 
-f2 <- ggarrange(p2a,p2b,p2c, nrow = 3, ncol = 1, common.legend = TRUE, heights = c(0.9, 0.9, 1), align = "v")
+f2 <- ggarrange(p2a,p2b,p2c, nrow = 3, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v")
 f2
 
 #Save the data

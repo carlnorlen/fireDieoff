@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: June 21, 2023
+#Date Updated: June 22, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -8,36 +8,31 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'MatchIt', 'purrr', 'mgcViz')
-install.packages('mgcViz',repo='https://cran.r-project.org/')
-
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'mgcViz','zoo', 'purrr')
+# p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
+#        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
+#        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'mgcViz', 'relaimpo', 'dplyr')
+# install.packages('mgcViz',repo='https://cran.r-project.org/')
+# library(dplyr)
+# library(zoo)
 # install.packages(c('ggmap'),repo='https://cran.r-project.org/')
-# lapply(p,require,character.only=TRUE)
+lapply(p,require,character.only=TRUE)
 
-library(mgcViz)
-library(relaimpo)
-#Set the working directory
+#Home computer
 setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
-# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
-
-#The data directory
 dir_in <- "D:\\Fire_Dieoff"
-# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
+
+#Lab computer
+# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 # dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
-# fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 
 #Add the data
 sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
-# summary(sev.data)
-# list.files(fire_in)
-# list.files(fire_in)
+# sev.data$treatment.cat <- 0
+
 raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
-# unchanged.control.data <- read.csv(file.path(dir_in, "control_south_sierra_unchanged_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
-# low.control.data <- read.csv(file.path(dir_in, "control_south_sierra_low_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
-# med.control.data <- read.csv(file.path(dir_in, "control_south_sierra_med_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
-# high.control.data <- read.csv(file.path(dir_in, "control_south_sierra_high_sev_2km_buffer_200pt_100mm_2C_5tree_ts16_300m_20230227_V2.csv"), header = TRUE, na.strings = "NaN")
 
 #Duplicate and add the fire severity columns
 unchanged.control.data <- raw.sev.control.data
@@ -68,6 +63,7 @@ sev.control.data$fire_count_2020 <- -9999
 
 #Add Control treatment column
 sev.control.data$treatment <- 'Control' #Try making this 1-km versus, 2-km
+# sev.control.data$treatment.cat <- 0
 
 #Combine the data together
 sev.pixel.data <- rbind(sev.data, sev.control.data)
@@ -94,7 +90,7 @@ sev.pixel.data[sev.pixel.data$fire_count_2020 == -9999,]$fire_count_2020 <- NA
 sev.pixel.data$fire.year <- sev.pixel.data$fire_year_2010
 
 #Do categorical treatments
-sev.pixel.data <- sev.pixel.data %>% mutate(treat = case_when(treatment == 'Disturb' ~ 1, treatment == 'Control' ~ 0))
+sev.pixel.data <- sev.pixel.data %>% dplyr::mutate(treat = case_when(treatment == 'Disturb' ~ 1, treatment == 'Control' ~ 0))
 
 #Create Fire Year Bins
 #Separate the data
@@ -144,101 +140,101 @@ hi.strat <- inner_join(hi.disturb, hi.control, by = 'stratlayer') %>%
 
 #Set the random number seed
 set.seed(4561)
-
+# tidyr::unnest()
 #Sample the unchanged control pixels
 un.sample <- sev.pixel.data %>%
                     filter(treatment == 'Control' & sev.bin == 'Unchanged' & stratlayer %in% (un.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
                     group_by(stratlayer) %>% #Group by Stratification layer
-                    nest() %>% #Nest the data
+                    tidyr::nest() %>% #Nest the data
                     ungroup() %>% #Un group the data
                     mutate(n = (un.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-                    mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
+                    mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
                     dplyr::select(-data) %>% #Get rid of the data column
-                    unnest(samp) #unnest the data
+                    tidyr::unnest(samp) #unnest the data
 
 #Sample the low severity control pixels
 lo.sample <- sev.pixel.data %>%
   filter(treatment == 'Control' & sev.bin == 'Low' & stratlayer %in% (lo.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
-  nest() %>% #Nest the data
+  tidyr::nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (lo.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-data) %>% #Get rid of the data column
-  unnest(samp) #unnest the data
+  tidyr::unnest(samp) #unnest the data
 
 #Sample the moderate severity control pixels
 mid.sample <- sev.pixel.data %>%
   filter(treatment == 'Control' & sev.bin == 'Mid' & stratlayer %in% (mid.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
-  nest() %>% #Nest the data
+  tidyr::nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (mid.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-data) %>% #Get rid of the data column
-  unnest(samp) #unnest the data
+  tidyr::unnest(samp) #unnest the data
 
 #High Severity Samples
 hi.sample <- sev.pixel.data %>%
   filter(treatment == 'Control' & sev.bin == 'High' & stratlayer %in% (hi.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
-  nest() %>% #Nest the data
+  tidyr::nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (hi.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-data) %>% #Get rid of the data column
-  unnest(samp) #unnest the data
+  tidyr::unnest(samp) #unnest the data
 
 #Make sure the stratlayer bins match with the sampled control bins
 #Sample the unchanged control pixels
 un.disturb <- sev.pixel.data %>%
   filter(treatment == 'Disturb' & sev.bin == 'Unchanged' & stratlayer %in% (un.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
-  nest() %>% #Nest the data
+  tidyr::nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (un.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
+  mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample, but slice sample doesn't work.
   dplyr::select(-data) %>% #Get rid of the data column
-  unnest(samp) #unnest the data
+  tidyr::unnest(samp) #unnest the data
 
 #Sample the low severity control pixels
 lo.disturb <- sev.pixel.data %>%
   filter(treatment == 'Disturb' & sev.bin == 'Low' & stratlayer %in% (lo.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
-  nest() %>% #Nest the data
+  tidyr::nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (lo.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-data) %>% #Get rid of the data column
-  unnest(samp) #unnest the data
+  tidyr::unnest(samp) #unnest the data
 
 #Sample the moderate severity control pixels
 mid.disturb <- sev.pixel.data %>%
   filter(treatment == 'Disturb' & sev.bin == 'Mid' & stratlayer %in% (mid.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
-  nest() %>% #Nest the data
+  tidyr::nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (mid.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-data) %>% #Get rid of the data column
-  unnest(samp) #unnest the data
+  tidyr::unnest(samp) #unnest the data
 
 #High Severity Samples
 hi.disturb <- sev.pixel.data %>%
   filter(treatment == 'Disturb' & sev.bin == 'High' & stratlayer %in% (hi.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
-  nest() %>% #Nest the data
+  tidyr::nest() %>% #Nest the data
   ungroup() %>% #Un group the data
   mutate(n = (hi.strat %>% pull(n))) %>% #Add the sample sizes for the stratlayers in the disturbed data
-  mutate(samp = map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
+  mutate(samp = purrr::map2(data, n, sample_n)) %>% #Do the random sample, sample_n is depricated for slice_sample
   dplyr::select(-data) %>% #Get rid of the data column
-  unnest(samp) #unnest the data
+  tidyr::unnest(samp) #unnest the data
 
 #Combine the sampled data back together
 sev.pixel.sample <- rbind(un.disturb, lo.disturb, mid.disturb, hi.disturb, un.sample, lo.sample, mid.sample, hi.sample)
 
 sev.pixel.sample <- sev.pixel.sample %>% 
-  pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
+  tidyr::pivot_longer(cols = X10_AET:X9_tpa_max, names_to = c('year', '.value'), names_pattern = "X(\\d{1}|\\d{2})_(.*)", names_repair = "unique")
 
 #Convert the year outputs to actual years
 sev.pixel.sample$year <- as.numeric(sev.pixel.sample$year) + 1984 
@@ -516,7 +512,8 @@ p4a <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >
                         Tree = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
                         tpa_max = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)], na.rm = TRUE),
                         Water_Stress = Water_Stress[vi.year == 2015], 
-                        stand.age = stand.age[vi.year == 2015]), # %>% 
+                        stand.age = stand.age[vi.year == 2015]) %>%
+                filter(stand.age <= 25), # %>% 
                 # group_by(system.index, sev.bin) %>%
                 # reframe(tpa_max.mean = mean(tpa_max[treatment == 'Disturb']) - mean(tpa_max[treatment == 'Control']),
                 #         Tree.mean = mean(Tree[treatment == 'Disturb']) - mean(Tree[treatment == 'Control'])),
@@ -573,14 +570,14 @@ p4c <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >
   xlab(expression('Pr-ET (mm 4yr'^-1*')')) + ylab(expression('Die-off (trees ha'^-1*')'))
 p4c
 
-p4d <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+p4d <- ggplot2::ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 dplyr::group_by(system.index, treatment, sev.bin) %>% 
                 reframe(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), 
                         ET = mean(AET[vi.year %in% c(2011,2012)]),
                         tpa_max = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)], na.rm = TRUE),
                         Water_Stress = PrET[vi.year %in% c(2012,2013,2014,2015)], 
                         stand.age = stand.age[vi.year == 2015]), # %>% 
-              # group_by(system.index, sev.bin) %>%
+               # filter(sev.bin %in% c('Mid', 'High')),
               # reframe(tpa_max.mean = mean(tpa_max[treatment == 'Disturb']) - mean(tpa_max[treatment == 'Control']),
               #         Tree.mean = mean(Tree[treatment == 'Disturb']) - mean(Tree[treatment == 'Control'])),
               mapping = aes(x = stand.age, y = tpa_max, color = treatment)) + 
@@ -593,7 +590,7 @@ p4d <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >
   stat_cor(mapping = aes(color = treatment)) +
   xlab('Years Since Fire') + ylab(expression('Die-off (trees ha'^-1*')'))
 p4d
-glimpse(sev.pixel.sample)
+# glimpse(sev.pixel.sample)
 model.data <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
   dplyr::group_by(system.index, treatment, sev.bin) %>% 
   reframe(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])),
@@ -603,31 +600,32 @@ model.data <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 
           Water_Stress = PrET[vi.year %in% c(2012,2013,2014,2015)], 
           stand.age = stand.age[vi.year == 2015],
           fire_sev = fire_sev_2010[vi.year == 2015],
+          treat = treat[vi.year == 2015],
           ppt_climate = clm_precip_sum[vi.year == 2015],
           temp_climate = clm_temp_mean[vi.year == 2015],
           elevation = elevation[vi.year == 2015])
-summary(model.data)
-sev.lm <- lm(data = model.data, formula = tpa_max ~ ET + Tree + Water_Stress + stand.age + elevation + ppt_climate + temp_climate + fire_sev)
+glimpse(model.data)
+sev.lm <- lm(data = model.data, formula = tpa_max ~ ET + Tree + Water_Stress + stand.age * fire_sev + treat)
 summary(sev.lm)
-dieoff.relimp <- calc.relimp(sev.lm, rela = TRUE, type = "lmg") 
+dieoff.relimp <- relaimpo::calc.relimp(sev.lm, rela = TRUE, type = "lmg") 
 dieoff.relimp
 # dtree.lm <- lm(data = model.data, formula = dTree ~ ET + Tree + Water_Stress + stand.age)
 # summary(dtree.lm)
 
 ### Fig SX: GAM 10 yr ###
 dieoff_gam <- model.data %>% 
-        gam(tpa_max ~ 
+        # filter(sev.bin %in% c('Mid', 'High')) %>%
+        mgcv::gam(tpa_max ~ 
         s(Tree,bs='cs') + 
         s(ET,bs='cs') + 
         s(Water_Stress,bs='cs') + 
-        s(stand.age,bs='cs') + 
-        s(ppt_climate,bs='cs') +
-        s(temp_climate,bs='cs') + 
-        s(elevation,bs='cs'),
-      data = .,method='REML')
+        s(ppt_climate,bs='cs', k = 3) +
+        stand.age + 
+        fire_sev + treat,
+      data = ., method='REML')
 summary(dieoff_gam)
 #Visualize the game relationships
-dieoff_gam_perc_plot <- getViz(dieoff_gam)
+dieoff_gam_perc_plot <- mgcViz::getViz(dieoff_gam)
 dieoff_gam_perc_plot
 #Get the intercept
 dieoff_gam_int = coef(dieoff_gam)[1]

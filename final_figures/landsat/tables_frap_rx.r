@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: February 6, 2020
-#Date Updated: April 3, 2023
+#Date Updated: June 23, 2023
 #Purpose: Create merge split raster files
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/chrono
@@ -242,17 +242,19 @@ pixel.sample$PrET <- pixel.sample$ppt - pixel.sample$AET
 pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
   # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
   #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
-  dplyr::group_by(system.index) %>% 
-  summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+  dplyr::group_by(system.index, treatment, fire.type.bin) %>% 
+  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
             RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
             Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
+            ET = mean(AET[vi.year %in% c(2011,2012)]),
             PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
             Water_Stress = Water_Stress[vi.year == 2015],
             ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]), 
-            dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)]),
-            fire.year.bin = fire.year.bin[vi.year == 2010],
-            treatment = treatment[vi.year == 2010],
-            fire.type.bin = fire.type.bin[vi.year == 2010])
+            dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)])#,
+            # fire.year.bin = fire.year.bin[vi.year == 2010],
+            # treatment = treatment[vi.year == 2010],
+            # fire.type.bin = fire.type.bin[vi.year == 2010])
+            )
 
 # age.dNDMI.rq <- rq(dNDMI_2015_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
 # print(age.dNDMI.rq %>% tidy())
@@ -269,102 +271,120 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & 
 # 
 # summary(stand.age.lm)
 #Treatment Grid Cells
-aov.dTree.treatment <- aov(dTree ~ treatment * fire.type.bin, data = pixel.filter)
-summary(aov.dTree.treatment)
+aov.dTree.rxfrap <- aov(dTree ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.dTree.rxfrap)
 
-aov.ADS.treatment <- aov(ADS ~ treatment * fire.type.bin, data = pixel.filter)
-summary(aov.ADS.treatment)
+aov.ADS.rxfrap <- aov(ADS ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.ADS.rxfrap)
 
-aov.PrET4yr.treatment <- aov(PrET_4yr ~ treatment * fire.type.bin, data = pixel.filter)
-summary(aov.PrET4yr.treatment)
+aov.PrET4yr.rxfrap <- aov(PrET_4yr ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.PrET4yr.rxfrap)
 
-aov.tree.treatment <- aov(Tree_Cover ~ treatment * fire.type.bin, data = pixel.filter)
-summary(aov.tree.treatment)
+aov.tree.rxfrap <- aov(Tree_Cover ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.tree.rxfrap)
 
-tukey.dTree.treatment <- TukeyHSD(aov.dTree.treatment)
-print(tukey.dTree.treatment)
+aov.ET.rxfrap <- aov(ET ~ treatment * fire.type.bin, data = pixel.filter)
+summary(aov.tree.rxfrap)
 
-tukey.ADS.treatment <- TukeyHSD(aov.ADS.treatment)
-print(tukey.ADS.treatment)
+tukey.dTree.rxfrap <- TukeyHSD(aov.dTree.rxfrap)
+print(tukey.dTree.rxfrap)
 
-tukey.PrET4yr.treatment <- TukeyHSD(aov.PrET4yr.treatment)
-print(tukey.PrET4yr.treatment)
+tukey.ADS.rxfrap <- TukeyHSD(aov.ADS.rxfrap)
+print(tukey.ADS.rxfrap)
 
-tukey.tree.treatment <- TukeyHSD(aov.tree.treatment)
-print(tukey.tree.treatment)
+tukey.PrET4yr.rxfrap <- TukeyHSD(aov.PrET4yr.rxfrap)
+print(tukey.PrET4yr.rxfrap)
 
-# anovas.treament <- anova(aov.dNDMI.stand.age.treatment, aov.PET4yr.stand.age.treatment, aov.biomass.stand.age.treatment)
-# print(anovas.treatment) 
+tukey.tree.rxfrap <- TukeyHSD(aov.tree.rxfrap)
+print(tukey.tree.rxfrap)
 
-#Control Grid Cells
-# aov.dNDMI.stand.age.control <- aov(dNDMI_2015_mean ~ agegroup, data = stand.age.control)
-# summary(aov.dNDMI.stand.age.control)
-# 
-# aov.PET4yr.stand.age.control <- aov(PET_4yr_2015_mean ~ agegroup, data = stand.age.control)
-# summary(aov.PET4yr.stand.age.control)
-# 
-# aov.biomass.stand.age.control <- aov(biomass_2012_mean ~ agegroup, data = stand.age.control)
-# summary(aov.biomass.stand.age.control)
-# 
-# tukey.dNDMI.stand.age.control <- TukeyHSD(aov.dNDMI.stand.age.control)
-# print(tukey.dNDMI.stand.age.control)
-# 
-# tukey.PET4yr.stand.age.control <- TukeyHSD(aov.PET4yr.stand.age.control)
-# print(tukey.PET4yr.stand.age.control)
-# 
-# tukey.biomass.stand.age.control <- TukeyHSD(aov.biomass.stand.age.control)
-# print(tukey.biomass.stand.age.control)
+tukey.ET.rxfrap <- TukeyHSD(aov.ET.rxfrap)
+print(tukey.ET.rxfrap)
 
-tb1 <- tukey.dTree.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 1: Tukey HSD, Die-off (dTree) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb1, width = 5, file = "Table1_dTree_dieoff_FRAP_Tukey_HSD.png", zoom = 4.0) 
+rxfrap.tHSD <- list(tukey.ADS.rxfrap, #tukey.PrET4yr.rxfrap.sev, 
+             tukey.tree.rxfrap, tukey.ET.rxfrap)
 
-tb2 <- tukey.ADS.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 2: Tukey HSD, Die-off (ADS) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb2, width = 5, file = "Table2_ADS_dieoff_FRAP_Tukey_HSD.png", zoom = 4.0) 
+#Combine the t-test results in a data frame
+df.rxfrap.tHSD <- as.data.frame(purrr::map_df(rxfrap.tHSD, tidy))
+rxfrap.tHSD.filter <- df.rxfrap.tHSD %>% filter(contrast %in% c('Disturb:Rxfire-Control:Rxfire', 'Disturb:Wildfire-Control:Wildfire'))
+                                                  # 'Disturb:Mid-Control:Mid', 'Disturb:High-Control:High'))
+#Add a variable label column
+# tHSD.filter$variable
+rxfrap.tHSD.filter$variable = c('Die-off (trees ha<sup>-1</sup>)','Die-off (trees ha<sup>-1</sup>)',
+                         # 'Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)',
+                         'Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)',
+                         'Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)')
 
-tb3 <- tukey.PrET4yr.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 3: four-year Pr-ET ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb3, width = 5, file = "Table3_PrET_4yr_FRAP_Tukey_HSD_.png", zoom = 4.0) 
+rxfrap.tHSD.filter$fire.type = c('Prescribed Fire', 'Wild Fire',
+                              #'Unchanged', 'Low', 'Moderate', 'High',
+                          'Prescribed Fire', 'Wild Fire',
+                          'Prescribed Fire', 'Wild Fire')
 
-tb4 <- tukey.tree.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 4: Pre-Fire Tree Cover ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb4, width = 5, file = "Table4_Tree_Cover_FRAP_Tukey_HSD_.png", zoom = 4.0) 
+#Add a drought sequence column
+# tHSD$sequence <- c('Both Droughts', '2nd Drougth Only', 'Both Droughts', '2nd Drougth Only',
+#                    'Both Droughts', '2nd Drougth Only','Both Droughts', '2nd Drougth Only')
 
-# tb5 <- tukey.biomass.stand.age.control %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 5: Not Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-# as_image(x = tb5, width = 5, file = "Table5_Not_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
-# 
-# tb6 <- tukey.biomass.stand.age.treatment %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 6: Exposed, Tukey HSD, Biomass ~ Years Since Fire", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-# as_image(x = tb6, width = 5, file = "Table6_Exposed_Biomass_Years_Fire_Tukey_HSD_.png", zoom = 4.0) 
+#Add mean values for Estimate 1
+rxfrap.tHSD.filter$estimate.1 <- c(#ADS
+  mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire'))$ADS, na.rm = T),
+  mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire'))$ADS, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$ADS, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$ADS, na.rm = T),
+  #Pr-ET 4yr
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$PrET_4yr, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$PrET_4yr, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$PrET_4yr, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$PrET_4yr, na.rm = T),
+  #Tree Cover
+  mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire'))$Tree_Cover, na.rm = T),
+  mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire'))$Tree_Cover, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$Tree_Cover, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$Tree_Cover, na.rm = T),
+  #ET
+  mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire'))$ET, na.rm = T),
+  mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire'))$ET, na.rm = T)
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$ET, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$ET, na.rm = T)
+)
 
-#Summary Statistics
-# summary.control <- stand.age.control %>% 
-#   group_by(agegroup) %>% 
-#   summarize(dNDMI_mean = mean(dNDMI_2015_mean),
-#             dNDMI_sd = sd(dNDMI_2015_mean),
-# 			biomass_mean = mean(biomass_2012_mean),
-# 			biomass_sd = sd(biomass_2012_mean))
-# 
-# print(summary.control)
-# 
-# summary.treatment <- stand.age.sample %>% 
-#   group_by(agegroup) %>% 
-#   summarize(dNDMI_mean = mean(dNDMI_2015_mean),
-#             dNDMI_sd = sd(dNDMI_2015_mean),
-# 			biomass_mean = mean(biomass_2012_mean),
-# 			biomass_sd = sd(biomass_2012_mean))
-# 
-# print(summary.treatment)
+#Add mean values for Estimate 2
+rxfrap.tHSD.filter$estimate.2 <- c(#ADS
+  mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Rxfire'))$ADS, na.rm = T),
+  mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Wildfire'))$ADS, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$ADS, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$ADS, na.rm = T),
+  #Pr-ET 4yr
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$PrET_4yr, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$PrET_4yr, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$PrET_4yr, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$PrET_4yr, na.rm = T),
+  #Tree Cover
+  mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Rxfire'))$Tree_Cover, na.rm = T),
+  mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Wildfire'))$Tree_Cover, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$Tree_Cover, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$Tree_Cover, na.rm = T),
+  #ET
+  mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Rxfire'))$ET, na.rm = T),
+  mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Wildfire'))$ET, na.rm = T)#,
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$ET, na.rm = T),
+  # mean((pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$ET, na.rm = T)
+)
 
-# stand.age.lm2 <- lm(dNDMI_2015_mean ~ stand_age_mean, data = stand.age)
+#Calculate proportion differences from Tukey HSD tests
+rxfrap.tHSD.filter$diff.pct <- rxfrap.tHSD.filter$estimate / rxfrap.tHSD.filter$estimate.2 * 100
 
-# summary(stand.age.lm2)
+rxfrap.tHSD.filter$low.pct <- rxfrap.tHSD.filter$conf.low / rxfrap.tHSD.filter$estimate.2 * 100
 
-# stand.age.socal.lm <- lm(dNDMI_2015_mean ~ stand_age_mean + I(stand_age_mean^2), data = stand.age.socal)
+rxfrap.tHSD.filter$high.pct <- rxfrap.tHSD.filter$conf.high / rxfrap.tHSD.filter$estimate.2 * 100
 
-# summary(stand.age.socal.lm)
+#Select and sort the tukey HSD columns and 
+rxfrap.tHSD.filter.sup <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, estimate.1, estimate.2, estimate, conf.low, conf.high, 
+                                                 diff.pct, high.pct, low.pct, adj.p.value)
 
-# stand.age.norcal.lm <- lm(dNDMI_2015_mean ~ stand_age_mean + I(stand_age_mean^2), data = stand.age.norcal)
+#Name the columns of the data frame
+colnames(rxfrap.tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 'Control Estimate','Difference', 'Low 95% CI', 'High 95% CI', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
+ncol(rxfrap.tHSD.filter.sup)
+#ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+tb1 <- kbl(rxfrap.tHSD.filter.sup, format = 'html', caption = "Table 1: Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb1, width = 10, file = "STable1_tHSD_test_results_with_pct.png", zoom = 5.0) 
 
-# summary(stand.age.norcal.lm)
-
-# nrow(stand.age)
-# summary(stand.age)
-# nrow(stand.age.norcal)
-# nrow(stand.age.socal)

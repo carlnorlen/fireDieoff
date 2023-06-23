@@ -424,7 +424,7 @@ f2
 ggsave(filename = 'Fig3_dieoff_tree_cover_severity_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
-p7 <- ggplot() + 
+p2a <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = sev.pixel.sample %>%
               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
@@ -432,7 +432,7 @@ p7 <- ggplot() +
               group_by(date, sev.bin, treatment) %>%
               summarize(ppt.mean = mean(ppt), ppt.n = n(), count = n()), # %>%  
               # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-            mapping = aes(x = date, y = ppt.mean, color = treatment, linetype = treatment), 
+            mapping = aes(x = date, y = ppt.mean, color = sev.bin, linetype = treatment), 
             size = 1) +
   #Precip 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
@@ -444,12 +444,13 @@ p7 <- ggplot() +
                 # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
-                            x = date, fill = treatment), alpha = 0.3) +
+                            x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
@@ -460,10 +461,10 @@ p7 <- ggplot() +
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
   xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #
   ylab(expression('Precip (mm yr'^-1*')')) + xlab('Year') 
-p7
+p2a
 
 #Create a AET time series figure
-p8 <- ggplot() + 
+p2b <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = sev.pixel.sample %>%
               filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
@@ -471,7 +472,7 @@ p8 <- ggplot() +
               group_by(date, sev.bin, treatment) %>%
               summarize(AET.mean = mean(AET), AET.n = n(), count = n()), # %>%  
               # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-            mapping = aes(x = date, y = AET.mean, color = treatment, linetype = treatment), 
+            mapping = aes(x = date, y = AET.mean, color = sev.bin, linetype = treatment), 
             size = 1) +
   #AET 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
@@ -483,12 +484,13 @@ p8 <- ggplot() +
                 # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
                             ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
-                            x = date, fill = treatment), alpha = 0.3) +
+                            x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
+  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
@@ -500,14 +502,14 @@ p8 <- ggplot() +
   xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(200, 550) + 
   #facet_grid(. ~ sev.bin) +
   ylab(expression('AET (mm yr'^-1*')')) + xlab('Year') 
-p8
+p2b
 
 #Create the Water Stress Panel
-f3 <- ggarrange(p7, p8, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a', 'b'))
+f3 <- ggarrange(p2a, p2b, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a', 'b'))
 f3
 
 #Save the data
-ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=16, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
 
 summary(sev.pixel.sample)
 #Do stand age versus die-off tests

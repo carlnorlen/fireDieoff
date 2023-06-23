@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: February 6, 2020
-#Date Updated: April 3, 2023
+#Date Updated: June 23, 2023
 #Purpose: Create merge split raster files
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/chrono
@@ -75,10 +75,10 @@ sev.pixel.data <- rbind(sev.data, sev.control.data)
 `%notin%` <- Negate(`%in%`)
 
 #Convert fire data -9999 to NAs
-sev.pixel.data[sev.pixel.data$fire_sev_2010 == -9999,]$fire_sev_2010 <- NA
-sev.pixel.data[sev.pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
-sev.pixel.data[sev.pixel.data$fire_ID_2010 == -9999,]$fire_ID_2010 <- NA
-sev.pixel.data[sev.pixel.data$fire_count_2010 == -9999,]$fire_count_2010 <- NA
+# sev.pixel.data[sev.pixel.data$fire_sev_2010 == -9999,]$fire_sev_2010 <- NA
+# sev.pixel.data[sev.pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
+# sev.pixel.data[sev.pixel.data$fire_ID_2010 == -9999,]$fire_ID_2010 <- NA
+# sev.pixel.data[sev.pixel.data$fire_count_2010 == -9999,]$fire_count_2010 <- NA
 sev.pixel.data[sev.pixel.data$fire_sev_2019 == -9999,]$fire_sev_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
 sev.pixel.data[sev.pixel.data$fire_ID_2019 == -9999,]$fire_ID_2019 <- NA
@@ -304,21 +304,19 @@ sev.pixel.sample <- sev.pixel.sample %>% mutate(fire.year.bin = case_when(
 #Fire year bins for Fire Severity Data
 sev.pixel.sample$fire.year.bin = with(sev.pixel.sample, factor(fire.year.bin, levels = c('2006-2010', '2001-2005','1996-2000', '1991-1995','1985-1990')))
 
-sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
-  #  filter(case_when(sev.bin == 'Unchanged' ~ stratlayer %in% un.strat,
-  # sev.bin == 'Low' ~ stratlayer %in% lo.strat,
-  # sev.bin == 'Mid' ~ stratlayer %in% mid.strat,
-  # sev.bin == 'High' ~ stratlayer %in% hi.strat)) %>%
-  dplyr::group_by(system.index) %>% 
-  summarize(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
+sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+  dplyr::group_by(system.index, treatment, sev.bin) %>% 
+  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
             RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
             Tree_Cover = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
+            ET = mean(AET[vi.year %in% c(2011,2012)]),
             ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]),
             Water_Stress = Water_Stress[vi.year == 2015],
             PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
             sev.bin = sev.bin[vi.year == 2010],
             treatment = treatment[vi.year == 2010])
 
+#Results for Table summarizing Figures 2 and 3
 aov.dTree.treatment.sev <- aov(dTree ~ treatment * sev.bin, data = sev.pixel.filter)
 summary(aov.dTree.treatment.sev)
 
@@ -329,6 +327,9 @@ aov.PrET4yr.treatment.sev <- aov(PrET_4yr ~ treatment * sev.bin, data = sev.pixe
 summary(aov.PrET4yr.treatment.sev)
 
 aov.tree.treatment.sev <- aov(Tree_Cover ~ treatment * sev.bin, data = sev.pixel.filter)
+summary(aov.tree.treatment.sev)
+
+aov.ET.treatment.sev <- aov(ET ~ treatment * sev.bin, data = sev.pixel.filter)
 summary(aov.tree.treatment.sev)
 
 tukey.dTree.treatment.sev <- TukeyHSD(aov.dTree.treatment.sev)
@@ -343,16 +344,111 @@ print(tukey.PrET4yr.treatment.sev)
 tukey.tree.treatment.sev <- TukeyHSD(aov.tree.treatment.sev)
 print(tukey.tree.treatment.sev)
 
+tukey.ET.treatment.sev <- TukeyHSD(aov.ET.treatment.sev)
+print(tukey.ET.treatment.sev)
+
 #Create the tables!
-tb5 <- tukey.dTree.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 5: Tukey HSD, Die-off (dTree) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb5, width = 5, file = "Table5_dTree_dieoff_fire_sev_Tukey_HSD.png", zoom = 4.0) 
+# tb5 <- tukey.dTree.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 5: Tukey HSD, Die-off (dTree) ~ treatment * fire severity", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb5, width = 5, file = "Table5_dTree_dieoff_fire_sev_Tukey_HSD.png", zoom = 4.0) 
+# 
+# tb6 <- tukey.ADS.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 6: Tukey HSD, Die-off (ADS) ~ treatment * fire severity", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb6, width = 5, file = "Table6_ADS_dieoff_fire_sev_Tukey_HSD.png", zoom = 4.0) 
+# 
+# tb7 <- tukey.PrET4yr.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 7: four-year Pr-ET ~ treatment * fire severity", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb7, width = 5, file = "Table7_PrET_4yr_fire_sev_Tukey_HSD_.png", zoom = 4.0) 
+# 
+# tb8 <- tukey.tree.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 8: Pre-Drought Tree Cover ~ treatment * fire severity", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb8, width = 5, file = "Table8_Tree_Cover_fire_sev_Tukey_HSD_.png", zoom = 4.0) 
+# 
+# tb9 <- tukey.ET.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 9: Pre-Drought ET ~ treatment * fire severity", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb9, width = 5, file = "Table9_ET_fire_sev_Tukey_HSD_.png", zoom = 4.0) 
 
-tb6 <- tukey.ADS.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 6: Tukey HSD, Die-off (ADS) ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb6, width = 5, file = "Table6_ADS_dieoff_fire_sev_Tukey_HSD.png", zoom = 4.0) 
+#Work on combining the different data sets into a table
+#Tukey HSD posthoc tests
+#Combine all the t-test results in a list
+tHSD <- list(tukey.ADS.treatment.sev, #tukey.PrET4yr.treatment.sev, 
+             tukey.tree.treatment.sev, tukey.ET.treatment.sev)
 
-tb7 <- tukey.PrET4yr.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 7: four-year Pr-ET ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb7, width = 5, file = "Table7_PrET_4yr_fire_sev_Tukey_HSD_.png", zoom = 4.0) 
+#Combine the t-test results in a data frame
+df.tHSD <- as.data.frame(purrr::map_df(tHSD, tidy))
+tHSD.filter <- df.tHSD %>% filter(contrast %in% c('Disturb:Unchanged-Control:Unchanged', 'Disturb:Low-Control:Low', 
+                                   'Disturb:Mid-Control:Mid', 'Disturb:High-Control:High'))
+#Add a variable label column
+# tHSD.filter$variable
+tHSD.filter$variable = c('Die-off (trees ha<sup>-1</sup>)','Die-off (trees ha<sup>-1</sup>)','Die-off (trees ha<sup>-1</sup>)','Die-off (trees ha<sup>-1</sup>)',
+                   # 'Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)',
+                   'Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)',
+                   'Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)')
 
-tb8 <- tukey.tree.treatment.sev %>% tidy() %>% as.data.frame() %>% kbl(caption = "Table 8: Pre-Fire Tree Cover ~ treatment * fire type", digits = 3) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb8, width = 5, file = "Table8_Tree_Cover_fire_sev_Tukey_HSD_.png", zoom = 4.0) 
+tHSD.filter$fire.severity = c('Unchanged', 'Low', 'Moderate', 'High',
+                              #'Unchanged', 'Low', 'Moderate', 'High',
+                              'Unchanged', 'Low', 'Moderate', 'High',
+                              'Unchanged', 'Low', 'Moderate', 'High')
 
+#Add a drought sequence column
+# tHSD$sequence <- c('Both Droughts', '2nd Drougth Only', 'Both Droughts', '2nd Drougth Only',
+#                    'Both Droughts', '2nd Drougth Only','Both Droughts', '2nd Drougth Only')
+
+#Add mean values for Estimate 1
+tHSD.filter$estimate.1 <- c(#ADS
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$ADS, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$ADS, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$ADS, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$ADS, na.rm = T),
+  #Pr-ET 4yr
+  # mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$PrET_4yr, na.rm = T),
+  # mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$PrET_4yr, na.rm = T),
+  # mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$PrET_4yr, na.rm = T),
+  # mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$PrET_4yr, na.rm = T),
+  #Tree Cover
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$Tree_Cover, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$Tree_Cover, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$Tree_Cover, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$Tree_Cover, na.rm = T),
+  #ET
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$ET, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$ET, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$ET, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$ET, na.rm = T)
+)
+
+#Add mean values for Estimate 2
+tHSD.filter$estimate.2 <- c(#ADS
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$ADS, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$ADS, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$ADS, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$ADS, na.rm = T),
+  #Pr-ET 4yr
+  # mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$PrET_4yr, na.rm = T),
+  # mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$PrET_4yr, na.rm = T),
+  # mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$PrET_4yr, na.rm = T),
+  # mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$PrET_4yr, na.rm = T),
+  #Tree Cover
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$Tree_Cover, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$Tree_Cover, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$Tree_Cover, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$Tree_Cover, na.rm = T),
+  #ET
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$ET, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$ET, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$ET, na.rm = T),
+  mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$ET, na.rm = T)
+)
+
+#Calculate proportion differences from Tukey HSD tests
+tHSD.filter$diff.pct <- tHSD.filter$estimate / tHSD.filter$estimate.2 * 100
+
+tHSD.filter$low.pct <- tHSD.filter$conf.low / tHSD.filter$estimate.2 * 100
+
+tHSD.filter$high.pct <- tHSD.filter$conf.high / tHSD.filter$estimate.2 * 100
+
+#Select and sort the tukey HSD columns and 
+tHSD.filter.sup <- tHSD.filter %>% dplyr::select(variable, fire.severity, estimate.1, estimate.2, estimate, conf.low, conf.high, 
+                                                 diff.pct, high.pct, low.pct, adj.p.value)
+
+#Name the columns of the data frame
+colnames(tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 'Control Estimate','Difference', 'Low 95% CI', 'High 95% CI', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
+ncol(tHSD.filter.sup)
+#ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+tb2 <- kbl(tHSD.filter.sup, format = 'html', caption = "Table 2: Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb2, width = 10, file = "STable10_tHSD_test_results_with_pct.png", zoom = 5.0) 

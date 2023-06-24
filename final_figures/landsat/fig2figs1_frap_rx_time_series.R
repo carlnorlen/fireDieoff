@@ -274,8 +274,8 @@ p1a <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) +
-  ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + 
+  ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') 
 p1a
 
 #Create the 
@@ -283,7 +283,7 @@ p1b <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = pixel.sample %>%
-              filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
               group_by(date, treatment, fire.type.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()), 
               # filter(if_else(treatment == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
@@ -291,7 +291,7 @@ p1b <- ggplot() +
             size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                 group_by(date, treatment, fire.type.bin) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()),  
@@ -316,29 +316,38 @@ p1b <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) + 
-  #ylim(30, 55) +
+  ylim(18, 55) +
   ylab(expression('Tree Cover (%)')) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1b
 
 p1c <- ggplot() +
-  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+  geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+              # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
+              # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower &
+              # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
               group_by(date, treatment, fire.type.bin) %>%
-              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()),
-            mapping = aes(x = date, y = PrET.mean, color = fire.type.bin, linetype = treatment),
+              summarize(AET.mean = mean(AET), AET.n = n(), count = n()),
+            mapping = aes(x = date, y = AET.mean, color = fire.type.bin, linetype = treatment),
             size = 1) +
-  #Water Stress 95% CI
+  #AET 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
+                #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
+                # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
+                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower &
+                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                 group_by(date, treatment, fire.type.bin) %>%
-                summarize(PrET.mean = mean(PrET),
-                          PrET.sd = sd(PrET), PrET.n = n(), count = n()),
-              mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
-                            ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
+                summarize(AET.mean = mean(AET),
+                          AET.sd = sd(AET), AET.n = n(), count = n()),
+              mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
+                            ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date, fill = fire.type.bin, alpha = treatment)) +
-  #Do the Formatting
+  #Do the Formating
   scale_linetype(name = 'Treatment') +
   scale_alpha_discrete(range = c(0.3, 0.3)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
@@ -350,12 +359,13 @@ p1c <- ggplot() +
   facet_grid(. ~ fire.type.bin) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA),  axis.text.x = element_text(size = 8),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) +
-  ylab(expression('Pr-ET (mm yr'^-1*')')) + xlab('Year')
+  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(325, 650) +
+  #facet_grid(. ~ fire.year.bin) +
+  ylab(expression('AET (mm yr'^-1*')')) + xlab('Year')
 p1c
 
 f1 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
@@ -363,131 +373,6 @@ f1
 
 #Save the data
 ggsave(filename = 'Fig2_frap_rx_dieoff_tree_cover_stand_age_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
-
-# p2a <- ggplot() + 
-#   geom_hline(yintercept = 0) +
-#   #Dead Tree/ha line
-#   geom_line(data = pixel.sample %>%
-#               filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
-#               group_by(date, fire.type.bin) %>%
-#             summarize(tpa_max.mean = mean(tpa_max[treatment == 'Disturb']) - mean(tpa_max[treatment == 'Control'])),
-#             mapping = aes(y = tpa_max.mean, x = date, color = fire.type.bin, linetype = treatment), linewidth = 1
-#   ) +
-#   #Dead trees/ha 95% CI
-#   geom_ribbon(data = pixel.sample %>%
-#                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
-#                 group_by(date, fire.type.bin) %>%
-#                 summarize(tpa_max.mean = mean(tpa_max[treatment == 'Disturb']) - mean(tpa_max[treatment == 'Control']),
-#                           tpa_max.sd = sd(tpa_max[treatment == 'Disturb'])^2 + sd(tpa_max[treatment == 'Control'])^2, 
-#                           tpa_max.n = n()),
-#               mapping = aes(ymin=tpa_max.mean - 1.96*(sqrt(tpa_max.sd) / tpa_max.n),
-#                             ymax=tpa_max.mean + 1.96*(sqrt(tpa_max.sd) / tpa_max.n),
-#                             x = date, fill = fire.type.bin, alpha = treatment)) +
-#   #Do the Formating
-#   scale_linetype(name = 'Treatment') +
-#   scale_alpha_discrete(range = c(0.3, 0.3)) +
-#   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-#   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-#   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
-#   #Pick the plot theme
-#   theme_bw() + 
-#   #Do the faceting
-#   # facet_grid(. ~ fire.type.bin) +
-#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-#         axis.title.x = element_blank(), legend.position = c(0.1, 0.6), legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-#   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-#             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-#   xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) +
-#   ylab(expression(atop('Tree Mortality Difference', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
-# p2a
-# 
-# #Create the 
-# p2b <- ggplot() + 
-#   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-#   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
-#   geom_line(data = pixel.sample %>%
-#               filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
-#               group_by(date, fire.type.bin) %>%
-#               summarize(Tree_Cover.mean = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control'])), 
-#             # filter(if_else(fire.year.bin == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
-#             mapping = aes(x = date, y = Tree_Cover.mean, color = fire.type.bin, linetype = treatment), 
-#             size = 1) + 
-#   #Tree Cover 95% CI
-#   geom_ribbon(data = pixel.sample %>%
-#                 filter(Tree_Cover > 0 & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
-#                 group_by(date, fire.type.bin) %>%
-#                 summarize(Tree_Cover.mean = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']),
-#                           Tree_Cover.sd = sd(Tree_Cover[treatment == 'Disturb'])^2 + sd(Tree_Cover[treatment == 'Control'])^2, 
-#                           Tree_Cover.n = n()),
-#               # filter(if_else(fire.year.bin == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
-#               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / Tree_Cover.n), #Do we remove the sqrt because it's the sum of squared errors?
-#                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / Tree_Cover.n),
-#                             x = date, fill = fire.type.bin, alpha = treatment)) +
-#   #Do the Formating
-#   scale_linetype(name = 'Treatment') +
-#   scale_alpha_discrete(range = c(0.3, 0.3)) +
-#   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-#   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-#   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
-#   #Pick the plot theme
-#   theme_bw() + 
-#   #Do the faceting
-#   # facet_grid(. ~ fire.type.bin) +
-#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-#         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-#   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-#             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-#   xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) +
-#   #ylim(30, 55) +
-#   ylab(expression('Difference in Tree Cover (%)')) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
-# p2b
-# 
-# p2c <- ggplot() +
-#   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-#   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
-#   geom_line(data = pixel.sample %>%
-#               filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-#               group_by(date, fire.type.bin) %>%
-#               summarize(PrET.mean = mean(PrET[treatment == 'Disturb']) - mean(PrET[treatment == 'Control'])),
-#             mapping = aes(x = date, y = PrET.mean, color = fire.type.bin, linetype = fire.type.bin),
-#             linewidth = 1) +
-#   #Water Stress 95% CI
-#   geom_ribbon(data = pixel.sample %>%
-#                 filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-#                 group_by(date, fire.type.bin) %>%
-#                 summarize(PrET.mean = mean(PrET[treatment == 'Disturb']) - mean(PrET[treatment == 'Control']),
-#                           PrET.sd = sd(PrET[treatment == 'Disturb'])^2 + sd(PrET[treatment == 'Control'])^2, 
-#                           PrET.n = n()),
-#               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / PrET.n),
-#                             ymax=PrET.mean + 1.96*(PrET.sd / PrET.n),
-#                             x = date, fill = fire.type.bin), alpha = 0.3) +
-#   #Do the Formating
-#   scale_linetype(name = 'Fire Type') +
-#   scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Fire Type') +
-#   scale_color_brewer(type = 'div', palette = 'Set1', name = 'Fire Type') +
-#   guides(color = guide_legend(), linetype = guide_legend(), fill = 'none') +
-#   #Pick the plot theme
-#   theme_bw() + 
-#   #Do the faceting
-#   # facet_grid(. ~ fire.type.bin) +
-#   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-#         axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-#         legend.key = element_rect(fill = NA),  axis.text.x = element_text(size = 8),
-#         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-#   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-#             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-#   xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) +
-#   ylab(expression('Difference in Pr-ET (mm yr'^-1*')')) + xlab('Year')
-# p2c
-# 
-# f2 <- ggarrange(p2a, p2b, p2c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
-# f2
-# #Save the data
-# ggsave(filename = 'FigS1_frap_rx_dieoff_tree_cover_stand_age_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
 
 #Figure 4: Precip, ET, Soil moisture, Water Stress time series figure
 p3a <- ggplot() +
@@ -537,35 +422,25 @@ p3a <- ggplot() +
   ylab(expression('Precip (mm yr'^-1*')')) + xlab('Year')
 p3a
 
-#Create an AET time series figure
 p3b <- ggplot() +
-  geom_hline(yintercept = 0) +
+  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = pixel.sample %>%
               filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
-              # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
-              # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower &
-              # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
               group_by(date, treatment, fire.type.bin) %>%
-              summarize(AET.mean = mean(AET), AET.n = n(), count = n()),
-            mapping = aes(x = date, y = AET.mean, color = fire.type.bin, linetype = treatment),
+              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()),
+            mapping = aes(x = date, y = PrET.mean, color = fire.type.bin, linetype = treatment),
             size = 1) +
-  #AET 95% CI
+  #Water Stress 95% CI
   geom_ribbon(data = pixel.sample %>%
                 filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
-                # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
-                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower &
-                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                 group_by(date, treatment, fire.type.bin) %>%
-                summarize(AET.mean = mean(AET),
-                          AET.sd = sd(AET), AET.n = n(), count = n()),
-              mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
-                            ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
+                summarize(PrET.mean = mean(PrET),
+                          PrET.sd = sd(PrET), PrET.n = n(), count = n()),
+              mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
+                            ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
                             x = date, fill = fire.type.bin, alpha = treatment)) +
-  #Do the Formating
+  #Do the Formatting
   scale_linetype(name = 'Treatment') +
   scale_alpha_discrete(range = c(0.3, 0.3)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
@@ -577,17 +452,17 @@ p3b <- ggplot() +
   facet_grid(. ~ fire.type.bin) +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
         axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+        legend.key = element_rect(fill = NA),  axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(300, 700) +
-  #facet_grid(. ~ fire.year.bin) +
-  ylab(expression('AET (mm yr'^-1*')')) + xlab('Year')
+  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) +
+  ylab(expression('Pr-ET (mm yr'^-1*')')) + xlab('Year')
 p3b
+
 
 f3 <- ggarrange(p3a, p3b, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a', 'b'))
 f3
 
 # #Save the data
-ggsave(filename = 'FigS2_frap_rx_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'FigS1_frap_rx_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)

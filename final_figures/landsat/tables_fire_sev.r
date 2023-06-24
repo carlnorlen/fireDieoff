@@ -443,6 +443,17 @@ tHSD.filter$low.pct <- tHSD.filter$conf.low / tHSD.filter$estimate.2 * 100
 tHSD.filter$high.pct <- tHSD.filter$conf.high / tHSD.filter$estimate.2 * 100
 
 #Select and sort the tukey HSD columns and 
+tHSD.filter.tab <- tHSD.filter %>% dplyr::select(variable, fire.severity,   
+                                                 diff.pct, high.pct, low.pct, adj.p.value)
+
+#Name the columns of the data frame
+colnames(tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
+
+#ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+tb1 <- kbl(tHSD.filter.tab, format = 'html', caption = "Table 2: Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb1, width = 10, file = "Table2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 
+
+#Select and sort the tukey HSD columns and 
 tHSD.filter.sup <- tHSD.filter %>% dplyr::select(variable, fire.severity, estimate.1, estimate.2, estimate, conf.low, conf.high, 
                                                  diff.pct, high.pct, low.pct, adj.p.value)
 
@@ -450,5 +461,5 @@ tHSD.filter.sup <- tHSD.filter %>% dplyr::select(variable, fire.severity, estima
 colnames(tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 'Control Estimate','Difference', 'Low 95% CI', 'High 95% CI', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
 ncol(tHSD.filter.sup)
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
-tb2 <- kbl(tHSD.filter.sup, format = 'html', caption = "Table 2: Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb2, width = 10, file = "STable10_tHSD_test_results_with_pct.png", zoom = 5.0) 
+tb2 <- kbl(tHSD.filter.sup, format = 'html', caption = "Table S2: Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb2, width = 10, file = "TableS2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 

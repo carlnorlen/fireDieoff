@@ -8,13 +8,14 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'mgcViz','zoo', 'purrr')
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'mgcViz','zoo', 'purrr', 'scales')
 # p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
 #        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
 #        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'mgcViz', 'relaimpo', 'dplyr')
 # install.packages('mgcViz',repo='https://cran.r-project.org/')
 # library(dplyr)
 # library(zoo)
+# library(scales)
 # install.packages(c('ggmap'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 
@@ -344,7 +345,7 @@ p1b <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = sev.pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
               filter(vi.year >= 2010) %>%
               group_by(date, sev.bin, treatment) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), count = n()), #%>%  
@@ -353,7 +354,7 @@ p1b <- ggplot() +
             size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                 filter(vi.year >= 2010) %>%
                 group_by(date, sev.bin, treatment) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
@@ -381,23 +382,25 @@ p1b <- ggplot() +
 p1b
 
 p1c <- ggplot() + 
-  geom_hline(yintercept = 0) + 
+  geom_hline(yintercept = 0) +
   geom_line(data = sev.pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>%  
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
               filter(vi.year >= 2010) %>%
               group_by(date, sev.bin, treatment) %>%
-              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()), 
-            mapping = aes(x = date, y = PrET.mean, color = sev.bin, linetype = treatment), 
-            size = 1) + 
-  #Water Stress 95% CI
+              summarize(AET.mean = mean(AET), AET.n = n(), count = n()), # %>%  
+            # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+            mapping = aes(x = date, y = AET.mean, color = sev.bin, linetype = treatment), 
+            size = 1) +
+  #AET 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>%  
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                 filter(vi.year >= 2010) %>%
                 group_by(date, sev.bin, treatment) %>%
-                summarize(PrET.mean = mean(PrET),
-                          PrET.sd = sd(PrET), PrET.n = n(), count = n()), #%>%  
-              mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
-                            ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
+                summarize(AET.mean = mean(AET),
+                          AET.sd = sd(AET), AET.n = n(), count = n()), #%>%  
+              # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
+              mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
+                            ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
                             x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
@@ -413,8 +416,9 @@ p1c <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ sev.bin) +
-  ylab(expression('Pr-ET (mm yr'^-1*')')) + xlab('Year')
+  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(200, 550) + 
+  #facet_grid(. ~ sev.bin) +
+  ylab(expression('AET (mm yr'^-1*')')) + xlab('Year') 
 p1c
 
 f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
@@ -427,7 +431,7 @@ ggsave(filename = 'Fig3_dieoff_tree_cover_severity_time_series.png', height=18, 
 p2a <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = sev.pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
               filter(vi.year >= 2010) %>%
               group_by(date, sev.bin, treatment) %>%
               summarize(ppt.mean = mean(ppt), ppt.n = n(), count = n()), # %>%  
@@ -436,7 +440,7 @@ p2a <- ggplot() +
             size = 1) +
   #Precip 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                 filter(vi.year >= 2010) %>%
                 group_by(date, sev.bin, treatment) %>%
                 summarize(ppt.mean = mean(ppt),
@@ -465,25 +469,23 @@ p2a
 
 #Create a AET time series figure
 p2b <- ggplot() + 
-  geom_hline(yintercept = 0) +
+  geom_hline(yintercept = 0) + 
   geom_line(data = sev.pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>%  
               filter(vi.year >= 2010) %>%
               group_by(date, sev.bin, treatment) %>%
-              summarize(AET.mean = mean(AET), AET.n = n(), count = n()), # %>%  
-              # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-            mapping = aes(x = date, y = AET.mean, color = sev.bin, linetype = treatment), 
-            size = 1) +
-  #AET 95% CI
+              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()), 
+            mapping = aes(x = date, y = PrET.mean, color = sev.bin, linetype = treatment), 
+            size = 1) + 
+  #Water Stress 95% CI
   geom_ribbon(data = sev.pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>%  
                 filter(vi.year >= 2010) %>%
                 group_by(date, sev.bin, treatment) %>%
-                summarize(AET.mean = mean(AET),
-                          AET.sd = sd(AET), AET.n = n(), count = n()), #%>%  
-                # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
-              mapping = aes(ymin=AET.mean - 1.96*(AET.sd / sqrt(AET.n)),
-                            ymax=AET.mean + 1.96*(AET.sd / sqrt(AET.n)),
+                summarize(PrET.mean = mean(PrET),
+                          PrET.sd = sd(PrET), PrET.n = n(), count = n()), #%>%  
+              mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
+                            ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
                             x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
@@ -499,9 +501,8 @@ p2b <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(200, 550) + 
-  #facet_grid(. ~ sev.bin) +
-  ylab(expression('AET (mm yr'^-1*')')) + xlab('Year') 
+  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ sev.bin) +
+  ylab(expression('Pr-ET (mm yr'^-1*')')) + xlab('Year')
 p2b
 
 #Create the Water Stress Panel

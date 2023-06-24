@@ -378,6 +378,17 @@ rxfrap.tHSD.filter$low.pct <- rxfrap.tHSD.filter$conf.low / rxfrap.tHSD.filter$e
 rxfrap.tHSD.filter$high.pct <- rxfrap.tHSD.filter$conf.high / rxfrap.tHSD.filter$estimate.2 * 100
 
 #Select and sort the tukey HSD columns and 
+rxfrap.tHSD.filter.tab <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, 
+                                                               diff.pct, high.pct, low.pct, adj.p.value)
+
+#Name the columns of the data frame
+colnames(rxfrap.tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
+# ncol(rxfrap.tHSD.filter.tab)
+#ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+tb1 <- kbl(rxfrap.tHSD.filter.tab, format = 'html', caption = "Table 1: Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb1, width = 10, file = "Table1_fire_type_tHSD_test_results_with_pct.png", zoom = 5.0) 
+
+#Select and sort the tukey HSD columns and 
 rxfrap.tHSD.filter.sup <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, estimate.1, estimate.2, estimate, conf.low, conf.high, 
                                                  diff.pct, high.pct, low.pct, adj.p.value)
 
@@ -385,6 +396,6 @@ rxfrap.tHSD.filter.sup <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.ty
 colnames(rxfrap.tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 'Control Estimate','Difference', 'Low 95% CI', 'High 95% CI', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
 ncol(rxfrap.tHSD.filter.sup)
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
-tb1 <- kbl(rxfrap.tHSD.filter.sup, format = 'html', caption = "Table 1: Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb1, width = 10, file = "STable1_tHSD_test_results_with_pct.png", zoom = 5.0) 
+tb2 <- kbl(rxfrap.tHSD.filter.sup, format = 'html', caption = "Table 1: Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+as_image(x = tb2, width = 10, file = "TableS1_fire_type_tHSD_test_results_with_pct.png", zoom = 5.0) 
 

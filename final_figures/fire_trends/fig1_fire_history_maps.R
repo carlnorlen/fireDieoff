@@ -3,8 +3,6 @@
 #Date Update: June 26, 2023
 #Purpose: Explore pixel sampling data with rgee.
 
-# cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
-# cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('sf', 'ggplot2', 'tidyterra', 'viridis', 'tigris','terra', 'ggpubr', 'scales', 'dplyr', 'tidyr', 'svglite') 
 install.packages('svglite',repo='https://cran.r-project.org/')
@@ -12,10 +10,8 @@ lapply(p,require,character.only=TRUE)
 # library(raster)
 # library(svglite)
 
-#Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fire_trends')
-
 #Home Computer directories
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fire_trends')
 usfs_in <- "D:\\Large_Files\\USFS\\data\\subsections"
 frap_in <- "D:\\Large_Files\\FRAP\\fire21_1_shp"
 sev_in <- "D:\\Large_Files\\USFS\\Fire_Severity\\VebBurnSeverity18_1_shp"

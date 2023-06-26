@@ -132,70 +132,8 @@ join$years.disturb <- join$INVYR - join$DSTRBYR1
 
 join <- join %>% mutate(disturb.bin = case_when(
   DSTRBCD1 %in% c(10, 11, 12, 54, 70) ~ 'Die-off',
-  DSTRBCD1 %in% c(31) ~ 'Ground Fire',
-  DSTRBCD1 %in% c(32) ~ 'Crown Fire',
+  DSTRBCD1 %in% c(30, 31, 32) ~ 'Fire',
   DSTRBCD1 == 0 ~'No Disturbance'))
-
-#Test out the basal area
-p2a<- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #Mean Die-off
-  geom_line(data = join %>% filter(DSTRBCD1 %in% c('30', '31', '32')) %>%
-              group_by(INVYR) %>% summarize(BA.dead = mean(basal_area.dead)), mapping = aes(x = INVYR, y = BA.dead), color = 'black', linewidth = 1) +
-  #95% CI Die-off
-  geom_ribbon(data = join %>% filter(DSTRBCD1 %in% c('30', '31', '32')) %>%
-                group_by(INVYR) %>%
-                summarize(BA.dead = mean(basal_area.dead),
-                          BA.dead.sd = sd(basal_area.dead), BA.n = n()),
-              mapping = aes(ymin=BA.dead - 1.96*(BA.dead.sd / sqrt(BA.n)),
-                            ymax=BA.dead + 1.96*(BA.dead.sd / sqrt(BA.n)),
-                            x = INVYR), alpha = 0.3) +
-  theme_bw() +
-  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab('Year') + ylab(expression('Mortality (m'^2*' ha'^-1*')')) 
-p2a
-
-p2b <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #The data mean
-  geom_line(data = join %>% filter(DSTRBCD1 %in% c('30', '31', '32')) %>%
-              group_by(INVYR) %>% summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100, BA.n = n()), 
-            mapping = aes(x = INVYR, y = BA.dead.pct.mean),  linewidth = 1) +
-  #The error bars (95% CI)
-  geom_ribbon(data = join %>% filter(DSTRBCD1 %in% c('30', '31', '32')) %>%
-                group_by(INVYR) %>%
-                summarize(BA.dead.pct.mean = mean(basal_area.dead.pct) * 100,
-                          BA.dead.pct.sd = sd(basal_area.dead.pct) * 100, 
-                          BA.n = n()),
-              mapping = aes(ymin=BA.dead.pct.mean - 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
-                            ymax=BA.dead.pct.mean + 1.96*(BA.dead.pct.sd / sqrt(BA.n)),
-                            x = INVYR), alpha = 0.2) +
-  theme_bw() +
-  theme(legend.position = 'none', axis.text.x = element_blank(), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), axis.text.y = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  xlab('Year') + ylab('Mortality (%)')
-p2b
-
-# join %>% filter(STDAGE <= 10) %>% count()
-p2c <- ggplot() + #geom_line(data = join %>% group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all)), mapping = aes(x = INVYR, y = BA.all), color = 'green') + 
-  #The data mean
-  geom_line(data = join  %>% filter(DSTRBCD1 %in% c('30', '31', '32')) %>%
-              group_by(INVYR) %>% summarize(BA.all = mean(basal_area.all), BA.n = n()), mapping = aes(x = INVYR, y = BA.all), color = 'black', linewidth = 1) +
-  #The error bars
-  geom_ribbon(data = join %>% filter(DSTRBCD1 %in% c('30', '31', '32')) %>%
-                group_by(INVYR) %>%
-                summarize(BA.mean = mean(basal_area.all),
-                          BA.sd = sd(basal_area.all), BA.n = n()),
-              mapping = aes(ymin=BA.mean - 1.96*(BA.sd / sqrt(BA.n)),
-                            ymax=BA.mean + 1.96*(BA.sd / sqrt(BA.n)),
-                            x = INVYR), alpha = 0.3) +
-  
-  xlab('Year') + ylab(expression('Basal Area (m'^2*' ha'^-1*')')) + theme_bw()
-p2c
-
-f2 <- ggarrange(p2a, p2b, p2c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a)', 'b)', 'c)'))
-f2
-
-ggsave(filename = 'Fig2_FIA_BA_fire_mortality_time_series.png', height=18, width= 10, units = 'cm', dpi=900)
 
 #FIA time series split up species
 all$tree_type <- recode(.x=all$COMMON_NAME, 'California black oak' = 'oak', 'California juniper' = 'juniper', 'California live oak' = 'oak', 'California sycamore' = 'deciduous', 'Coulter pine' = 'pine', 'chinkapin oak' = 'oak', 'Jeffrey pine' = 'pine',
@@ -204,7 +142,8 @@ all$tree_type <- recode(.x=all$COMMON_NAME, 'California black oak' = 'oak', 'Cal
                         'California-laurel' = 'deciduous', 'Oregon ash' = 'deciduous', 'Douglas-fir' = 'fir', 'honey mesquite' = 'deciduous', 'desert ironwood' = 'deciduous', 'California red fir' = 'fir', 'California buckeye' = 'deciduous', 'Engelmann oak' = 'oak', 'grand fir' = 'fir', 'western white pine' = 'pine',
                         "western white pine" = 'pine', "whitebark pine" = 'pine', "mountain hemlock" = "other conifer", "gray or California foothill pine" = "pine", "foxtail pine" = 'pine', "blue oak" = 'oak', "California white oak" = 'oak', "quaking aspen" = 'deciduous',
                         "giant sequoia" = 'other conifer', "Unknown dead conifer" = 'other conifer', "ash spp." = 'deciduous', "black cottonwood" = 'deciduous', "California torreya (nutmeg)" = 'deciduous', "Oregon white oak" = 'oak', "Port-Orford-cedar" = 'cedar', "Pacific dogwood" = 'deciduous',
-                        "red alder" = 'deciduous', "bitter cherry" = 'deciduous', 'Rocky Mountain maple' = 'deciduous', 'unknown dead conifer' = 'other conifer')
+                        "red alder" = 'deciduous', "bitter cherry" = 'deciduous', 'Rocky Mountain maple' = 'deciduous', 'unknown dead conifer' = 'other conifer',
+                        'velvet ash' = 'deciduous')
 all$tree_type <- as.factor(all$tree_type)
 # test <- all %>% select(PLOT, INVYR) %>% group_by(PLOT, INVYR) %>% summarize(count = n())
 
@@ -213,7 +152,8 @@ live.sp <- all %>% filter(STATUSCD == 1) %>%
   group_by(INVYR, PLOT, tree_type, .drop = FALSE) %>% 
   summarize(count.live = n(), tpa.live = sum(count), 
             basal_area.live = sum(basal_area), STDAGE = median(STDAGE), FORTYPCD = median (FORTYPCD), MEANING = first(MEANING), DSTRBCD1 = first(DSTRBCD1), 
-            DSTRBYR1 = first(DSTRBYR1), OWNGRPCD = first(OWNGRPCD))
+            DSTRBYR1 = first(DSTRBYR1), OWNGRPCD = first(OWNGRPCD)) %>%
+  ungroup()
 live.sp
 all %>% select(AGENTCD) %>% unique()
 
@@ -222,7 +162,8 @@ dead.sp <- all %>% filter(case_when(DSTRBCD1 %in% c(30,31,32) ~ STATUSCD == 2 & 
                                      DSTRBCD1 %in% c(0,10,11,12,54,70) ~ STATUSCD == 2 & 
                                       MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019") & AGENTCD %in% c(10, 20, 50, 70))) %>% 
   group_by(PLOT, INVYR, tree_type, .drop = FALSE) %>% 
-  summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
+  summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area)) %>%
+  ungroup()
 
 dead.sp
 join.sp <- left_join(live.sp, dead.sp, by = c('PLOT', 'INVYR', 'tree_type'))
@@ -231,8 +172,9 @@ join.sp <- left_join(live.sp, dead.sp, by = c('PLOT', 'INVYR', 'tree_type'))
 join.sp <- join.sp %>% dplyr::mutate(basal_area.dead = replace(basal_area.dead, is.na(basal_area.dead), 0), 
                                count.dead = replace(count.dead, is.na(count.dead), 0),
                                tpa.dead = replace(tpa.dead, is.na(tpa.dead), 0)
-) %>% group_by(INVYR, PLOT, tree_type) %>%
-  fill(STDAGE, .direction = c("up"))
+) %>% group_by(INVYR, PLOT, .drop = FALSE) %>%
+  fill(DSTRBCD1, .direction = c("updown")) %>%
+  ungroup()
 # join
 # summary(join)
 #Add the total basal area calculations
@@ -250,8 +192,7 @@ join.sp %>% summary()
 
 join.sp <- join.sp %>% mutate(disturb.bin = case_when(
   DSTRBCD1 %in% c(10, 11, 12, 54, 70) ~ 'Die-off',
-  DSTRBCD1 %in% c(31) ~ 'Ground Fire',
-  DSTRBCD1 %in% c(32) ~ 'Crown Fire',
+  DSTRBCD1 %in% c(30, 31, 32) ~ 'Fire',
   DSTRBCD1 == 0 ~'No Disturbance'))
 
 #Create a tree_type factor variable and sort it to make the plots
@@ -259,17 +200,57 @@ join.sp$tree_type.f <- join.sp$tree_type
 join.sp$tree_type.f <- factor(join.sp$tree_type.f, levels= c('pine', 'fir', 'oak', 'juniper', 'cedar'))
 join.sp$basal_area.dead.pct <-join.sp$basal_area.dead.pct * 100
 
+#Do the statistics by disturb.bin
+join %>% ungroup %>% filter(disturb.bin %in% c('Die-off', 'Fire') & !is.na(disturb.bin)) %>% summary()
+ttest.dead <- t.test(data = join %>% ungroup %>% filter(disturb.bin %in% c('Die-off', 'Fire') & !is.na(disturb.bin)), 
+                basal_area.dead.pct ~ disturb.bin)
+ttest.dead
+#Tukey HSD
+# dead.tHSD <- TukeyHSD(aov.dead)
+# dead.tHSD
+
+#ANOVA and Tukey HSD for basal are die-off by forest type, and disturb bin
+type.aov.dead <- aov(data = join.sp %>% ungroup %>% filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off','Fire')& tree_type %in% c('pine', 'fir')), basal_area.dead.pct ~ tree_type * disturb.bin)
+type.aov.dead %>% summary()
+
+type.dead.tHSD <- TukeyHSD(type.aov.dead) 
+type.dead.tHSD
+
+
 # summary(join.sp)
+join %>% ungroup() %>%
+  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire')) %>%
+  group_by(disturb.bin) %>%
+  summarize(count = n())
+
+#Create labels for the bar chart (a)
+p4a_letters <- data.frame(label = c("a", "a"),
+                       # sequence   = c('Both Droughts', 'Both Droughts', '2nd Drought Only', '2nd Drought Only'),
+                       # tree_type = c('pine/fir', 'other tree', 'pine/fir', 'other tree', 
+                       #               'pine/fir', 'other tree', 'pine/fir', 'other tree'),
+                       y     = c(7.9, 7.9),
+                       x     = c(1,2)
+)
+
+#Letters to indicate sample sizes
+p4a_counts <- data.frame(label = c("n = 83", "n = 80"),
+                       # sequence   = c('Both Droughts', 'Both Droughts', '2nd Drought Only', '2nd Drought Only'),
+                       y     = c(7.3, 7.3),
+                       x     = c(1, 2)
+)
+
 #Overall mortality by disturbance type
 p4a <- ggbarplot(join %>% ungroup() %>%
-                   filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Ground Fire', 'Crown Fire')), #& tree_type %in% c('pine', 'fir')),
+                   filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire')), #& tree_type %in% c('pine', 'fir')),
                  x = "disturb.bin", y = "basal_area.dead", #fill = 'tree_type.f', 
-                 #color = "tree_type.f", 
+                 fill = 'gray', 
                  position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
-                 xlab = 'Disturbance', order = c('Die-off', "Ground Fire", "Crown Fire")) +
+                 xlab = 'Disturbance', order = c('Die-off', "Fire")) +
   theme_bw() + 
   #guides(color = 'none', fill = guide_legend(title = "Tree Type", label.position = "bottom", title.position="top", title.hjust = 0.5)) +
   #scale_fill_discrete(labels = c("pine" = "Pine", "fir" = "Fir", "oak" = "Oak", "cedar" = "Cedar")) +
+  geom_text(data = p4a_letters, mapping = aes(x = x, y = y, label = label), size = 5) +
+  geom_text(data = p4a_counts, mapping = aes(x = x, y = y, label = label), size = 3) +
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = c(0.2, 0.55), legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
         legend.direction = "horizontal", axis.text.x = element_blank(), axis.title.x = element_blank(),
@@ -279,69 +260,33 @@ p4a <- ggbarplot(join %>% ungroup() %>%
         plot.tag = element_text(face = "bold")) + ylab(expression('Mortality (m'^2*' ha'^-1*')'))
 p4a
 
+#Create labels for the bar chart (b)
+p4b_letters <- data.frame(label = c("a", "b", "ab", "b"),
+                          # sequence   = c('Both Droughts', 'Both Droughts', '2nd Drought Only', '2nd Drought Only'),
+                          # tree_type = c('pine/fir', 'other tree', 'pine/fir', 'other tree', 
+                          #               'pine/fir', 'other tree', 'pine/fir', 'other tree'),
+                          y     = c(31, 12, 22, 15),
+                          x     = c(0.76,1.24, 1.76, 2.24)
+)
+
 #Die-off Mortality as a % of basal area
 p4b <- ggbarplot(join.sp %>% ungroup() %>%
-                  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Ground Fire', 'Crown Fire')& tree_type %in% c('pine', 'fir')),
-                x = "disturb.bin", y = "basal_area.dead", fill = 'tree_type.f', 
+                  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire')& tree_type %in% c('pine', 'fir')),
+                x = "disturb.bin", y = "basal_area.dead.pct", fill = 'tree_type.f', 
                 color = "tree_type.f", 
                 position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
-                xlab = 'Disturbance', order = c('Die-off', "Ground Fire", "Crown Fire")) +
+                xlab = 'Disturbance', order = c('Die-off', "Fire")) +
   theme_bw() + guides(color = 'none', fill = guide_legend(title = "Tree Type", label.position = "bottom", title.position="top", title.hjust = 0.5)) +
   scale_fill_discrete(labels = c("pine" = "Pine", "fir" = "Fir", "oak" = "Oak", "cedar" = "Cedar")) +
+  geom_text(data = p4b_letters, mapping = aes(x = x, y = y, label = label), size = 5) +
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-        legend.position = c(0.2, 0.55), legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
+        legend.position = c(0.9, 0.65), legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
         legend.direction = "horizontal", axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
         axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
         strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
         plot.tag.position = c(0.2, 0.9), 
-        plot.tag = element_text(face = "bold")) + ylab(expression('Mortality (m'^2*' ha'^-1*')'))
+        plot.tag = element_text(face = "bold")) + ylab('Mortality (%)')
 p4b
-# expression('Mortality (m'^2*' ha'^-1*')')
-
-# p4b <- ggbarplot(join.sp %>% ungroup() %>%
-#                   filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Ground Fire', 'Crown Fire') & tree_type %in% c('pine', 'fir')),
-#                 x = "disturb.bin", y = "basal_area.dead.pct", fill = 'tree_type.f', 
-#                 color = "tree_type.f", 
-#                 position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
-#                 ylab = 'Mortality (%)', 
-#                 xlab = 'Disturbance', order = c('Die-off', "Ground Fire", "Crown Fire")) +
-#   theme_bw() + guides(color = 'none', fill = guide_legend(title = "Tree Type", label.position = "bottom", title.position="top", title.hjust = 0.5)) +
-#   # scale_color_manual(values = c("black", "black"), aesthetics = "color") + labs(tag = 'd)') +
-#   scale_fill_discrete(labels = c("pine" = "Pine", "fir" = "Fir", "oak" = "Oak", "cedar" = "Cedar")) +
-#   # theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-#   #       legend.position = 'none', legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
-#   #       legend.direction = "horizontal", axis.text.x = element_text(size = 8, color = 'black'), axis.title.x = element_text(size = 10, color = 'black'),
-#   #       axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
-#   #       strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
-#   #       plot.tag.position = c(0.53, 0.96), 
-#   #       plot.tag = element_text(face = "bold"))
-# theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-#       legend.position = 'none', legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
-#       legend.direction = "horizontal", axis.text.x = element_blank(), axis.title.x = element_blank(),
-#       axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
-#       strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
-#       plot.tag.position = c(0.2, 0.9), 
-#       plot.tag = element_text(face = "bold"))
-# p4b
-# 
-# p4c <- ggbarplot(join.sp %>% ungroup() %>%
-#                    filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Ground Fire', 'Crown Fire')& tree_type %in% c('pine', 'fir')),
-#                  x = "disturb.bin", y = "basal_area.all", fill = 'tree_type.f', 
-#                  color = "tree_type.f", 
-#                  position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
-#                  xlab = 'Disturbance Type', order = c('Die-off', "Ground Fire", "Crown Fire")) +
-#   theme_bw() + guides(color = 'none', fill = guide_legend(title = "Tree Type", label.position = "bottom", title.position="top", title.hjust = 0.5)) +
-#   scale_fill_discrete(labels = c("pine" = "Pine", "fir" = "Fir", "oak" = "Oak", "cedar" = "Cedar")) +
-# 
-#   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-#         legend.position = 'none', legend.text = element_text(size = 8, angle = 45, vjust = 0.8), legend.title = element_text(size = 10),
-#         legend.direction = "horizontal", axis.text.x = element_text(size = 8, color = 'black'), axis.title.x = element_text(size = 10, color = 'black'),
-#         axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
-#         strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
-#         plot.tag.position = c(0.53, 0.96), 
-#         plot.tag = element_text(face = "bold")) +
-#         ylab(expression('Basal Area (m'^2*' ha'^-1*')'))
-# p4c
 
 #Combine the two figure panels into one	  
 f4 <- ggarrange(p4a, p4b, ncol = 1, nrow = 2, align = "v", labels = c("a", "b"),  heights = c(0.95, 1), common.legend = FALSE)

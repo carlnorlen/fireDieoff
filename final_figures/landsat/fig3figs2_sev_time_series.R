@@ -6,18 +6,20 @@
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
-p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
-       'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'mgcViz','zoo', 'purrr', 'scales')
+p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 
+       'sf', 'ncdf4', 'gtools', 'tigris', 'patchwork', 'tidymodels', 'corrr', 'vip',
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'mgcViz','zoo', 'purrr', 'scales', 
+       'DALEX', 'DALEXtra')
 # p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
 #        'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
 #        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'mgcViz', 'relaimpo', 'dplyr')
-# install.packages('mgcViz',repo='https://cran.r-project.org/')
-# library(dplyr)
+# install.packages(c('DALEX', 'DALEXtra'), repo='https://cran.r-project.org/')
+# library(DALEX)
+# library()
 # library(zoo)
 # library(scales)
 # install.packages(c('ggmap'),repo='https://cran.r-project.org/')
-lapply(p,require,character.only=TRUE)
+lapply(c('tidymodels', 'corrr', 'vip'), require,character.only=TRUE)
 
 #Home computer
 setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
@@ -613,25 +615,87 @@ model.data <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 
           temp_climate = clm_temp_mean[vi.year == 2015],
           elevation = elevation[vi.year == 2015])
 glimpse(model.data)
-sev.lm <- lm(data = model.data, formula = tpa_max ~ ET + Tree + Water_Stress + stand.age * fire_sev + treat)
+
+# summary(dtree.lm)
+
+set.seed(4595)
+data_split <- initial_split(model.data, prop = 0.75)
+
+dieoff_train <- training(data_split)
+dieoff_train
+dieoff_test  <- testing(data_split)
+
+#Create a gam fit with tidy models
+lm_fit <- linear_reg(engine = 'lm') %>%
+               set_mode("regression") %>% 
+               fit(tpa_max ~ ET + Tree + Water_Stress + stand.age + fire_sev + treat, data = dieoff_train) %>%
+               step_ns(Water_Stress, deg_free = 2)
+
+gam_fit <- gen_additive_mod(engine = 'mgcv') %>%
+  set_mode("regression") %>% 
+  fit(tpa_max ~ s(Tree,bs='cs') + 
+        s(ET,bs='cs') + 
+        s(Water_Stress,bs='cs') + 
+        stand.age + 
+        fire_sev + treat, data = dieoff_train)
+vip_features <- c('stand.age', 'fire_sev', 'treat', 'Tree', 'ET', 'Water_Stress')
+vip_train <- dieoff_train %>% dplyr::select(all_of(vip_features))
+
+explainer_gam <- 
+  explain_tidymodels(
+    gam_fit, 
+    data = vip_train, 
+    y = dieoff_train$tpa_max,
+    label = "gam",
+    verbose = FALSE
+  )
+
+explainer_lm <- 
+  explain_tidymodels(
+    lm_fit, 
+    data = vip_train, 
+    y = dieoff_train$tpa_max,
+    label = "lm",
+    verbose = FALSE
+  )
+
+#Do a Global Explanation (local explanation are also possible)
+vip_gam <- model_parts(explainer_gam, loss_function = loss_root_mean_square)
+vip_lm <- model_parts(explainer_lm, loss_function = loss_root_mean_square)
+plot(vip_gam)
+plot(vip_lm)
+
+#Get the fitted data
+dieoff_test$tpa_max.predict <- predict(lm_fit, dieoff_test)$.pred
+
+
+p6a <- ggplot(data = dieoff_test, mapping = aes(x = tpa_max, y = tpa_max.predict)) +
+  geom_point() +
+  geom_abline(slope = 1, linewidth = 2, color = 'blue') +
+  # geom_text(data = rsq.6c, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
+  # geom_text(data = rmse.6c, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
+  # xlim(0, 32) + ylim(0, 32) +
+  theme_bw() +
+  ylab(expression('Predicted Mortality (trees ha'^-1*')')) + xlab(expression('Observed Mortality (trees ha'^-1*')'))
+p6a
+
+### Fig SX: GAM 10 yr ###
+dieoff_gam <- model.data %>% 
+  # filter(sev.bin %in% c('Mid', 'High')) %>%
+  mgcv::gam(tpa_max ~ 
+              s(Tree,bs='cs') + 
+              s(ET,bs='cs') + 
+              s(Water_Stress,bs='cs') + 
+              s(ppt_climate,bs='cs', k = 3) +
+              stand.age + 
+              fire_sev + treat,
+            data = ., method='REML')
+summary(dieoff_gam)
+sev.lm <- lm(data = model.data, formula = tpa_max ~ ET + Tree + stand.age * treat + fire_sev)
 summary(sev.lm)
 dieoff.relimp <- relaimpo::calc.relimp(sev.lm, rela = TRUE, type = "lmg") 
 dieoff.relimp
 # dtree.lm <- lm(data = model.data, formula = dTree ~ ET + Tree + Water_Stress + stand.age)
-# summary(dtree.lm)
-
-### Fig SX: GAM 10 yr ###
-dieoff_gam <- model.data %>% 
-        # filter(sev.bin %in% c('Mid', 'High')) %>%
-        mgcv::gam(tpa_max ~ 
-        s(Tree,bs='cs') + 
-        s(ET,bs='cs') + 
-        s(Water_Stress,bs='cs') + 
-        s(ppt_climate,bs='cs', k = 3) +
-        stand.age + 
-        fire_sev + treat,
-      data = ., method='REML')
-summary(dieoff_gam)
 #Visualize the game relationships
 dieoff_gam_perc_plot <- mgcViz::getViz(dieoff_gam)
 dieoff_gam_perc_plot

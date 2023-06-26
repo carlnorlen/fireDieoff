@@ -1,67 +1,25 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: June 23, 2023
+#Date Update: June 26, 2023
 #Purpose: Explore pixel sampling data with rgee.
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
-p <- c('sf', 'ggplot2', 'tidyterra', 'viridis', 'tigris','terra') 
-# install.packages('tidyterra',repo='https://cran.r-project.org/')
-# library(tidyterra)
-# library(ggplot2)
-# library(RStoolbox)
-# library(sf)
-# install.packages(p,repo='https://cran.r-project.org/')
+p <- c('sf', 'ggplot2', 'tidyterra', 'viridis', 'tigris','terra', 'ggpubr', 'scales', 'dplyr', 'tidyr', 'svglite') 
+install.packages('svglite',repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 # library(raster)
+# library(svglite)
+
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/pixel_sample')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fire_trends')
 
-#Set up a python environment
-# ee_install(py_env = "rgee")
+#Home Computer directories
+usfs_in <- "D:\\Large_Files\\USFS\\data\\subsections"
+frap_in <- "D:\\Large_Files\\FRAP\\fire21_1_shp"
+sev_in <- "D:\\Large_Files\\USFS\\Fire_Severity\\VebBurnSeverity18_1_shp"
 
-#Upgrade the python API version
-# ee_install_upgrade(version = '0.1.312')
-
-#Intialize RGEE
-# ee_Initialize(user = 'cnorlen@uci.edu', drive = TRUE)
-
-#Install a python package
-# py_install("jsbeautifier")
-
-#Import a python package
-# regex <- import("regex")
-# jsb <- import("jsbeautifier")
-
-#Load a GEE package
-# palettes <- module('users/gena/packages:palettes')
-# js.batch <- 'https://github.com/fitoprincipe/geetools-code-editor/blob/master/batch'
-# batch <- module(js.batch)
-# batch
-#Some how the LST module works, but other ones don't
-# lsmod <- 'users/sofiaermida/landsat_smw_lst:modules/Landsat_LST.js'
-# mod <- module(lsmod)
-# mod
-# geom <- ee$Geometry$Rectangle(-8.91, 40.0, -8.3, 40.4)
-# LST <- mod$collection("L8", "2018-05-15", "2018-05-31", geom, TRUE)
-# print(LST$first)
-# LST$mean
-# Map$addLayer(LST$first, {}, 'LST')
-
-# frap.year <- ee$Image('users/cnorlen/Fire_Dieoff/frap_year_bin')
-
-# yearViz <- list(
-#   min = 1919,
-#   max = 2020,
-#   palette = c("yellow", "orange", "red")
-# )
-# Map$addLayer()
-# Map$addLayer(frap.year, yearViz, 'FRAP Year Data')
-
-#Setting variable for ESPG 5070, proj4 crs
-# c <- terra::crs("+proj=aea +lat_1=29.5 +lat_2=45.5 +lat_0=23 +lon_0=-96 +x_0=0 +y_0=0 +datum=NAD83 +units=m +no_defs")
-# terra::crs
 #Add California Boundary shape file
 us_states_20m <- states(cb = TRUE, resolution = "20m", class = "sf")
 # us_states_20m <- st_transform(us_states_20m, c)
@@ -70,8 +28,6 @@ ca_20m <- st_as_sf(ca_20m)
 # ca_20m <- st_transform(ca_20m, c)
 
 #Select USFS EcoRegion for South Sierra Nevada
-usfs_in <- "D:\\Large_Files\\USFS\\data\\subsections"
-frap_in <- "D:\\Large_Files\\FRAP\\fire21_1_shp"
 usfs.regions <- st_read(file.path(usfs_in, 'S_USA.EcomapSubsections.shp'))
 usfs.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S == 'M261Eq' | MAP_UNIT_S == 'M261Es' | MAP_UNIT_S == 'M261Eu' | MAP_UNIT_S == 'M261Er' | MAP_UNIT_S == 'M261Eo') # | MAP_UNIT_S == 'M261Ev') #MAP_UNIT_S == 'M261Et' | 
 
@@ -81,21 +37,38 @@ st_bbox(usfs.sierra.union)
 usfs.sierra.union$bbox
 sierra.extent <- st_bbox(usfs.sierra.union)
 sierra.extent
-c <- st_crs(usfs.sierra.union)
+
 # frap.files <- list.files(file.path(frap_in))
 
 #Get the FRAP and FRAP Rx data
 frap <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\firep21_1.shp")
-st_is_valid(frap)
-frap$valid <- st_is_valid(frap)
+c <- st_crs(frap)
+# st_crs(frap)
+# st_is_valid(frap)
+# frap$valid <- st_is_valid(frap)
 
-#Intersect may not be the best option
-frap.sierra <- st_intersection(st_transform(frap[frap$valid == TRUE, ],c), usfs.sierra.union)
-# frap
-# list.files(file.path(frap_in))
-#Load Prescribed Burn FRAP data
-#The shape files won't load for some reason
+#Add the Wildfire Perimeters
+frap$intersects <- st_intersects(frap, st_transform(usfs.sierra.union,c)) %>% lengths > 0
+frap$title <- 'Wild Fire Perimeters'
+#Add the Prescribed Fire Perimeters
 rxburn <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\rxburn21_1.shp")
+rxburn$intersects <- st_intersects(rxburn, st_transform(usfs.sierra.union,c)) %>% lengths > 0
+rxburn$title <- 'Prescribed Fire Perimeters'
+#Add the Fire Severity Perimeters
+fire.sev <- read_sf(file.path(sev_in, "VegBurnSeverity18.shp"))
+fire.sev$intersects <- st_intersects(fire.sev, st_transform(usfs.sierra.union,c)) %>% lengths > 0
+fire.sev.perimeter <- read_sf("D:\\Large_Files\\Fire_Severity\\veg_severity_perimeters\\veg_severity_perimeters.shp")
+fire.sev.perimeter$intersects <- st_intersects(fire.sev.perimeter, st_transform(usfs.sierra.union,c)) %>% lengths > 0
+fire.sev.perimeter$title <- 'Fire Severity Perimeters'
+
+#Number of FRAP fires
+frap %>% filter(intersects == TRUE & YEAR_ <= 2010 & YEAR_ >= 1987) %>% count()
+
+#Number of rx fires
+rxburn %>% filter(intersects == TRUE & YEAR_ <= 2010 & YEAR_ >= 1987) %>% count()
+
+#Number of Fire severity fires
+fire.sev.perimeter %>% filter(intersects == TRUE & FIRE_YEAR <= 2010 & FIRE_YEAR >= 1987) %>% count()
 # crs(sierra.extent) <- c
 #Export the FRAP raster
 # frap.raster <- ee_as_raster(image = frap.year, via = 'drive', container = 'Fire_Dieoff')
@@ -154,272 +127,109 @@ sev.buffer.year.2010 <- terra::rast(file.path(data_in, 'USFS_fire_severity_buffe
 sev.buffer.year.2010.m <- sev.buffer.year.2010 == 0
 sev.buffer.year.2010.mask <-  terra::mask(sev.buffer.year.2010, mask = sev.buffer.year.2010.m, maskvalue = 1)
 
-#FRAP 2010
-p1 <- ggplot() + 
-  geom_sf(data = frap.sierra %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010), mapping = aes(fill = YEAR_)) +
-  # geom_spatraster(data = frap.buffer.year.2010.mask.crop, mapping = aes(fill = fire_type_last)) +
-  # geom_spatraster(data = frap.year.2010.mask.crop, mapping = aes(fill = fire_type_last)) +
-  # geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
+#FRAP permeters
+p1a <- ggplot() + 
+  geom_sf(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis_d(name = 'Fire Type', option = 'inferno', na.value = NA) + theme_bw() + 
+  coord_sf() + xlab('Longitude') + ylab('Latitude') +
+  scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + facet_wrap(~title) +
   theme(
     legend.justification = c(1, 0),
-    legend.position = 'right',
+    legend.position = c(0.3, 0.2),
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+p1a
+
+#Prescribed Fire Perimeters
+p1b <- ggplot() + 
+  geom_sf(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('Longitude') + ylab(NULL) +
+  scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + facet_wrap(~title) +
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = 'none',
+    legend.text = element_text(size = 6),
+    legend.title = element_text(size = 8),
+    legend.direction = "vertical")
+p1b
+
+#Fire Severity Perimeters
+p1c <- ggplot() + 
+  # geom_sf(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = YEAR_), color = 'black', linewidth = 1) +
+  geom_sf(data = fire.sev.perimeter %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(FIRE_YEAR))) +
+  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
+  coord_sf() + xlab('Longitude') + ylab(NULL) +
+  scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + facet_wrap(~title) +
+  theme(
+    legend.justification = c(1, 0),
+    legend.position = 'none',
     legend.text = element_text(size = 6),
     legend.title = element_text(size = 8),
     legend.direction = "vertical")
 
-p1
+p1c
 
-ggsave(filename = 'Fig1a_frap_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
+#Add Fire colors
+#Create the palette
+# mypalette <- brewer_pal('seq', "Set2")(2)[1:1]
+# brewer_pal('div', "Set2")(2)[1]
+cols <- c("Wild"=brewer_pal('div', "Set2")(2)[2], "Prescribed" = brewer_pal('div', "Set2")(2)[1])
+# lines <- c("Wild" = "dashed", "Prescribed" = "solid")
 
-#Make a figure of the raster
-p2 <- ggplot() + 
-geom_spatraster(data = frap.year.2000.mask, layer = 1, maxcell = 1e6) +
-geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-coord_sf() + xlab('longitude') + ylab('latitude') +
-scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p2
-
-ggsave(filename = 'Fig37_FRAP_year_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p3 <- ggplot() + 
-  ggR(img = frap.year.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p3
-
-ggsave(filename = 'Fig38_FRAP_year_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p4 <- ggplot() + 
-  ggR(img = frap.year.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p4
-
-ggsave(filename = 'Fig39_FRAP_year_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-#FRAP Count map
-p5 <- ggplot() + 
-  ggR(img = frap.count.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.5),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p5
-
-ggsave(filename = 'Fig40_FRAP_count_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p6 <- ggplot() + 
-  ggR(img = frap.count.2000.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.5),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p6
-
-ggsave(filename = 'Fig41_FRAP_count_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p7 <- ggplot() + 
-  ggR(img = frap.count.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.5),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p7
-
-ggsave(filename = 'Fig42_FRAP_count_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p8 <- ggplot() + 
-  ggR(img = frap.count.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = '# of Fires', option = 'viridis', direction = -1, na.value = NA, discrete = TRUE, na.translate = F) + theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.5),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p8
-
-ggsave(filename = 'Fig43_FRAP_count_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-# frap.year.mask
-#Create map of prescirbed burn versus 
-p9 <- ggplot() + 
-  ggR(img = frap.type.1990.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
+#Add the Burned Area Time Series
+p1d <- ggplot() +
+  #Line of total FRAP burned area in the South Sierra
+  geom_line(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
+group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
+mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000, color = "Wild"), linewidth = 1) +  #, color = 'South Wildfire', linetype = 'South Wildfire'), size = 1) + 
+  # Line of total RxBurn burned area in the South Sierra
+  geom_line(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
+              group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)),
+            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area /10000, color = "Prescribed"), size = 1) +
   theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
+  #Figure
+  theme(legend.position = c(0.1, 0.8), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "horizontal",
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6), axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+        axis.text.x = element_blank(), axis.title.x = element_blank()) +
+  scale_colour_manual(name="Fire Type",values=cols, aesthetics = 'color') +
+  # scale_linetype_manual(name="Fire Type (FRAP)", values = lines) +
+  ylab('Burned Area (ha)') + xlab(NULL)
+p1d
 
-p9
+#Create the fire severity palette
+mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
 
-ggsave(filename = 'Fig44_FRAP_type_1990_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p10 <- ggplot() + 
-  ggR(img = frap.type.2000.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
+#Create a time series of Fire Severity burned area
+p1e <- ggplot() +
+  #Line of total USFS burned area in the South Sierra
+  geom_line(data = fire.sev %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>%
+              group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
+            mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
+                          color = as.factor(BURNSEV)), size = 1) + 
+  #Do the black and white theme
   theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
+  #Figure
+  theme(legend.position = c(0.165, 0.7), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "horizontal",
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  scale_color_manual(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High'), values = mypalette, aesthetics = 'color') +
+  # scale_linetype_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High')) +
+  ylab('Burned Area (ha)') + xlab('Year')
+p1e
 
-p10
+#Combining the panels into one plot with patchwork
+p2 <- (p1a | p1b | p1c) #/ 
+p3 <- (p1d / p1e) #+  plot_layout(widths = 0.8)) + plot_annotation(tag_levels = 'a')
 
-ggsave(filename = 'Fig45_FRAP_type_2000_map.png', height=16, width= 12, units = 'cm', dpi=900)
+#layout the plots
+layout <- c(
+  area(t = 1, l = 1, b = 9, r = 4),
+  area(t = 10.5, l = 1, b = 12.5, r = 4)
+)
 
-p11 <- ggplot() + 
-  ggR(img = frap.type.2010.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
-  theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
+p2 / p3 +  plot_layout(design = layout) + plot_annotation(tag_levels = 'a')
 
-p11
-
-ggsave(filename = 'Fig46_FRAP_type_2010_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p12 <- ggplot() + 
-  ggR(img = frap.type.2020.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE, forceCat = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Fire Type', option = 'magma', begin = 0.2, end = 0.8, na.value = NA, discrete = TRUE, na.translate = F, breaks = c(1, 2), labels = c('Wild', 'Prescribed')) + 
-  theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p12
-
-ggsave(filename = 'Fig47_FRAP_type_2020_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-#ADS Data
-p13 <- ggplot() + 
-  ggR(img = ads.2007.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Die-off (ADS)', option = 'magma', na.value = NA, limits = c(0,30)) + 
-  theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p13
-
-ggsave(filename = 'Fig48_ADS_2007_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p14 <- ggplot() + 
-  ggR(img = ads.2011.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Die-off (ADS)', option = 'magma', na.value = NA, limits = c(0,30)) + 
-  theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p14
-
-ggsave(filename = 'Fig49_ADS_2011_map.png', height=16, width= 12, units = 'cm', dpi=900)
-
-p15 <- ggplot() + 
-  ggR(img = ads.2018.mask, layer = 1, maxpixels = 1e6, geom_raster = TRUE, ggLayer = TRUE) +
-  geom_sf(data = ca_20m, color='black', size = 0.2, fill=NA) +
-  geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
-  coord_sf() + xlab('longitude') + ylab('latitude') +
-  scale_fill_viridis(name = 'Die-off (ADS)', option = 'magma', na.value = NA, limits = c(0,100)) + 
-  theme_bw() + 
-  theme(
-    legend.justification = c(1, 0),
-    legend.position = c(0.89, 0.6),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    legend.direction = "vertical")
-
-p15
-
-ggsave(filename = 'Fig50_ADS_2018_map.png', height=16, width= 12, units = 'cm', dpi=900)
+#Save the plots
+ggsave(filename = 'Fig1_fire_maps.png', height=30, width= 30, units = 'cm', dpi=900)
+# ggsave(filename = 'Fig1_fire_maps.svg', height=30, width= 30, units = 'cm', dpi=900)

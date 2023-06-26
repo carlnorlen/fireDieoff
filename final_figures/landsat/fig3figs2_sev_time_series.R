@@ -665,6 +665,8 @@ vip_lm <- model_parts(explainer_lm, loss_function = loss_root_mean_square)
 plot(vip_gam)
 plot(vip_lm)
 
+lm_fit %>% metrics()
+summary(lm_fit)
 #Get the fitted data
 dieoff_test$tpa_max.predict <- predict(lm_fit, dieoff_test)$.pred
 

@@ -5,13 +5,13 @@
 
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('sf', 'ggplot2', 'tidyterra', 'viridis', 'tigris','terra', 'ggpubr', 'scales', 'dplyr', 'tidyr', 'svglite') 
-install.packages('svglite',repo='https://cran.r-project.org/')
+# install.packages('svglite',repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 # library(raster)
 # library(svglite)
 
 #Home Computer directories
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fire_trends')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 usfs_in <- "D:\\Large_Files\\USFS\\data\\subsections"
 frap_in <- "D:\\Large_Files\\FRAP\\fire21_1_shp"
 sev_in <- "D:\\Large_Files\\USFS\\Fire_Severity\\VebBurnSeverity18_1_shp"
@@ -29,10 +29,13 @@ usfs.sierra <- subset(usfs.regions, MAP_UNIT_S == 'M261Ep' | MAP_UNIT_S == 'M261
 
 #Merge Sierra Nevada polygons into one larger polygon
 usfs.sierra.union <- usfs.sierra %>% st_union()
-st_bbox(usfs.sierra.union)
-usfs.sierra.union$bbox
-sierra.extent <- st_bbox(usfs.sierra.union)
-sierra.extent
+
+#Calculate the Area of the South Sierra polygons
+st_area(usfs.sierra.union) * 0.0001
+# st_bbox(usfs.sierra.union)
+# usfs.sierra.union$bbox
+# sierra.extent <- st_bbox(usfs.sierra.union)
+# sierra.extent
 
 # frap.files <- list.files(file.path(frap_in))
 
@@ -70,58 +73,58 @@ fire.sev.perimeter %>% filter(intersects == TRUE & FIRE_YEAR <= 2010 & FIRE_YEAR
 # frap.raster <- ee_as_raster(image = frap.year, via = 'drive', container = 'Fire_Dieoff')
 
 #Load in the exported data for my hard drive
-data_in <- 'D://Fire_Dieoff'
-files <- list.files(data_in)
-files
-# files[1]
-
-#Import as spatial rasters
-#Select FRAP fire rasters
-# frap.year.1 <- raster::raster(file.path(data_in, files[4]))
-# frap.year.2 <- raster::raster(file.path(data_in, files[5]))
-
-#Select the frap year layers
-# frap.year.1990 <- raster::raster(file.path(data_in, files[16]))
-# frap.year.1990.m <- frap.year.1990 == 0
-# frap.year.1990.mask <-  raster::mask(frap.year.1990, mask = frap.year.1990.m, maskvalue = 1)
+# data_in <- 'D://Fire_Dieoff'
+# files <- list.files(data_in)
+# files
+# # files[1]
 # 
-# frap.year.2000 <- raster::raster(file.path(data_in, files[17]))
-# frap.year.2000.m <- frap.year.2000 == 0
-# frap.year.2000.mask <-  raster::mask(frap.year.2000, mask = frap.year.2000.m, maskvalue = 1)
-#FRAP Wildfire layer
-frap.year.2010 <- terra::rast(file.path(data_in, 'FRAP_wildfire_2010_300m.tif'))
-frap.year.2010.m <- frap.year.2010== 0
-frap.year.2010.mask <-  terra::mask(frap.year.2010, mask = frap.year.2010.m, maskvalue = 1)
-c <- crs(frap.year.2010.mask)
-# st_crs(usfs.sierra.union)
-# frap.year.2010.mask
-#Hack to deal with this until I find a better way
-sierra.extent <- ext(project(vect(usfs.sierra.union),c))
-# sierra.extent <- ext(-119.9852, 34.8167, -117.8697, 38.82613)
-frap.year.2010.mask.crop <- terra::crop(frap.year.2010.mask, sierra.extent)
-
-frap.buffer.year.2010 <- terra::rast(file.path(data_in, 'FRAP_wildfire_buffer_2010_300m.tif'))
-frap.buffer.year.2010.m <- frap.buffer.year.2010== 0
-frap.buffer.year.2010.mask <-  terra::mask(frap.buffer.year.2010, mask = frap.buffer.year.2010.m, maskvalue = 1)
-frap.buffer.year.2010.mask.crop <- terra::crop(frap.buffer.year.2010.mask, sierra.extent)
-
-#FRAP Rx Wildfire layer
-rx.year.2010 <- terra::rast(file.path(data_in, 'FRAP_Rxfire_2010_300m.tif'))
-rx.year.2010.m <- rx.year.2010== 0
-rx.year.2010.mask <-  terra::mask(rx.year.2010, mask = rx.year.2010.m, maskvalue = 1)
-
-rx.buffer.year.2010 <- terra::rast(file.path(data_in, 'FRAP_Rxfire_buffer_2010_300m.tif'))
-rx.buffer.year.2010.m <- rx.buffer.year.2010== 0
-rx.buffer.year.2010.mask <-  terra::mask(rx.year.buffer.2010, mask = rx.year.buffer.2010.m, maskvalue = 1)
-
-#USFS Sev fire layer
-sev.year.2010 <- terra::rast(file.path(data_in, 'USFS_fire_severity_2010_300m.tif'))
-sev.year.2010.m <- sev.year.2010 == 0
-sev.year.2010.mask <-  raster::mask(sev.year.2010, mask = sev.year.2010.m, maskvalue = 1)
-
-sev.buffer.year.2010 <- terra::rast(file.path(data_in, 'USFS_fire_severity_buffer_2010_300m.tif'))
-sev.buffer.year.2010.m <- sev.buffer.year.2010 == 0
-sev.buffer.year.2010.mask <-  terra::mask(sev.buffer.year.2010, mask = sev.buffer.year.2010.m, maskvalue = 1)
+# #Import as spatial rasters
+# #Select FRAP fire rasters
+# # frap.year.1 <- raster::raster(file.path(data_in, files[4]))
+# # frap.year.2 <- raster::raster(file.path(data_in, files[5]))
+# 
+# #Select the frap year layers
+# # frap.year.1990 <- raster::raster(file.path(data_in, files[16]))
+# # frap.year.1990.m <- frap.year.1990 == 0
+# # frap.year.1990.mask <-  raster::mask(frap.year.1990, mask = frap.year.1990.m, maskvalue = 1)
+# # 
+# # frap.year.2000 <- raster::raster(file.path(data_in, files[17]))
+# # frap.year.2000.m <- frap.year.2000 == 0
+# # frap.year.2000.mask <-  raster::mask(frap.year.2000, mask = frap.year.2000.m, maskvalue = 1)
+# #FRAP Wildfire layer
+# frap.year.2010 <- terra::rast(file.path(data_in, 'FRAP_wildfire_2010_300m.tif'))
+# frap.year.2010.m <- frap.year.2010== 0
+# frap.year.2010.mask <-  terra::mask(frap.year.2010, mask = frap.year.2010.m, maskvalue = 1)
+# c <- crs(frap.year.2010.mask)
+# # st_crs(usfs.sierra.union)
+# # frap.year.2010.mask
+# #Hack to deal with this until I find a better way
+# sierra.extent <- ext(project(vect(usfs.sierra.union),c))
+# # sierra.extent <- ext(-119.9852, 34.8167, -117.8697, 38.82613)
+# frap.year.2010.mask.crop <- terra::crop(frap.year.2010.mask, sierra.extent)
+# 
+# frap.buffer.year.2010 <- terra::rast(file.path(data_in, 'FRAP_wildfire_buffer_2010_300m.tif'))
+# frap.buffer.year.2010.m <- frap.buffer.year.2010== 0
+# frap.buffer.year.2010.mask <-  terra::mask(frap.buffer.year.2010, mask = frap.buffer.year.2010.m, maskvalue = 1)
+# frap.buffer.year.2010.mask.crop <- terra::crop(frap.buffer.year.2010.mask, sierra.extent)
+# 
+# #FRAP Rx Wildfire layer
+# rx.year.2010 <- terra::rast(file.path(data_in, 'FRAP_Rxfire_2010_300m.tif'))
+# rx.year.2010.m <- rx.year.2010== 0
+# rx.year.2010.mask <-  terra::mask(rx.year.2010, mask = rx.year.2010.m, maskvalue = 1)
+# 
+# rx.buffer.year.2010 <- terra::rast(file.path(data_in, 'FRAP_Rxfire_buffer_2010_300m.tif'))
+# rx.buffer.year.2010.m <- rx.buffer.year.2010== 0
+# rx.buffer.year.2010.mask <-  terra::mask(rx.year.buffer.2010, mask = rx.year.buffer.2010.m, maskvalue = 1)
+# 
+# #USFS Sev fire layer
+# sev.year.2010 <- terra::rast(file.path(data_in, 'USFS_fire_severity_2010_300m.tif'))
+# sev.year.2010.m <- sev.year.2010 == 0
+# sev.year.2010.mask <-  raster::mask(sev.year.2010, mask = sev.year.2010.m, maskvalue = 1)
+# 
+# sev.buffer.year.2010 <- terra::rast(file.path(data_in, 'USFS_fire_severity_buffer_2010_300m.tif'))
+# sev.buffer.year.2010.m <- sev.buffer.year.2010 == 0
+# sev.buffer.year.2010.mask <-  terra::mask(sev.buffer.year.2010, mask = sev.buffer.year.2010.m, maskvalue = 1)
 
 #FRAP permeters
 p1a <- ggplot() + 

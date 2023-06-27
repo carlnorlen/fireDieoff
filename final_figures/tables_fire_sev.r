@@ -15,7 +15,7 @@ lapply(p,require,character.only=TRUE)
 # dir <- "D:\\Large_Files\\CECS"
 # memory.limit(32000)
 
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 # setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
@@ -315,6 +315,10 @@ sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 
             PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
             sev.bin = sev.bin[vi.year == 2010],
             treatment = treatment[vi.year == 2010])
+
+#Calculate the sample sizes for the treatment and controls
+sev.pixel.filter %>% group_by(treatment) %>%
+                     summarize(count = n())
 
 #Results for Table summarizing Figures 2 and 3
 aov.dTree.treatment.sev <- aov(dTree ~ treatment * sev.bin, data = sev.pixel.filter)

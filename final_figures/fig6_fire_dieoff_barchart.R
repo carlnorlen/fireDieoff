@@ -21,7 +21,7 @@ lapply(p,require,character.only=TRUE)
 #INstalling packages: install.packages('RColorBrewer',repo='https://cran.cnr.berkeley.edu/')
 
 #Home computer layout
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/fia')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
 fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
 
@@ -95,7 +95,7 @@ live <- all %>% filter(STATUSCD == 1) %>% group_by(INVYR, PLOT) %>% summarize(co
 all %>% summary()
 #There is a slightly different result when using INVYR instead of MORTYR to calculate annual mortality
 dead <- all %>% filter(case_when(DSTRBCD1 %in% c(30,31,32) ~ STATUSCD == 2 & AGENTCD == 30, 
-                                 DSTRBCD1 %in% c(0,10,11,12,54,70) ~ STATUSCD == 2 & 
+                                 DSTRBCD1 %in% c(10,11,12,54,70) ~ STATUSCD == 2 & 
                                    MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019") & AGENTCD %in% c(10, 20, 50, 70))) %>% 
                 group_by(PLOT, INVYR) %>% summarize(count.dead = n(), tpa.dead = sum(count), basal_area.dead = sum(basal_area))
 # dead <- dead %>% mutate(INVYR = MORTYR) & MORTYR %in% c("2013", "2014", "2015", "2016", "2017", "2018", "2019")
@@ -192,7 +192,8 @@ join.sp %>% summary()
 
 join.sp <- join.sp %>% mutate(disturb.bin = case_when(
   DSTRBCD1 %in% c(10, 11, 12, 54, 70) ~ 'Die-off',
-  DSTRBCD1 %in% c(30, 31, 32) ~ 'Fire',
+  # DSTRBCD1 %in% c(30, 31, 32) ~ 'Fire',
+  DSTRBCD1 %in% c(31, 32) ~ 'Fire',
   DSTRBCD1 == 0 ~'No Disturbance'))
 
 #Create a tree_type factor variable and sort it to make the plots
@@ -219,8 +220,8 @@ type.dead.tHSD
 
 # summary(join.sp)
 join %>% ungroup() %>%
-  filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire')) %>%
-  group_by(disturb.bin) %>%
+  # filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire')) %>%
+  group_by(DSTRBCD1) %>%
   summarize(count = n())
 
 #Create labels for the bar chart (a)
@@ -292,4 +293,4 @@ p4b
 f4 <- ggarrange(p4a, p4b, ncol = 1, nrow = 2, align = "v", labels = c("a", "b"),  heights = c(0.95, 1), common.legend = FALSE)
 f4
 
-ggsave(filename = 'Fig8_fire_mortality_by_tree_type.png', height=16, width=16, units = 'cm', dpi=900)
+ggsave(filename = 'Fig6_fire_mortality_by_tree_type.png', height=16, width=16, units = 'cm', dpi=900)

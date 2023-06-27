@@ -16,7 +16,7 @@ lapply(p,require,character.only=TRUE)
 # memory.limit(32000)
 
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 # setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
@@ -255,6 +255,11 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & 
             # treatment = treatment[vi.year == 2010],
             # fire.type.bin = fire.type.bin[vi.year == 2010])
             )
+
+#Calculate the sample sizes for the treatment and controls
+pixel.filter %>% group_by(treatment, fire.type.bin) %>%
+  summarize(count = n())
+
 
 # age.dNDMI.rq <- rq(dNDMI_2015_mean ~ stand_age_mean, data = stand.age.sample, tau = q10)
 # print(age.dNDMI.rq %>% tidy())

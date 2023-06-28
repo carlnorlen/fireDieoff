@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: June 20, 2023
+#Date Updated: June 28, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -16,13 +16,13 @@ lapply(p,require,character.only=TRUE)
 
 # library(scales)
 #Home Computer directories
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
-dir_in <- "D:\\Fire_Dieoff"
+# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# dir_in <- "D:\\Fire_Dieoff"
 
 
 #Lab computer directories
-# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
-# dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+setwd('C:\\Users\\Carl\\mystuff\\fireDieoff\\final_figures')
+dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 
 #Add the data
 sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
@@ -441,6 +441,56 @@ sev.pixel.sample <- sev.pixel.sample %>%
          dTree_Cover = Tree_Cover - mean(Tree_Cover[stand.age %in% c(-1, -2)]),
          dShrub_Cover = Shrub_Cover - mean(Shrub_Cover[stand.age %in% c(-1, -2)])) %>%
   ungroup()
+
+sev.pixel.summary <- sev.pixel.sample %>% 
+  filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+  group_by(stand.age, sev.bin) %>% 
+  reframe(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
+          Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
+          Tree_Cover.n = n(),
+          Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
+          Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
+          Shrub_Cover.n = n(),
+          AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
+          AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
+          AET.n = n()) %>% 
+  #Add the upper and lower 95% confidence intervals
+  mutate(tree.ci.95.lower = Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         tree.ci.95.upper = Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         shrub.ci.95.lower = Shrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         shrub.ci.95.upper = Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         et.ci.95.lower = AET.mean - 1.96*(sqrt(AET.sd / AET.n)),
+         et.ci.95.upper = AET.mean + 1.96*(sqrt(AET.sd / AET.n)))
+
+#Select the columns I want for the data
+sev.results.data <- sev.pixel.summary %>% dplyr::select(sev.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
+
+
+#Do some calculations for the results section of the manuscript
+pixel.summary <- pixel.sample %>% 
+  filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+  group_by(stand.age, fire.type.bin) %>% 
+  reframe(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
+          Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
+          Tree_Cover.n = n(),
+          Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
+          Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
+          Shrub_Cover.n = n(),
+          AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
+          AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
+          AET.n = n()) %>% 
+  #Add the upper and lower 95% confidence intervals
+  mutate(tree.ci.95.lower = Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         tree.ci.95.upper = Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         shrub.ci.95.lower = Shrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         shrub.ci.95.upper = Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         et.ci.95.lower = AET.mean - 1.96*(sqrt(AET.sd / AET.n)),
+         et.ci.95.upper = AET.mean + 1.96*(sqrt(AET.sd / AET.n)))
+
+#Select the columns I want for the data
+results.data <- pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
+
+
 
 #Create a unique palette
 mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]

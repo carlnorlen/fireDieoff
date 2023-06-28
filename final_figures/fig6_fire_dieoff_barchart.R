@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: August 4, 2021
-#Date Edited: June 26, 2023
+#Date Edited: June 28, 2023
 #Purpose: Do an analysis of dead trees and Stand Age
 
 # Specify necessary packages
@@ -21,14 +21,14 @@ lapply(p,require,character.only=TRUE)
 #INstalling packages: install.packages('RColorBrewer',repo='https://cran.cnr.berkeley.edu/')
 
 #Home computer layout
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
-sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
-fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
+# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
+# sql_dir <- 'D:\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+# fiaCA <- file.path(sql_dir, 'FIADB_CA.db')
 
 #Lab Computer layout
-# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/fia')
-# sql_dir <- 'C:\\Users\\Carl\\mystuff\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
-# fiaCA <- file.path(sql_dir, 'SQLite_FIADB_CA.db')
+setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures')
+sql_dir <- 'C:\\Users\\Carl\\mystuff\\Large_Files\\FIA\\SQLite_FIADB_CA\\2019_version' #Download from FIA DataMart
+fiaCA <- file.path(sql_dir, 'SQLite_FIADB_CA.db')
 
 #Add Data Sets
 
@@ -117,7 +117,7 @@ summary(join)
 join$count.all <- join$count.live + join$count.dead
 join$tpa.all <- join$tpa.live + join$tpa.dead
 join$basal_area.all <- join$basal_area.live + join$basal_area.dead
-join$basal_area.dead.pct <- join$basal_area.dead / join$basal_area.all
+join$basal_area.dead.pct <- join$basal_area.dead / join$basal_area.all * 100
 #fill the NAs for basal_area.dead.pct, this could go earlier
 join <- join %>% dplyr::mutate(basal_area.dead.pct = replace(basal_area.dead.pct, is.na(basal_area.dead.pct), 0))
 
@@ -229,21 +229,21 @@ p4a_letters <- data.frame(label = c("a", "a"),
                        # sequence   = c('Both Droughts', 'Both Droughts', '2nd Drought Only', '2nd Drought Only'),
                        # tree_type = c('pine/fir', 'other tree', 'pine/fir', 'other tree', 
                        #               'pine/fir', 'other tree', 'pine/fir', 'other tree'),
-                       y     = c(7.9, 7.9),
+                       y     = c(23, 27),
                        x     = c(1,2)
 )
 
 #Letters to indicate sample sizes
 p4a_counts <- data.frame(label = c("n = 83", "n = 80"),
                        # sequence   = c('Both Droughts', 'Both Droughts', '2nd Drought Only', '2nd Drought Only'),
-                       y     = c(7.3, 7.3),
+                       y     = c(21, 25),
                        x     = c(1, 2)
 )
 
 #Overall mortality by disturbance type
 p4a <- ggbarplot(join %>% ungroup() %>%
                    filter(!is.na(disturb.bin) & disturb.bin %in% c('Die-off', 'Fire')), #& tree_type %in% c('pine', 'fir')),
-                 x = "disturb.bin", y = "basal_area.dead", #fill = 'tree_type.f', 
+                 x = "disturb.bin", y = "basal_area.dead.pct", #fill = 'tree_type.f', 
                  fill = 'gray', 
                  position = position_dodge(), add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
                  xlab = 'Disturbance', order = c('Die-off', "Fire")) +
@@ -258,7 +258,7 @@ p4a <- ggbarplot(join %>% ungroup() %>%
         axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), strip.background = element_blank(),
         strip.text.x = element_blank(), plot.margin = unit(c(2.5,0,0,5), "pt"), panel.spacing = unit(20, "pt"),
         plot.tag.position = c(0.2, 0.9), 
-        plot.tag = element_text(face = "bold")) + ylab(expression('Mortality (m'^2*' ha'^-1*')'))
+        plot.tag = element_text(face = "bold")) + ylab('Mortality (%)')
 p4a
 
 #Create labels for the bar chart (b)

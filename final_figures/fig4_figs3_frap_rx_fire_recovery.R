@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: June 20, 2023
+#Date Updated: June 28, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -17,13 +17,13 @@ lapply(p,require,character.only=TRUE)
 #Set the working directory
 
 #Home data directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
-dir_in <- "D:\\Fire_Dieoff"
+# setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+# dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 
 #Lab data directory
-# setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
-# dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
+setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures')
+dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 
 #Add the Wildfire data
@@ -354,19 +354,43 @@ pixel.sample <- pixel.sample %>%
   # summarize(Tree_Cover.mean = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']))
 summary(pixel.sample)
 
+#Do some calculations for the results section of the manuscript
+pixel.summary <- pixel.sample %>% 
+  filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+  group_by(stand.age, fire.type.bin) %>% 
+  reframe(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
+          Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
+          Tree_Cover.n = n(),
+          Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
+          Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
+          Shrub_Cover.n = n(),
+          AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
+          AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
+          AET.n = n()) %>% 
+  #Add the upper and lower 95% confidence intervals
+  mutate(tree.ci.95.lower = Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         tree.ci.95.upper = Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         shrub.ci.95.lower = Shrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         shrub.ci.95.upper = Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         et.ci.95.lower = AET.mean - 1.96*(sqrt(AET.sd / AET.n)),
+         et.ci.95.upper = AET.mean + 1.96*(sqrt(AET.sd / AET.n)))
+
+#Select the columns I want for the data
+results.data <- pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
+
 #Create fire recovery curves
 p2a <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
   geom_line(data = pixel.sample %>%
-              filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year >= 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+              filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
               group_by(stand.age, fire.type.bin) %>%
               summarize(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control'])),
             mapping = aes(x = stand.age, y = Tree_Cover.mean, color = fire.type.bin), linewidth = 1) + 
   #Tree Cover 95% CI
   geom_errorbar(data = pixel.sample %>%
-                  filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year >= 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+                  filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                   group_by(stand.age, fire.type.bin) %>%
                   summarize(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
                             Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
@@ -376,7 +400,7 @@ p2a <- ggplot() +
                               x = stand.age, color = fire.type.bin)) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), legend.position = c(0.06, 0.4), legend.background = element_rect(colour = NA, fill = NA),
+        axis.title.x = element_blank(), legend.position = c(0.08, 0.4), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
@@ -391,13 +415,13 @@ p2b <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
   geom_line(data = pixel.sample %>%
-              filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year >= 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+              filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
               group_by(stand.age, fire.type.bin) %>%
               summarize(Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control'])), 
             mapping = aes(x = stand.age, y = Shrub_Cover.mean, color = fire.type.bin), linewidth = 1) + 
   #Tree Cover 95% CI
   geom_errorbar(data = pixel.sample %>%
-                  filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year >= 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+                  filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                   group_by(stand.age, fire.type.bin) %>%
                   summarize(Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
                             Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
@@ -421,13 +445,13 @@ p2c <- ggplot() +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
 #Create a Tree Cover line
 geom_line(data = pixel.sample %>%
-            filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year >= 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
+            filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
             group_by(stand.age, fire.type.bin) %>%
             summarize(AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control'])), 
           mapping = aes(x = stand.age, y = AET.mean, color = fire.type.bin), linewidth = 1) + 
   #Tree Cover 95% CI
   geom_errorbar(data = pixel.sample %>%
-                  filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year >= 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
+                  filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
                   group_by(stand.age, fire.type.bin) %>%
                   summarize(AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
                             AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
@@ -443,10 +467,11 @@ theme_bw() +
   #scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  ylab(expression('AET Change (mm yr'^-1*')')) + xlab('Years Since Fire')
+  ylab(expression('ET Change (mm yr'^-1*')')) + xlab('Years Since Fire')
 p2c
 
-f1 <- ggarrange(p2a,p2b,p2c, nrow = 3, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v")
+f1 <- ggarrange(p2a,p2b,p2c, nrow = 3, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
 f1
+
 #Save the data
-ggsave(filename = 'Fig6_frap_stand_age_tree_shrub_ET.png', height=15, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig4_frap_stand_age_tree_shrub_ET.png', height=15, width= 20, units = 'cm', dpi=900)

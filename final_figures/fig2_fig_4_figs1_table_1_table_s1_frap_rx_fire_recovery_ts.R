@@ -407,7 +407,7 @@ p1a <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + 
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + 
   ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') 
 p1a
 
@@ -448,7 +448,7 @@ p1b <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) + 
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) + 
   ylim(18, 55) +
   ylab(expression('Tree Cover (%)')) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1b
@@ -496,16 +496,16 @@ p1c <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(325, 650) +
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + ylim(325, 650) +
   #facet_grid(. ~ fire.year.bin) +
-  ylab(expression('AET (mm yr'^-1*')')) + xlab('Year')
+  ylab(expression('ET (mm yr'^-1*')')) + xlab('Year')
 p1c
 
 f1 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
 f1
 
 #Save the figure
-ggsave(filename = 'Fig2_frap_rx_dieoff_tree_cover_stand_age_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig4_frap_rx_dieoff_tree_cover_stand_age_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
 
 #Create Table 1 for the manuscript and Table S1 for the supplement
 #Filter the data into subsets for modeling
@@ -513,10 +513,10 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (
   #Group into grid cell bins for each treatment and fire type
   dplyr::group_by(system.index, treatment, fire.type.bin) %>%
   #Calculate summaries for each grid cell
-  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014, 2015)]),
-          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
-          Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014,2015)]),
-          ET = mean(AET[vi.year %in% c(2011,2012)]),
+  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)])) / mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          Tree_Cover = mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          ET = mean(AET[vi.year %in% c(2010, 2011)]),
           PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
           Water_Stress = Water_Stress[vi.year == 2015],
           ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]), 
@@ -689,7 +689,7 @@ p3a <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) +
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ fire.year.bin) +
   ylab(expression('Precip (mm yr'^-1*')')) + xlab('Year')
 p3a
 
@@ -727,7 +727,7 @@ p3b <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) +
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) +
   ylab(expression('Pr-ET (mm yr'^-1*')')) + xlab('Year')
 p3b
 

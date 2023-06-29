@@ -26,13 +26,13 @@ dir_in <- "D:\\Fire_Dieoff"
 # dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 
 #Add the data
-sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_fire_year_5tree_ts8_300m_20230327.csv"), header = TRUE, na.strings = "NaN")
+sev.data <- read.csv(file.path(dir_in, "fire_south_sierra_USFS_sevfire_500pt_fire_year_5tree_ts8_300m_20230403.csv"), header = TRUE, na.strings = "NaN")
 # fire.data$fire.year <- fire.data$perimeter_year
 sev.data$treatment <- 'Disturb'
 # summary(sev.data)
 # list.files(fire_in)
 # list.files(fire_in)
-raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_fire_year_5tree_ts16_300m_20230327.csv"), header = TRUE, na.strings = "NaN")
+raw.sev.control.data <- read.csv(file.path(dir_in, "control_south_sierra_sev_2km_buffer_500pt_fire_year_5tree_ts16_300m_20230403.csv"), header = TRUE, na.strings = "NaN")
 
 #Duplicate and add the fire severity columns
 unchanged.control.data <- raw.sev.control.data
@@ -441,7 +441,7 @@ p2c <- ggplot() +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  ylab(expression('AET Change (mm yr'^-1*')')) + xlab('Years Since Fire')
+  ylab(expression('ET Change (mm yr'^-1*')')) + xlab('Years Since Fire')
 p2c
 
 f2 <- ggarrange(p2a,p2b,p2c, nrow = 3, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v")
@@ -487,7 +487,7 @@ p1a <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + facet_grid(. ~ sev.bin) +
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + facet_grid(. ~ sev.bin) +
   ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1a
 
@@ -528,7 +528,7 @@ p1b <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #ylim(20, 45) + #facet_grid(. ~ sev.bin) + #ylim(20, 50) +
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #ylim(20, 45) + #facet_grid(. ~ sev.bin) + #ylim(20, 50) +
   ylab(expression('Tree Cover (%)')) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1b
 
@@ -567,9 +567,9 @@ p1c <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + ylim(200, 550) + 
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + ylim(200, 550) + 
   #facet_grid(. ~ sev.bin) +
-  ylab(expression('AET (mm yr'^-1*')')) + xlab('Year') 
+  ylab(expression('ET (mm yr'^-1*')')) + xlab('Year') 
 p1c
 
 f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
@@ -614,7 +614,7 @@ p2a <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #
   ylab(expression('Precip (mm yr'^-1*')')) + xlab('Year') 
 p2a
 
@@ -652,7 +652,7 @@ p2b <- ggplot() +
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
-  xlim(as.Date('2010-08-01'),as.Date('2020-01-01')) + #facet_grid(. ~ sev.bin) +
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ sev.bin) +
   ylab(expression('Pr-ET (mm yr'^-1*')')) + xlab('Year')
 p2b
 
@@ -666,10 +666,10 @@ ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=12, width= 18
 #Table 2 and Table S2
 sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
   dplyr::group_by(system.index, treatment, sev.bin) %>% 
-  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2018, 2019)]) - mean(Tree_Cover[vi.year %in% c(2014, 2015)]),
-          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])) / mean(Tree_Cover[vi.year %in% c(2011, 2012)]),
-          Tree_Cover = mean(Tree_Cover[vi.year %in% c(2014,2015)]),
-          ET = mean(AET[vi.year %in% c(2011,2012)]),
+  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2012,2013)])) / mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          Tree_Cover = mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          ET = mean(AET[vi.year %in% c(2010, 2011)]),
           ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]),
           # Water_Stress = Water_Stress[vi.year == 2015],
           PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 

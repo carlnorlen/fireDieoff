@@ -516,12 +516,12 @@ ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=12, width= 18
 
 summary(sev.pixel.sample)
 #Do stand age versus die-off tests
-p4a <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+p4a <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 dplyr::group_by(system.index, treatment, sev.bin) %>% 
                 reframe(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), 
                         Tree = mean(Tree_Cover[vi.year %in% c(2011,2012)]),
                         tpa_max = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)], na.rm = TRUE),
-                        Water_Stress = Water_Stress[vi.year == 2015], 
+                        Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
                         stand.age = stand.age[vi.year == 2015]) %>%
                 filter(stand.age <= 25), # %>% 
                 # group_by(system.index, sev.bin) %>%
@@ -538,12 +538,12 @@ p4a <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >
   xlab('Tree Cover (%)') + ylab(expression('Die-off (trees ha'^-1*')'))
 p4a
 
-p4b <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+p4b <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 dplyr::group_by(system.index, treatment, sev.bin) %>% 
                 reframe(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), 
                         ET = mean(AET[vi.year %in% c(2011,2012)]),
                         tpa_max = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)], na.rm = TRUE),
-                        Water_Stress = Water_Stress[vi.year == 2015], 
+                        Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
                         stand.age = stand.age[vi.year == 2015]), # %>% 
               # group_by(system.index, sev.bin) %>%
               # reframe(tpa_max.mean = mean(tpa_max[treatment == 'Disturb']) - mean(tpa_max[treatment == 'Control']),
@@ -564,7 +564,7 @@ p4c <- ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >
                 reframe(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), 
                         ET = mean(AET[vi.year %in% c(2011,2012)]),
                         tpa_max = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)], na.rm = TRUE),
-                        Water_Stress = PrET[vi.year %in% c(2012,2013,2014,2015)], 
+                        Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
                         stand.age = stand.age[vi.year == 2015]), # %>% 
               # group_by(system.index, sev.bin) %>%
               # reframe(tpa_max.mean = mean(tpa_max[treatment == 'Disturb']) - mean(tpa_max[treatment == 'Control']),
@@ -585,7 +585,7 @@ p4d <- ggplot2::ggplot(data = sev.pixel.sample %>% filter(fire.year <= 2010 & fi
                 reframe(dTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2011,2012)])), 
                         ET = mean(AET[vi.year %in% c(2011,2012)]),
                         tpa_max = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)], na.rm = TRUE),
-                        Water_Stress = PrET[vi.year %in% c(2012,2013,2014,2015)], 
+                        Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
                         stand.age = stand.age[vi.year == 2015]), # %>% 
                # filter(sev.bin %in% c('Mid', 'High')),
               # reframe(tpa_max.mean = mean(tpa_max[treatment == 'Disturb']) - mean(tpa_max[treatment == 'Control']),
@@ -607,7 +607,7 @@ model.data <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 
           Tree = mean(Tree_Cover[vi.year %in% c(2011,2012)]), 
           ET = mean(AET[vi.year %in% c(2011,2012)]),
           tpa_max = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)], na.rm = TRUE),
-          Water_Stress = PrET[vi.year %in% c(2012,2013,2014,2015)], 
+          Water_Stress = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
           stand.age = stand.age[vi.year == 2015],
           fire_sev = fire_sev_2010[vi.year == 2015],
           treat = treat[vi.year == 2015],
@@ -617,7 +617,13 @@ model.data <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year >= 1986 
 glimpse(model.data)
 
 # summary(dtree.lm)
-
+library(tidymodels)
+library(mgcv)
+library(mgcViz)
+library(parsnip)
+library(vip)
+library(DALEX)
+library(DALEXtra)
 set.seed(4595)
 data_split <- initial_split(model.data, prop = 0.75)
 
@@ -665,13 +671,13 @@ vip_lm <- model_parts(explainer_lm, loss_function = loss_root_mean_square)
 plot(vip_gam)
 plot(vip_lm)
 
-lm_fit %>% metrics()
+# lm_fit %>% metrics()
 summary(lm_fit)
 #Get the fitted data
-dieoff_test$tpa_max.predict <- predict(lm_fit, dieoff_test)$.pred
+dieoff_test$tpa_max.predict.lm <- predict(lm_fit, dieoff_test)$.pred
+dieoff_test$tpa_max.predict.gam <- predict(gam_fit, dieoff_test)$.pred
 
-
-p6a <- ggplot(data = dieoff_test, mapping = aes(x = tpa_max, y = tpa_max.predict)) +
+p6a <- ggplot(data = dieoff_test, mapping = aes(x = tpa_max, y = tpa_max.predict.lm)) +
   geom_point() +
   geom_abline(slope = 1, linewidth = 2, color = 'blue') +
   # geom_text(data = rsq.6c, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
@@ -680,6 +686,16 @@ p6a <- ggplot(data = dieoff_test, mapping = aes(x = tpa_max, y = tpa_max.predict
   theme_bw() +
   ylab(expression('Predicted Mortality (trees ha'^-1*')')) + xlab(expression('Observed Mortality (trees ha'^-1*')'))
 p6a
+
+p6b <- ggplot(data = dieoff_test, mapping = aes(x = tpa_max, y = tpa_max.predict.gam)) +
+  geom_point() +
+  geom_abline(slope = 1, linewidth = 2, color = 'blue') +
+  # geom_text(data = rsq.6c, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
+  # geom_text(data = rmse.6c, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
+  # xlim(0, 32) + ylim(0, 32) +
+  theme_bw() +
+  ylab(expression('Predicted Mortality (trees ha'^-1*')')) + xlab(expression('Observed Mortality (trees ha'^-1*')'))
+p6b
 
 ### Fig SX: GAM 10 yr ###
 dieoff_gam <- model.data %>% 
@@ -693,7 +709,7 @@ dieoff_gam <- model.data %>%
               fire_sev + treat,
             data = ., method='REML')
 summary(dieoff_gam)
-sev.lm <- lm(data = model.data, formula = tpa_max ~ ET + Tree + stand.age * treat + fire_sev)
+sev.lm <- lm(data = model.data, formula = tpa_max ~ ET + Tree + Water_Stress + stand.age + treat + fire_sev)
 summary(sev.lm)
 dieoff.relimp <- relaimpo::calc.relimp(sev.lm, rela = TRUE, type = "lmg") 
 dieoff.relimp

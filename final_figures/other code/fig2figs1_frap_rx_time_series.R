@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: January 24, 2022
-#Date Updated: June 21, 2023
+#Date Updated: June 29, 2023
 #Purpose: Create figures for chapter 2 manuscript
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -15,7 +15,7 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'r
 lapply(p,require,character.only=TRUE)
 # library(purrr)
 #Set the working directory
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/landsat')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures')
 # setwd('C:/Users/Carl/mystuff/fireDieoff/final_figures/landsat')
 
 #The data directory
@@ -24,13 +24,13 @@ dir_in <- "D:\\Fire_Dieoff"
 # dir_in <- "C:\\Users\\Carl\\mystuff\\Large_Files\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 #Add the Wildfire data
-frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
+frap.fire.data <- read.csv(file.path(dir_in, "fire_south_sierra_FRAP_wildfire_500pt_200mm_5tree_ts8_300m_20230327.csv"), header = TRUE, na.strings = "NaN")
 
 #Add the treatment column
 frap.fire.data$treatment <- 'Disturb'
 
 #Add the Wildfire buffer data
-frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230322.csv"), header = TRUE, na.strings = "NaN")
+frap.control.data <- read.csv(file.path(dir_in, "control_south_sierra_FRAP_2km_buffer_500pt_200mm_5tree_ts16_300m_20230327.csv"), header = TRUE, na.strings = "NaN")
 
 #Add Fire Columns
 frap.control.data$fire_count_2010 <- -9999
@@ -242,7 +242,7 @@ pixel.sample$std.year.bin = with(pixel.sample, factor(std.year.bin, levels = c('
 p1a <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
-              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
               group_by(date, treatment, fire.type.bin) %>%
               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), 
             mapping = aes(x = date, y = tpa_max.mean, color = fire.type.bin, linetype = treatment), 
@@ -250,7 +250,7 @@ p1a <- ggplot() +
   ) +
   #Dead Trees 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
 
                 group_by(date, treatment, fire.type.bin) %>%
                 summarize(tpa_max.mean = mean(tpa_max),
@@ -283,7 +283,7 @@ p1b <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = pixel.sample %>%
-              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
               group_by(date, treatment, fire.type.bin) %>%
               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()), 
               # filter(if_else(treatment == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
@@ -291,7 +291,7 @@ p1b <- ggplot() +
             size = 1) + 
   #Tree Cover 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                 group_by(date, treatment, fire.type.bin) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()),  
@@ -323,7 +323,7 @@ p1b
 p1c <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
-              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
               # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
               #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -335,7 +335,7 @@ p1c <- ggplot() +
             size = 1) +
   #AET 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -378,7 +378,7 @@ ggsave(filename = 'Fig2_frap_rx_dieoff_tree_cover_stand_age_time_series.png', he
 p3a <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
               # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
               #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
               # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -390,7 +390,7 @@ p3a <- ggplot() +
             size = 1) +
   #AET 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
                 #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
                 # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
@@ -426,14 +426,14 @@ p3b <- ggplot() +
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
   geom_line(data = pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+              filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
               group_by(date, treatment, fire.type.bin) %>%
               summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()),
             mapping = aes(x = date, y = PrET.mean, color = fire.type.bin, linetype = treatment),
             size = 1) +
   #Water Stress 95% CI
   geom_ribbon(data = pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year >= 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+                filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 group_by(date, treatment, fire.type.bin) %>%
                 summarize(PrET.mean = mean(PrET),
                           PrET.sd = sd(PrET), PrET.n = n(), count = n()),

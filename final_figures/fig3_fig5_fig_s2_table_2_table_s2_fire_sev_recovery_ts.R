@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: June 28, 2023
+#Date Updated: August 9, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -474,7 +474,7 @@ p1a <- ggplot() +
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             x = date, fill = sev.bin, alpha = treatment)) +
   #Do the Formating
-  scale_linetype(name = 'Treatment') +
+  scale_linetype(name = 'Treatment', labels = c('Unburned', 'Burned')) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
   scale_alpha_discrete(range = c(0.3, 0.3)) +
@@ -576,7 +576,7 @@ f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, height
 f2
 
 #Save the data
-ggsave(filename = 'Fig5_dieoff_tree_cover_severity_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig5_dieoff_tree_cover_severity_time_series.png', height=16, width= 24, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
 p2a <- ggplot() + 
@@ -804,7 +804,7 @@ tHSD.filter$high.pct <- tHSD.filter$conf.high / tHSD.filter$estimate.2 * 100
 tHSD.filter.tab <- tHSD.filter %>% dplyr::select(variable, fire.severity, diff.pct, high.pct, low.pct, adj.p.value) 
 
 #Name the columns of the data frame
-colnames(tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
+colnames(tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low 95% CI', 'High 95% CI', 'p-value')
 
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
 tb1 <- kbl(tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)

@@ -1,20 +1,20 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 10, 2023
+#Date Updated: August 9, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
-p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
-       'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
+p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr',  
+      'sf', 'ncdf4', 'gtools', 'tigris', 'patchwork', 'ggpubr',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable')
 # install.packages(p,repo='https://cran.r-project.org/')
 
 # install.packages(c('zoo'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
-# library(zoo)
+library(ggpubr)
 #Set the working directory
 
 #Home data directory
@@ -392,7 +392,7 @@ p1a <- ggplot() +
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             x = date, fill = fire.type.bin, alpha = treatment)) +
   #Do the Formating
-  scale_linetype(name = 'Treatment') +
+  scale_linetype(name = 'Treatment', labels = c('Unburned', 'Burned')) +
   scale_alpha_discrete(range = c(0.3, 0.3)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
@@ -523,6 +523,31 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (
           dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)])
   )
 
+#Create potentail figure 5
+# p5a <- ggbarplot(pixel.filter,
+#                 x = "treatment", y = "dTree", position = position_dodge(), color = "fire.type.bin", fill = 'gray',
+#                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
+#                 ylab = expression('Tree Cover Deficit (%)'), 
+#                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+#                 ) + 
+#   theme_bw() + guides(color = 'none') +
+#   scale_color_manual(values = c("black", "black"),
+#                      aesthetics = "color") + labs(tag = 'b)') +
+#   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+#         legend.position = c(0.76, 0.1), legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+#         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+#         axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+#         panel.spacing = unit(20, "pt"), plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96) 
+#         plot.tag = element_text(face = "bold"),
+#         strip.text.x = element_text(size = 10, face = 'bold')) +
+#   # scale_x_discrete(labels = c("Response During\n1st Period", "Response During\n2nd Period")) +
+#   geom_text(data = p1_texta, mapping = aes(x = x, y = y, label = label), size = 5) +
+#   geom_text(data = p1_textb, mapping = aes(x = x, y = y, label = label), size = 3) +
+#   geom_text(data = data.frame(label = "Mean \n+/- SE", y = 3.5, x = 1.2, sequence = 'Both Droughts'), mapping = aes(x=x, y=y, label = label), size = 2) + 
+#   facet_grid(~ factor(sequence, levels = c('Both Droughts', '2nd Drought Only')), 
+#              labeller = as_labeller(c('Both Droughts' = "Exposed to Both Droughts", '2nd Drought Only' = "Exposed to 2nd Drought Only"))) 
+# p5a
+
 #Calculate the sample sizes for the treatment and controls
 pixel.filter %>% group_by(treatment, fire.type.bin) %>%
   summarize(count = n())
@@ -628,7 +653,7 @@ rxfrap.tHSD.filter.tab <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.ty
                                                                diff.pct, high.pct, low.pct, adj.p.value)
 
 #Name the columns of the data frame
-colnames(rxfrap.tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
+colnames(rxfrap.tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low 95% CI', 'High 95% CI', 'p-value')
 
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
 tb1 <- kbl(rxfrap.tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)

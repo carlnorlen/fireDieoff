@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: August 9, 2023
+#Date Update: August 15, 2023
 #Purpose: Explore pixel sampling data with rgee.
 
 #Run the script: R < pixel_sample.r --vanilla
@@ -78,11 +78,11 @@ p1a <- ggplot() +
   scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + #facet_wrap(~title) +
   theme(
     legend.justification = c(1, 0),
-    legend.position = c(0.3, 0.2),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-    axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+    legend.position = c(0.4, 0.1),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10), plot.margin = unit(c(0,0,0,0), "pt"),
+    axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+    axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
     legend.direction = "vertical")
 p1a
 
@@ -103,9 +103,9 @@ mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000,
             mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area /10000, color = "Prescribed"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
   theme_bw() + 
   #Figure
-  theme(legend.position = c(0.2, 0.8), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6), 
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+  theme(legend.position = c(0.25, 0.8), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
+        legend.title = element_text(size = 10), legend.text = element_text(size = 8), 
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.text.x = element_blank(), axis.title.x = element_blank()) +
   scale_colour_manual(name="Fire Type",values=cols, aesthetics = 'color') +
   # scale_linetype_manual(name="Fire Type (FRAP)", values = lines) +
@@ -125,11 +125,11 @@ p1c <- ggplot() +
   #Do the black and white theme
   theme_bw() + 
   #Figure
-  theme(legend.position = c(0.165, 0.7), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
-        legend.title = element_text(size = 8), 
-        legend.text = element_text(size = 6),
-        axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10)) +
+  theme(legend.position = c(0.25, 0.7), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
+        legend.title = element_text(size = 10), 
+        legend.text = element_text(size = 8),
+        axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12)) +
   scale_color_manual(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High'), values = mypalette, aesthetics = 'color') +
   # scale_linetype_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High')) +
   ylab('Burned Area (ha)') + xlab('Year')
@@ -139,10 +139,10 @@ p1c
 p2 <- (p1a)
 p3 <- (p1b / p1c) 
 
-(p2 | p3) + plot_annotation(tag_levels = 'a')
+(p2 | p3) + plot_layout(ncol = 2, widths = c(1.1, 0.9)) + plot_annotation(tag_levels = 'a')
 
 #Save the plots
-ggsave(filename = 'Fig1_fire_maps.png', height=20, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig1_fire_maps.png', height=18, width= 18, units = 'cm', dpi=900)
 
 #Supplementary Figure 1 
 #Shows where the different Fire perimeters are
@@ -154,10 +154,11 @@ p2a <- ggplot() +
   theme(
     legend.justification = c(1, 0),
     legend.position = c(0.3, 0.2),
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-    axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    strip.text.x = element_text(size = 12),
+    axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+    axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
     legend.direction = "vertical")
 p2a
 
@@ -170,10 +171,11 @@ p2b <- ggplot() +
   theme(
     legend.justification = c(1, 0),
     legend.position = 'none',
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-    axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    strip.text.x = element_text(size = 12),
+    axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+    axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
     legend.direction = "vertical")
 p2b
 
@@ -187,10 +189,11 @@ p2c <- ggplot() +
   theme(
     legend.justification = c(1, 0),
     legend.position = 'none',
-    legend.text = element_text(size = 6),
-    legend.title = element_text(size = 8),
-    axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-    axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+    legend.text = element_text(size = 8),
+    legend.title = element_text(size = 10),
+    strip.text.x = element_text(size = 12),
+    axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+    axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
     legend.direction = "vertical")
 
 p2c

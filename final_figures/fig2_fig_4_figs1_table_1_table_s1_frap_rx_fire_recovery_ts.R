@@ -401,10 +401,11 @@ p1a <- ggplot() +
   theme_bw() + 
   #Do the faceting
   facet_grid(. ~ fire.type.bin) +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), legend.position = c(0.1, 0.6), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+        axis.title.x = element_blank(), legend.position = c(0.15, 0.6), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, "pt"),
+        legend.title = element_text(size = 10), legend.text = element_text(size = 8),
+        strip.text = element_text(size = 12)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + 
@@ -442,10 +443,12 @@ p1b <- ggplot() +
   theme_bw() + 
   #Do the faceting
   facet_grid(. ~ fire.type.bin) +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, "pt"),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) + 
@@ -490,10 +493,13 @@ p1c <- ggplot() +
   theme_bw() + 
   #Do the faceting
   facet_grid(. ~ fire.type.bin) +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 10), panel.spacing = unit(20, "pt"),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6),
+        # strip.position = 'none',
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + ylim(325, 650) +
@@ -501,11 +507,11 @@ p1c <- ggplot() +
   ylab(expression('ET (mm yr'^-1*')')) + xlab('Year')
 p1c
 
-f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
+f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 0.9, 1.1), align = "v", labels = c('a', 'b', 'c'))
 f2
 
 #Save the figure
-ggsave(filename = 'Fig4_frap_rx_dieoff_tree_cover_stand_age_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
+ggsave(filename = 'Fig4_frap_rx_dieoff_tree_cover_stand_age_time_series.png', height=12, width= 12, units = 'cm', dpi=900)
 
 #Create Table 1 for the manuscript and Table S1 for the supplement
 #Filter the data into subsets for modeling
@@ -536,10 +542,10 @@ p7a <- ggbarplot(pixel.filter,
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
-        strip.text.x = element_text(size = 10, face = 'bold')) +
+        strip.text.x = element_text(size = 12, face = 'bold')) +
   # labs(tag = 'a') +
   geom_pwc(
     tip.length = 0, bracket.nudge.y = -0.77,
@@ -561,7 +567,7 @@ p7b <- ggbarplot(pixel.filter,
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
@@ -586,7 +592,7 @@ p7c <- ggbarplot(pixel.filter,
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
@@ -610,8 +616,8 @@ p7d <- ggbarplot(pixel.filter,
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
-        legend.direction = "vertical", axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        legend.direction = "vertical", axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
@@ -629,7 +635,7 @@ p7d
 f7 <- (p7a / p7b / p7c / p7d) + plot_annotation(tag_levels = 'a')
 f7
 
-ggsave(filename = 'Fig5_frap_rx_comparison_barchart.png', height=18, width= 12, units = 'cm', dpi=900)
+ggsave(filename = 'Fig5_frap_rx_comparison_barchart.png', height=16, width= 12, units = 'cm', dpi=900)
 
 #Calculate the sample sizes for the treatment and controls
 pixel.filter %>% group_by(treatment, fire.type.bin) %>%
@@ -732,15 +738,15 @@ rxfrap.tHSD.filter$low.pct <- rxfrap.tHSD.filter$conf.low / rxfrap.tHSD.filter$e
 rxfrap.tHSD.filter$high.pct <- rxfrap.tHSD.filter$conf.high / rxfrap.tHSD.filter$estimate.2 * 100
 
 #Select and sort the tukey HSD columns and 
-rxfrap.tHSD.filter.tab <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, 
-                                                               diff.pct, high.pct, low.pct, adj.p.value)
-
-#Name the columns of the data frame
-colnames(rxfrap.tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low 95% CI', 'High 95% CI', 'p-value')
-
-#ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
-tb1 <- kbl(rxfrap.tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb1, width = 10, file = "Table1_fire_type_tHSD_test_results_with_pct.png", zoom = 5.0) 
+# rxfrap.tHSD.filter.tab <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, 
+#                                                                diff.pct, high.pct, low.pct, adj.p.value)
+# 
+# #Name the columns of the data frame
+# colnames(rxfrap.tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low 95% CI', 'High 95% CI', 'p-value')
+# 
+# #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+# tb1 <- kbl(rxfrap.tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb1, width = 10, file = "Table1_fire_type_tHSD_test_results_with_pct.png", zoom = 5.0) 
 
 #Select and sort the tukey HSD columns and 
 rxfrap.tHSD.filter.sup <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, estimate.1, estimate.2, estimate, conf.low, conf.high, 

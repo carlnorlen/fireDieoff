@@ -321,31 +321,6 @@ sev.pixel.summary <- sev.pixel.sample %>%
 #Select the columns I want for the data
 sev.results.data <- sev.pixel.summary %>% dplyr::select(sev.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
 
-
-# #Do some calculations for the results section of the manuscript
-# pixel.summary <- pixel.sample %>% 
-#   filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
-#   group_by(stand.age, fire.type.bin) %>% 
-#   reframe(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
-#           Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
-#           Tree_Cover.n = n(),
-#           Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
-#           Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
-#           Shrub_Cover.n = n(),
-#           AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
-#           AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
-#           AET.n = n()) %>% 
-#   #Add the upper and lower 95% confidence intervals
-#   mutate(tree.ci.95.lower = Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
-#          tree.ci.95.upper = Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
-#          shrub.ci.95.lower = Shrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
-#          shrub.ci.95.upper = Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
-#          et.ci.95.lower = AET.mean - 1.96*(sqrt(AET.sd / AET.n)),
-#          et.ci.95.upper = AET.mean + 1.96*(sqrt(AET.sd / AET.n)))
-# 
-# #Select the columns I want for the data
-# results.data <- pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
-
 #Create Figure 3
 #Create a unique palette
 mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
@@ -481,10 +456,11 @@ p1a <- ggplot() +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = c(0.07, 0.6), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, 'pt'),
+        legend.title = element_text(size = 10), legend.text = element_text(size = 8),
+        strip.text.x = element_text(size = 12)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + facet_grid(. ~ sev.bin) +
@@ -522,10 +498,12 @@ p1b <- ggplot() +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+        legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, 'pt'),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #ylim(20, 45) + #facet_grid(. ~ sev.bin) + #ylim(20, 50) +
@@ -561,10 +539,12 @@ p1c <- ggplot() +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 10), panel.spacing = unit(20, 'pt'),
+        legend.title = element_text(size = 8), legend.text = element_text(size = 6),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + ylim(200, 550) + 
@@ -572,11 +552,11 @@ p1c <- ggplot() +
   ylab(expression('ET (mm yr'^-1*')')) + xlab('Year') 
 p1c
 
-f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
+f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 0.9, 1.1), align = "v", labels = c('a', 'b', 'c'))
 f2
 
 #Save the data
-ggsave(filename = 'Fig6_dieoff_tree_cover_severity_time_series.png', height=16, width= 24, units = 'cm', dpi=900)
+ggsave(filename = 'Fig6_dieoff_tree_cover_severity_time_series.png', height=12, width= 22, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
 p2a <- ggplot() + 
@@ -690,10 +670,10 @@ p7a <- ggbarplot(sev.pixel.filter,
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 11), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
-        strip.text.x = element_text(size = 10, face = 'bold')) +
+        strip.text.x = element_text(size = 12, face = 'bold')) +
   # labs(tag = 'a') +
   geom_pwc(
     tip.length = 0, bracket.nudge.y = -0.82,
@@ -716,7 +696,7 @@ p7b <- ggbarplot(sev.pixel.filter,
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
@@ -742,7 +722,7 @@ p7c <- ggbarplot(sev.pixel.filter,
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
@@ -767,8 +747,8 @@ p7d <- ggbarplot(sev.pixel.filter,
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
-        legend.direction = "vertical", axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        legend.direction = "vertical", axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
@@ -787,9 +767,9 @@ f7 <- (p7a / p7b / p7c / p7d) + plot_annotation(tag_levels = 'a')
 f7
 
 #Save PNG file
-ggsave(filename = 'Fig7_sev_comparison_barchart.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig7_sev_comparison_barchart.png', height=16, width= 20, units = 'cm', dpi=900)
 #Save SVG file
-ggsave(filename = 'Fig7_sev_comparison_barchart.svg', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = 'Fig7_sev_comparison_barchart.svg', height=16, width= 20, units = 'cm', dpi=900)
 
 #Calculate the sample sizes for the treatment and controls
 sev.pixel.filter %>% group_by(treatment) %>%

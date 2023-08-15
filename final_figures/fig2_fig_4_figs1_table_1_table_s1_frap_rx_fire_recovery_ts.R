@@ -526,7 +526,7 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (
 #Create Bar Chart as a Potential Alternative to Table 1
 p7a <- ggbarplot(pixel.filter,
                 y = "ADS", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
-                add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
                 xlab = NULL, #order = c("1999-2002", "2012-2015")
                 ) +
   theme_bw() + guides(color = 'none') +
@@ -540,19 +540,18 @@ p7a <- ggbarplot(pixel.filter,
         panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
         plot.tag = element_text(face = "bold"),
         strip.text.x = element_text(size = 10, face = 'bold')) +
-  labs(tag = 'a') +
+  # labs(tag = 'a') +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.77,
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
   ylab(expression(atop('Die-off Severity','(trees ha'^-1*')')))
-  # scale_x_discrete(labels = c("Response During\n1st Period", "Response During\n2nd Period")) +
-  # geom_text(data = p1_texta, mapping = aes(x = x, y = y, label = label), size = 5) +
-  # geom_text(data = p1_textb, mapping = aes(x = x, y = y, label = label), size = 3) +
-  # geom_text(data = data.frame(label = "Mean \n+/- SE", y = 3.5, x = 1.2, sequence = 'Both Droughts'), mapping = aes(x=x, y=y, label = label), size = 2) +
-  # facet_grid(~ factor(sequence, levels = c('Both Droughts', '2nd Drought Only')),
-  #            labeller = as_labeller(c('Both Droughts' = "Exposed to Both Droughts", '2nd Drought Only' = "Exposed to 2nd Drought Only")))
 p7a
 
 p7b <- ggbarplot(pixel.filter,
                  y = "dTree", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
-                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
                  xlab = NULL, #order = c("1999-2002", "2012-2015")
 ) +
   theme_bw() + guides(color = 'none') +
@@ -567,13 +566,17 @@ p7b <- ggbarplot(pixel.filter,
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
         strip.text.x = element_blank()) +
-  #labs(tag = 'b') +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.59,
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
   ylab(expression(atop('Die-off Severity', '('*Delta*'Tree %)')))
 p7b
 
 p7c <- ggbarplot(pixel.filter,
                  y = "Tree_Cover", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
-                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
                  xlab = NULL, #order = c("1999-2002", "2012-2015")
 ) +
   theme_bw() + guides(color = 'none') +
@@ -588,12 +591,17 @@ p7c <- ggbarplot(pixel.filter,
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
         strip.text.x = element_blank()) +
-  #labs(tag = 'c') +
-  ylab('Tree Cover (%)')
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.48,
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Pre-Drought','Tree Cover (%)')))
+p7c
 
 p7d <- ggbarplot(pixel.filter,
                  y = "ET", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
-                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
                  xlab = NULL, #order = c("1999-2002", "2012-2015")
 ) +
   theme_bw() + guides(color = 'none') +
@@ -608,18 +616,20 @@ p7d <- ggbarplot(pixel.filter,
         plot.tag = element_text(face = "bold"),
         strip.background = element_blank(),
         strip.text.x = element_blank()) +
-  #labs(tag = 'd') +
-  ylab(expression('ET (mm yr'^-1*')')) + xlab('Treatment') +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.34,
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Pre-Drought','ET (mm yr'^-1*')'))) + xlab('Treatment') +
 scale_x_discrete(labels = c("Unburned", "Burned")) #+
 
 p7d
 
-# f7 <- ggarrange(p7a, p7b, p7c, p7d, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(1, 0.9, 0.9, 1), align = "hv", labels = c('a', 'b', 'c', 'd'))
-# f7
 f7 <- (p7a / p7b / p7c / p7d) + plot_annotation(tag_levels = 'a')
 f7
-#Save the figure
-ggsave(filename = 'Fig4_frap_rx_comparison_barchart.png', height=18, width= 12, units = 'cm', dpi=900)
+
+ggsave(filename = 'Fig5_frap_rx_comparison_barchart.png', height=18, width= 12, units = 'cm', dpi=900)
 
 #Calculate the sample sizes for the treatment and controls
 pixel.filter %>% group_by(treatment, fire.type.bin) %>%

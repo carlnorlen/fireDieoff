@@ -6,8 +6,8 @@
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
-p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'raster', 
-       'rgdal', 'sp', 'sf', 'RStoolbox', 'ncdf4', 'gtools', 'tigris', 'patchwork', 
+p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 
+       'sf', 'RStoolbox', 'gtools', 'tigris', 'patchwork',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'scales')
 # install.packages(p,repo='https://cran.r-project.org/')
@@ -576,7 +576,7 @@ f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, height
 f2
 
 #Save the data
-ggsave(filename = 'Fig5_dieoff_tree_cover_severity_time_series.png', height=16, width= 24, units = 'cm', dpi=900)
+ggsave(filename = 'Fig6_dieoff_tree_cover_severity_time_series.png', height=16, width= 24, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
 p2a <- ggplot() + 
@@ -675,6 +675,121 @@ sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 
           PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
           sev.bin = sev.bin[vi.year == 2010],
           treatment = treatment[vi.year == 2010])
+
+#Create Bar Chart as a Potential Alternative to Table 1
+p7a <- ggbarplot(sev.pixel.filter,
+                 y = "ADS", position = position_dodge(), fill = "sev.bin", x = 'treatment', #x = 'sev.bin',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, #palette = c("gray25", "gray75"),
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.text.x = element_text(size = 10, face = 'bold')) +
+  # labs(tag = 'a') +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.82,
+    method = "tukey_hsd", label = "p.format", #group.by = 'treatment',
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Die-off Severity','(trees ha'^-1*')')))
+p7a
+
+p7b <- ggbarplot(sev.pixel.filter,
+                 y = "dTree", position = position_dodge(), fill = "sev.bin", x = 'treatment',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.64, group.by = "sev.bin",
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Die-off Severity', '('*Delta*'Tree %)')))
+p7b
+
+p7c <- ggbarplot(sev.pixel.filter,
+                 y = "Tree_Cover", position = position_dodge(), fill = "sev.bin", x = 'treatment',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.57, #p.adjust.method = "bonferroni",
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Pre-Drought','Tree Cover (%)')))
+p7c
+
+p7d <- ggbarplot(sev.pixel.filter,
+                 y = "ET", position = position_dodge(), fill = "sev.bin", x = 'treatment',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.45,
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Pre-Drought','ET (mm yr'^-1*')'))) + xlab('Treatment') +
+  scale_x_discrete(labels = c("Unburned", "Burned")) #+
+
+p7d
+
+f7 <- (p7a / p7b / p7c / p7d) + plot_annotation(tag_levels = 'a')
+f7
+
+#Save PNG file
+ggsave(filename = 'Fig7_sev_comparison_barchart.png', height=18, width= 20, units = 'cm', dpi=900)
+#Save SVG file
+ggsave(filename = 'Fig7_sev_comparison_barchart.svg', height=18, width= 20, units = 'cm', dpi=900)
 
 #Calculate the sample sizes for the treatment and controls
 sev.pixel.filter %>% group_by(treatment) %>%

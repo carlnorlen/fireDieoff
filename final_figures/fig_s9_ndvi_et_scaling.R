@@ -1,6 +1,6 @@
 #Created by: Carl A. Norlen
 #Date Created: August, 9, 2023
-#Date Updated: August 14, 2023
+#Date Updated: August 15, 2023
 #Purpose: Create figures to show ET-NDVI scaling relationships and correction factors
 
     ######## PREP environment ######
@@ -48,16 +48,17 @@ GEE_NDVI_mean <- GEE_NDVI %>% group_by(site_ID,date) %>% # mean and std
 
 # readxl
     # 1.) Ingest flux data
-    UCI_tower_good <- read_excel(paste0(dir_in,'\\Monthly_towerdata3.xlsx'),sheet='All sites good4') %>% # new gC/m2/day
+UCI_tower_good <- read_excel(paste0(dir_in,'\\Monthly_towerdata3.xlsx'),sheet='All sites good4') %>% # new gC/m2/day
       # dplyr::select(Site,Efill.1,`Mean date`) %>%
       mutate(site_ID = as.factor(Site), date=floor_date(as.Date(`Mean date`),unit='month'), Days_Month = days_in_month(date),
-      ET_mm_d=Efill.1) %>%
+      ET_mm_d=Efill.1) #%>%
       #dplyr::select(site_ID,ET_mm_d,date,Days_Month) %>%
-      mutate(ET_mm_d = case_when(ET_mm_d<=0 ~ 0,
-                                     ET_mm_d>0 ~ ET_mm_d)) #%>% 
+      # mutate(ET_mm_d = case_when(ET_mm_d<=0 ~ 0,
+      #                                ET_mm_d>0 ~ ET_mm_d)) #%>% 
       #filter(!site_ID%in%c('US-SCd'))
 
 #Fix the column name
+UCI_tower_good$ET.GEE.predict <- UCI_tower_good$'Predicted E from predicted GEE'
 UCI_tower_good$ET.predict <- UCI_tower_good$'Predicted ET'
 UCI_tower_good$soil.bucket.2dsd <- UCI_tower_good$'Bucket 2 DSD'
 UCI_tower_good$et.mes.div.et.pred <- UCI_tower_good$'MeasureE/Predicted E'
@@ -88,11 +89,11 @@ GEE_ET_tower_all
     #   facet_wrap(~site_ID,scales='free') +
     #   labs(color='GPP correction',x='month',y='correction scalar')
 
-GEE_ET_tower_all %>% select(site_ID) %>% unique()
+# GEE_ET_tower_all %>% select(site_ID) %>% unique()
 
 # Create an exponential model.
 # Estimate the rest parameters using a linear model
-model.data <- GEE_ET_tower_all %>% filter('Bucket 2 DSD' >= 10 & site_ID != 'US-SCg' & 
+model.data <- GEE_ET_tower_all %>% filter('Bucket 2 DSD' > 10 & site_ID != 'US-SCg' & 
                                             case_when(site_ID %in% c('US-CZ1', 'US-SCs', 'US-SCw', 'US-SCd', 'US-SCc') ~ 
                                                         month %in% c('03', '04', '05'),
                                                         site_ID %in% c('US-CZ2', 'US-CZ3', 'US-CZ4', 'US-SCf') ~ month %in% c('06', '07', '08')))
@@ -106,7 +107,7 @@ start <- list(alpha = alpha.0, beta = beta.0)
 
 #Create the exponential fit between ET and NDVI
 nlsFit <-
-  nls(formula = ET_mm_d~alpha*exp(NDVI_mean*beta),
+  nls(formula = ET_mm_d~alpha*NDVI_mean^(beta),
       start = start,
       data = model.data)
 nlsFit
@@ -117,15 +118,17 @@ nlsFit
 # plot scaling factors
 #Create scaling plots
 #Maximum ET from NDVI Equation
-p1a <- ggplot(data = GEE_ET_tower_all %>% filter('Bucket 2 DSD' >= 10 & site_ID != 'US-SCg' & 
+p1a <- ggplot(data = GEE_ET_tower_all %>% filter('Bucket 2 DSD' > 10 & site_ID != 'US-SCg' & 
                                                  case_when(site_ID %in% c('US-CZ1', 'US-SCs', 'US-SCw', 'US-SCd', 'US-SCc') ~ 
                                                            month %in% c('03', '04', '05'), 
                                                            site_ID %in% c('US-CZ2', 'US-CZ3', 'US-CZ4', 'US-SCf') ~ month %in% c('06', '07', '08'))), 
        mapping = aes(x = NDVI_mean, y = ET_mm_d)) + 
   geom_smooth(linetype = 'dashed',
-              method = nls, method.args = list(formula = y ~ alpha*exp(x*beta), start = start), se=FALSE, color = 'black', linewidth = 2) +
-  stat_cor(mapping = aes(label = paste(..rr.label.., expression('ET = 0.6242 * e'^'(2.2238 * NDVI)'), sep = "~`,`~")),
+              method = nls, method.args = list(formula = y ~ alpha*x ^(beta), start = start), se=FALSE, color = 'black', linewidth = 2) +
+  stat_cor(label.x.npc = 0.1, label.y.npc = 0.95, mapping = aes(label = after_stat(rr.label)), #, expression('ET = 4.1760 * NDVI'^'0.9925'), sep = "~`,`~")),
            size = 3.5, color = 'black', r.accuracy = 0.001, p.accuracy = 0.001) +
+  annotate(geom = "text", x = 0.24, y = 5.5, size = 3.5, label = expression(italic(y)*' = 4.1760 * '*italic(x)^'0.9925'), parse = TRUE) +
+  # stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
        geom_point(alpha = 0.5) +
        theme_bw() +
        ylab(expression('Observed ET (mm day'^-1*')')) +
@@ -134,6 +137,7 @@ p1a
 # glimpse(GEE_ET_tower_all)
 # summary(GEE_ET_tower_all)
 #Measured / Observed ET by Soil moisture correction
+#Am I using the correct ET predict? This is the final prediction
 p1b <- ggplot(data = GEE_ET_tower_all %>% filter(ET.predict > 1 & site_ID != 'US-SCg'), #%>% filter('Bucket 2 DSD' >= 10 & 
                                                    # case_when(site_ID %in% c('US-CZ1', 'US-SCs', 'US-SCw', 'US-SCd', 'US-SCc') ~ 
                                                    #             month %in% c('03', '04', '05'), 
@@ -146,7 +150,7 @@ p1b <- ggplot(data = GEE_ET_tower_all %>% filter(ET.predict > 1 & site_ID != 'US
   stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
   geom_point(alpha = 0.5) +
   theme_bw() +
-  ylab(expression('Measured / Observed ET')) +
+  ylab(expression('Measured ET / Observed ET')) +
   xlab('Soil Moisture (mm)')
 p1b
 
@@ -162,7 +166,7 @@ p1c <- ggplot(data = GEE_ET_tower_all  %>% filter(ET.predict > 1 & site_ID != 'U
   stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
   geom_point(alpha = 0.5) +
   theme_bw() +
-  ylab(expression('Measured / Observed ET')) +
+  ylab(expression('Measured ET / Observed ET')) +
   xlab(expression('Solar Radiation (W m'^-2*')'))
 p1c
 
@@ -178,7 +182,7 @@ p1d <- ggplot(data = GEE_ET_tower_all  %>% filter(ET.predict > 1 & site_ID != 'U
   stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
   geom_point(alpha = 0.5) +
   theme_bw() +
-  ylab(expression('Measured / Observed ET')) +
+  ylab(expression('Measured ET / Observed ET')) +
   xlab('Temperature (C)')
 p1d
 

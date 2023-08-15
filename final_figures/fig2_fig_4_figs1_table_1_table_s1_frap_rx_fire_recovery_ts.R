@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: August 9, 2023
+#Date Updated: August 14, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -501,8 +501,8 @@ p1c <- ggplot() +
   ylab(expression('ET (mm yr'^-1*')')) + xlab('Year')
 p1c
 
-f1 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
-f1
+f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
+f2
 
 #Save the figure
 ggsave(filename = 'Fig4_frap_rx_dieoff_tree_cover_stand_age_time_series.png', height=18, width= 18, units = 'cm', dpi=900)
@@ -523,30 +523,103 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (
           dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)])
   )
 
-#Create potentail figure 5
-# p5a <- ggbarplot(pixel.filter,
-#                 x = "treatment", y = "dTree", position = position_dodge(), color = "fire.type.bin", fill = 'gray',
-#                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, 
-#                 ylab = expression('Tree Cover Deficit (%)'), 
-#                 xlab = NULL, #order = c("1999-2002", "2012-2015")
-#                 ) + 
-#   theme_bw() + guides(color = 'none') +
-#   scale_color_manual(values = c("black", "black"),
-#                      aesthetics = "color") + labs(tag = 'b)') +
-#   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-#         legend.position = c(0.76, 0.1), legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
-#         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-#         axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
-#         panel.spacing = unit(20, "pt"), plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96) 
-#         plot.tag = element_text(face = "bold"),
-#         strip.text.x = element_text(size = 10, face = 'bold')) +
-#   # scale_x_discrete(labels = c("Response During\n1st Period", "Response During\n2nd Period")) +
-#   geom_text(data = p1_texta, mapping = aes(x = x, y = y, label = label), size = 5) +
-#   geom_text(data = p1_textb, mapping = aes(x = x, y = y, label = label), size = 3) +
-#   geom_text(data = data.frame(label = "Mean \n+/- SE", y = 3.5, x = 1.2, sequence = 'Both Droughts'), mapping = aes(x=x, y=y, label = label), size = 2) + 
-#   facet_grid(~ factor(sequence, levels = c('Both Droughts', '2nd Drought Only')), 
-#              labeller = as_labeller(c('Both Droughts' = "Exposed to Both Droughts", '2nd Drought Only' = "Exposed to 2nd Drought Only"))) 
-# p5a
+#Create Bar Chart as a Potential Alternative to Table 1
+p7a <- ggbarplot(pixel.filter,
+                y = "ADS", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
+                add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                xlab = NULL, #order = c("1999-2002", "2012-2015")
+                ) +
+  theme_bw() + guides(color = 'none') +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.text.x = element_text(size = 10, face = 'bold')) +
+  labs(tag = 'a') +
+  ylab(expression(atop('Die-off Severity','(trees ha'^-1*')')))
+  # scale_x_discrete(labels = c("Response During\n1st Period", "Response During\n2nd Period")) +
+  # geom_text(data = p1_texta, mapping = aes(x = x, y = y, label = label), size = 5) +
+  # geom_text(data = p1_textb, mapping = aes(x = x, y = y, label = label), size = 3) +
+  # geom_text(data = data.frame(label = "Mean \n+/- SE", y = 3.5, x = 1.2, sequence = 'Both Droughts'), mapping = aes(x=x, y=y, label = label), size = 2) +
+  # facet_grid(~ factor(sequence, levels = c('Both Droughts', '2nd Drought Only')),
+  #            labeller = as_labeller(c('Both Droughts' = "Exposed to Both Droughts", '2nd Drought Only' = "Exposed to 2nd Drought Only")))
+p7a
+
+p7b <- ggbarplot(pixel.filter,
+                 y = "dTree", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
+                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  #labs(tag = 'b') +
+  ylab(expression(atop('Die-off Severity', '('*Delta*'Tree %)')))
+p7b
+
+p7c <- ggbarplot(pixel.filter,
+                 y = "Tree_Cover", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
+                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  #labs(tag = 'c') +
+  ylab('Tree Cover (%)')
+
+p7d <- ggbarplot(pixel.filter,
+                 y = "ET", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
+                 add = "mean_se" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
+        axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  #labs(tag = 'd') +
+  ylab(expression('ET (mm yr'^-1*')')) + xlab('Treatment') +
+scale_x_discrete(labels = c("Unburned", "Burned")) #+
+
+p7d
+
+# f7 <- ggarrange(p7a, p7b, p7c, p7d, ncol = 1, nrow = 4, common.legend = FALSE, heights = c(1, 0.9, 0.9, 1), align = "hv", labels = c('a', 'b', 'c', 'd'))
+# f7
+f7 <- (p7a / p7b / p7c / p7d) + plot_annotation(tag_levels = 'a')
+f7
+#Save the figure
+ggsave(filename = 'Fig4_frap_rx_comparison_barchart.png', height=18, width= 12, units = 'cm', dpi=900)
 
 #Calculate the sample sizes for the treatment and controls
 pixel.filter %>% group_by(treatment, fire.type.bin) %>%

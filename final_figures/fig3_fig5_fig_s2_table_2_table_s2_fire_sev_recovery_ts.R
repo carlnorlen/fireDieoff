@@ -463,7 +463,7 @@ p1a <- ggplot() +
         strip.text.x = element_text(size = 12)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + facet_grid(. ~ sev.bin) +
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
   ylab(expression(atop('Die-off Severity', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1a
 
@@ -593,7 +593,8 @@ p2a <- ggplot() +
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + 
+  facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #
   ylab(expression('Precip (mm yr'^-1*')')) + xlab('Year') 
 p2a
@@ -631,7 +632,8 @@ p2b <- ggplot() +
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + facet_grid(. ~ sev.bin) +
+            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) + 
+  facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ sev.bin) +
   ylab(expression('Pr-ET (mm yr'^-1*')')) + xlab('Year')
 p2b
@@ -666,7 +668,7 @@ p7a <- ggbarplot(sev.pixel.filter,
   scale_color_manual(values = c("black", "black"),
                      aesthetics = "color") + #labs(tag = 'b)') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) + 
   theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
         legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
         legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
@@ -824,11 +826,11 @@ tHSD.filter$variable = c('Die-off (trees ha<sup>-1</sup>)','Die-off (trees ha<su
                          'Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)',
                          'Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)')
 
-tHSD.filter$fire.severity = c('Unchanged', 'Low', 'Moderate', 'High',
-                              'Unchanged', 'Low', 'Moderate', 'High',
-                              'Unchanged', 'Low', 'Moderate', 'High',
-                              'Unchanged', 'Low', 'Moderate', 'High',
-                              'Unchanged', 'Low', 'Moderate', 'High')
+tHSD.filter$fire.severity = c('Lowest', 'Low', 'Moderate', 'High',
+                              'Lowest', 'Low', 'Moderate', 'High',
+                              'Lowest', 'Low', 'Moderate', 'High',
+                              'Lowest', 'Low', 'Moderate', 'High',
+                              'Lowest', 'Low', 'Moderate', 'High')
 
 #Add mean values for Estimate 1
 tHSD.filter$estimate.1 <- c(

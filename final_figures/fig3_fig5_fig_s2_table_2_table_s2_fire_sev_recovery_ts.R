@@ -1,13 +1,13 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: August 9, 2023
+#Date Updated: August 23, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 
-       'sf', 'RStoolbox', 'gtools', 'tigris', 'patchwork',
+       'sf','gtools', 'tigris', 'patchwork',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'scales')
 # install.packages(p,repo='https://cran.r-project.org/')
@@ -346,14 +346,14 @@ p2a <- ggplot() +
                               ymax=Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
                               x = stand.age, fill = sev.bin), alpha = 0.3) +
   theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), legend.position = c(0.06, 0.4), legend.background = element_rect(colour = NA, fill = NA),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+        axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+        legend.title = element_text(size = 12), legend.text = element_text(size = 10)) +
+  scale_color_manual(values = mypalette, name = 'Fire Severity', labels = c('Lowest', 'Low', 'Mid', 'High')) +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  ylab(expression('Tree Cover Change (%)')) + xlab('Years Since Fire')
+  ylab(expression(atop('Tree Cover', 'Change (%)'))) + xlab('Years Since Fire')
 p2a
 
 #Pr-ET change with wildfire (FRAP)
@@ -377,14 +377,14 @@ p2b <- ggplot() +
                               ymax=Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
                               x = stand.age, fill = sev.bin), alpha = 0.3) +
   theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  ylab(expression('Shrub Cover Change (%)')) + xlab('Years Since Fire')
+  ylab(expression(atop('Shrub Cover', 'Change (%)'))) + xlab('Years Since Fire')
 p2b
 
 #AET change with wildfire (FRAP)
@@ -408,18 +408,18 @@ p2c <- ggplot() +
                               ymax=AET.mean + 1.96*(sqrt(AET.sd / AET.n)),
                               x = stand.age, fill = sev.bin), alpha = 0.3) +
   theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12), legend.position = c(0.8, 0.25), legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 10),
+        legend.title = element_text(size = 12), legend.text = element_text(size = 10)) +
   #Add the Color and fill scales
-  scale_color_manual(values = mypalette, name = 'Fire Severity') +
+  scale_color_manual(values = mypalette, name = 'Fire Severity', labels = c('Lowest', 'Low', 'Mid', 'High')) +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  ylab(expression('ET Change (mm yr'^-1*')')) + xlab('Years Since Fire')
+  guides(color = guide_legend(nrow = 2, ncol = 2), linetype = 'none', fill = 'none') +
+  ylab(expression(atop('ET Change', '(mm yr'^-1*')'))) + xlab('Years Since Fire')
 p2c
 
-f2 <- ggarrange(p2a,p2b,p2c, nrow = 3, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v")
+f2 <- ggarrange(p2a, p2b, p2c, nrow = 3, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))
 f2
 
 #Save the data

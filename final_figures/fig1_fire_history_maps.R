@@ -79,8 +79,8 @@ p1a <- ggplot() +
   theme(
     legend.justification = c(1, 0),
     legend.position = c(0.4, 0.1),
-    legend.text = element_text(size = 8),
-    legend.title = element_text(size = 10), plot.margin = unit(c(0,0,0,0), "pt"),
+    legend.text = element_text(size = 10),
+    legend.title = element_text(size = 12), plot.margin = unit(c(0,0,0,0), "pt"),
     axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
     axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
     legend.direction = "vertical")
@@ -104,7 +104,7 @@ mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000,
   theme_bw() + 
   #Figure
   theme(legend.position = c(0.25, 0.8), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
-        legend.title = element_text(size = 10), legend.text = element_text(size = 8), 
+        legend.title = element_text(size = 12), legend.text = element_text(size = 10), 
         axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.text.x = element_blank(), axis.title.x = element_blank()) +
   scale_colour_manual(name="Fire Type",values=cols, aesthetics = 'color') +
@@ -126,8 +126,8 @@ p1c <- ggplot() +
   theme_bw() + 
   #Figure
   theme(legend.position = c(0.25, 0.7), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
-        legend.title = element_text(size = 10), 
-        legend.text = element_text(size = 8),
+        legend.title = element_text(size = 12), 
+        legend.text = element_text(size = 10),
         axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
         axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12)) +
   scale_color_manual(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High'), values = mypalette, aesthetics = 'color') +

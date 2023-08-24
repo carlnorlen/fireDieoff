@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: August 14, 2023
+#Date Updated: August 23, 2023
 #Purpose: Create figures for EEB GSS presentation
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -291,16 +291,16 @@ p2a <- ggplot() +
                               ymax=Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
                               x = stand.age, fill = fire.type.bin), alpha = 0.3) +
   theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_blank(), legend.position = c(0.08, 0.4), legend.background = element_rect(colour = NA, fill = NA),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+        axis.title.x = element_blank(), legend.position = c(0.065, 0.4), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
+        legend.title = element_text(size = 12), legend.text = element_text(size = 10)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
   # scale_fill_manual(values = fills) + 
   # guides(fill = "none") +
-  ylab(expression('Tree Change (%)')) + xlab('Years Since Fire')
+  ylab(expression(atop('Tree Cover', 'Change (%)'))) + xlab('Years Since Fire')
 p2a
 
 #Pr-ET change with wildfire (FRAP)
@@ -323,14 +323,14 @@ p2b <- ggplot() +
                               ymax=Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
                               x = stand.age, fill = fire.type.bin), alpha = 0.3) +
   theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-  ylab(expression('Shrub Change (%)')) + xlab('Years Since Fire')
+  ylab(expression(atop('Shrub Cover', 'Change (%)'))) + xlab('Years Since Fire')
 p2b
 
 #AET change with wildfire (FRAP)
@@ -354,15 +354,15 @@ geom_line(data = pixel.sample %>%
                               ymax=AET.mean + 1.96*(sqrt(AET.sd / AET.n)),
                               x = stand.age, fill = fire.type.bin), alpha = 0.3) +
 theme_bw() +
-  theme(axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10),
-        axis.title.x = element_text(size = 10), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 8),
+  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+        axis.title.x = element_text(size = 12), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
+        legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 10),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
   #scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  ylab(expression('ET Change (mm yr'^-1*')')) + xlab('Years Since Fire')
+  ylab(expression(atop('ET Change', '(mm yr'^-1*')'))) + xlab('Years Since Fire')
 p2c
 
 f1 <- ggarrange(p2a,p2b,p2c, nrow = 3, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c'))

@@ -947,7 +947,7 @@ theme_bw() +
   scale_alpha_discrete(range = c(0.3, 0.3)) +
   # guides(color = guide_legend(), linetype = 'none', fill = guide_legend(), alpha = 'none') +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
-  facet_grid(. ~ sev.bin) +
+  facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
   ylab(expression('Tree Cover (%)')) + xlab('Years Since Fire')
 p3a
 
@@ -981,7 +981,7 @@ p3b <- ggplot() +
   scale_alpha_discrete(range = c(0.3, 0.3)) +
   # guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   guides(color = 'none', linetype = 'none', fill = 'none', alpha = 'none') +
-  facet_grid(. ~ sev.bin) +
+  facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
   # guides(fill = "none") +
   ylab(expression('Shrub Cover (%)')) + xlab('Years Since Fire')
 p3b  
@@ -1044,7 +1044,7 @@ p4a <- ggplot() +
   scale_linetype(name = 'Treatment') +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
-  facet_grid(. ~ sev.bin) +
+  facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
   ylab(expression('# Pixels')) 
 p4a
 

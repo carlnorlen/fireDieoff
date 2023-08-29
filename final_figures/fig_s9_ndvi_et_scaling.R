@@ -80,7 +80,21 @@ GEE_ET_tower_all <- left_join(GEE_NDVI_mean,UCI_tower_good,by=c("date", "site_ID
 # GEE_ET_tower_all %>% summary()
 GEE_ET_tower_all$year <- format(GEE_ET_tower_all$date, '%Y')
 GEE_ET_tower_all$month <- format(GEE_ET_tower_all$date, '%m')
-GEE_ET_tower_all
+GEE_ET_tower_all %>% summary()
+
+#Calculate the predicted NDVI
+GEE_ET_tower_all$ET.NDVI.predict  <- 4.1760 * (GEE_ET_tower_all$NDVI_mean)^0.9925
+GEE_ET_tower_all$et.mes.div.et.pred.ndvi <- GEE_ET_tower_all$ET_mm_d /  GEE_ET_tower_all$ET.NDVI.predict
+
+#Create ET scalars
+GEE_ET_tower_all$ET.soil.moisture.scalar <- 0.69 + (0.00035 * GEE_ET_tower_all$soil.bucket.2dsd)
+GEE_ET_tower_all$ET.solar.rad.scalar <- 0.02 + (0.0029 * GEE_ET_tower_all$srad)
+GEE_ET_tower_all$ET.temp.scalar <- 0.74 + (0.0053 * GEE_ET_tower_all$tmean)
+
+#Do final ET prediction
+GEE_ET_tower_all$ET.predict.scalars <- GEE_ET_tower_all$ET.NDVI.predict * GEE_ET_tower_all$ET.soil.moisture.scalar * GEE_ET_tower_all$ET.solar.rad.scalar * GEE_ET_tower_all$ET.temp.scalar
+GEE_ET_tower_all$ET.predict.final <- 0.71 + 1.2 * GEE_ET_tower_all$ET.predict.scalars
+# summary(GEE_ET_tower_all)
   # plot scaling factors
     # figSX_scalingfactors <- ggplot(GEE_GPP) + geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Tcorr,color='T scalar'),alpha=0.5) + 
     #   geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Kcorr,color='K scalar'),alpha=0.5) + 
@@ -88,7 +102,7 @@ GEE_ET_tower_all
     #   geom_hline(yintercept=1,color='black') +
     #   facet_wrap(~site_ID,scales='free') +
     #   labs(color='GPP correction',x='month',y='correction scalar')
-
+# summary(GEE_ET_tower_all)
 # GEE_ET_tower_all %>% select(site_ID) %>% unique()
 
 # Create an exponential model.
@@ -127,13 +141,14 @@ p1a <- ggplot(data = GEE_ET_tower_all %>% filter('Bucket 2 DSD' > 10 & site_ID !
               method = nls, method.args = list(formula = y ~ alpha*x ^(beta), start = start), se=FALSE, color = 'black', linewidth = 2) +
   stat_cor(label.x.npc = 0.1, label.y.npc = 0.95, mapping = aes(label = after_stat(rr.label)), #, expression('ET = 4.1760 * NDVI'^'0.9925'), sep = "~`,`~")),
            size = 3.5, color = 'black', r.accuracy = 0.001, p.accuracy = 0.001) +
-  annotate(geom = "text", x = 0.24, y = 5.5, size = 3.5, label = expression(italic(y)*' = 4.1760 * '*italic(x)^'0.9925'), parse = TRUE) +
+  annotate(geom = "text", x = 0.31, y = 5.5, size = 3.5, label = expression(italic(y)*' = 4.1760 * '*italic(x)^'0.9925'), parse = TRUE) +
   # stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
        geom_point(alpha = 0.5) +
        theme_bw() +
        ylab(expression('Observed ET (mm day'^-1*')')) +
        xlab('NDVI')
 p1a
+
 # glimpse(GEE_ET_tower_all)
 # summary(GEE_ET_tower_all)
 #Measured / Observed ET by Soil moisture correction
@@ -142,7 +157,7 @@ p1b <- ggplot(data = GEE_ET_tower_all %>% filter(ET.predict > 1 & site_ID != 'US
                                                    # case_when(site_ID %in% c('US-CZ1', 'US-SCs', 'US-SCw', 'US-SCd', 'US-SCc') ~ 
                                                    #             month %in% c('03', '04', '05'), 
                                                    #           site_ID %in% c('US-CZ2', 'US-CZ3', 'US-CZ4', 'US-SCf') ~ month %in% c('06', '07', '08'))), 
-              mapping = aes(x = soil.bucket.2dsd, y = et.mes.div.et.pred)) + 
+              mapping = aes(x = soil.bucket.2dsd, y = et.mes.div.et.pred.ndvi)) + 
   geom_smooth(linetype = 'dashed',
               method = 'lm', formula = y ~ x, se=FALSE, color = 'black', linewidth = 2) +
   stat_cor(label.x.npc = 0.1, label.y.npc = 0.95, mapping = aes(label = paste(..rr.label..)),
@@ -150,7 +165,7 @@ p1b <- ggplot(data = GEE_ET_tower_all %>% filter(ET.predict > 1 & site_ID != 'US
   stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
   geom_point(alpha = 0.5) +
   theme_bw() +
-  ylab(expression('Measured ET / Observed ET')) +
+  ylab(expression('Predicted ET / Observed ET')) +
   xlab('Soil Moisture (mm)')
 p1b
 
@@ -158,7 +173,7 @@ p1c <- ggplot(data = GEE_ET_tower_all  %>% filter(ET.predict > 1 & site_ID != 'U
               # case_when(site_ID %in% c('US-CZ1', 'US-SCs', 'US-SCw', 'US-SCd', 'US-SCc') ~ 
               #             month %in% c('03', '04', '05'), 
               #           site_ID %in% c('US-CZ2', 'US-CZ3', 'US-CZ4', 'US-SCf') ~ month %in% c('06', '07', '08'))), 
-              mapping = aes(x = srad, y = et.mes.div.et.pred)) + 
+              mapping = aes(x = srad, y = et.mes.div.et.pred.ndvi)) + 
   geom_smooth(linetype = 'dashed',
               method = 'lm', formula = y ~ x, se=FALSE, color = 'black', linewidth = 2) +
   stat_cor(label.x.npc = 0.1, label.y.npc = 0.95,mapping = aes(label = paste(..rr.label..)),
@@ -166,7 +181,7 @@ p1c <- ggplot(data = GEE_ET_tower_all  %>% filter(ET.predict > 1 & site_ID != 'U
   stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
   geom_point(alpha = 0.5) +
   theme_bw() +
-  ylab(expression('Measured ET / Observed ET')) +
+  ylab(expression('Predicted ET / Observed ET')) +
   xlab(expression('Solar Radiation (W m'^-2*')'))
 p1c
 
@@ -174,7 +189,7 @@ p1d <- ggplot(data = GEE_ET_tower_all  %>% filter(ET.predict > 1 & site_ID != 'U
               # case_when(site_ID %in% c('US-CZ1', 'US-SCs', 'US-SCw', 'US-SCd', 'US-SCc') ~ 
               #             month %in% c('03', '04', '05'), 
               #           site_ID %in% c('US-CZ2', 'US-CZ3', 'US-CZ4', 'US-SCf') ~ month %in% c('06', '07', '08'))), 
-              mapping = aes(x = tmean, y = et.mes.div.et.pred)) + 
+              mapping = aes(x = tmean, y = et.mes.div.et.pred.ndvi)) + 
   geom_smooth(linetype = 'dashed',
               method = 'lm', formula = y ~ x, se=FALSE, color = 'black', linewidth = 2) +
   stat_cor(label.x.npc = 0.1, label.y.npc = 0.95,mapping = aes(label = paste(..rr.label..)),
@@ -182,13 +197,30 @@ p1d <- ggplot(data = GEE_ET_tower_all  %>% filter(ET.predict > 1 & site_ID != 'U
   stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
   geom_point(alpha = 0.5) +
   theme_bw() +
-  ylab(expression('Measured ET / Observed ET')) +
+  ylab(expression('Predicted ET / Observed ET')) +
   xlab('Temperature (C)')
 p1d
 
-f1 <- ggarrange(p1a, p1b, p1c, p1d, nrow=2, ncol = 2, common.legend = FALSE, align = "hv", labels = c('a', 'b', 'c', 'd'))
+p1e <- ggplot(data = GEE_ET_tower_all  %>% filter(!is.na(ET_mm_d) & site_ID != 'US-SCg'), #%>% filter('Bucket 2 DSD' >= 10 & 
+              # case_when(site_ID %in% c('US-CZ1', 'US-SCs', 'US-SCw', 'US-SCd', 'US-SCc') ~ 
+              #             month %in% c('03', '04', '05'), 
+              #           site_ID %in% c('US-CZ2', 'US-CZ3', 'US-CZ4', 'US-SCf') ~ month %in% c('06', '07', '08'))), 
+              mapping = aes(x = ET.predict.scalars, y = ET.NDVI.predict)) + 
+  geom_smooth(linetype = 'dashed',
+              method = 'lm', formula = y ~ x, se=FALSE, color = 'black', linewidth = 2) +
+  stat_cor(label.x.npc = 0.1, label.y.npc = 0.95,mapping = aes(label = paste(..rr.label..)),
+           size = 3.5, color = 'black', r.accuracy = 0.001, p.accuracy = 0.001) +
+  stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
+  geom_point(alpha = 0.5) +
+  theme_bw() +
+  ylab(expression('Observed ET (mm day'^-1*')')) +
+  xlab(expression('Predicted ET with Scalars (mm day'^-1*')'))
+p1e
 
-ggsave(filename = 'figS2_ET_prediction_equations.png', height=24, width= 24, units = 'cm', dpi=900)
+
+f1 <- ggarrange(p1a, p1b, p1c, p1d, p1e, nrow=2, ncol = 3, common.legend = FALSE, align = "hv", labels = c('a', 'b', 'c', 'd', 'e'))
+
+ggsave(filename = 'figS2_ET_prediction_equations.png', height=16, width= 24, units = 'cm', dpi=900)
 
 # figS1_scalingfactors <- ggplot(data = GEE_ET_tower_all) + geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Tcorr,color='T scalar'),alpha=0.5) + 
 #   geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Kcorr,color='K scalar'),alpha=0.5) + 
@@ -212,27 +244,49 @@ ggsave(filename = 'figS2_ET_prediction_equations.png', height=24, width= 24, uni
 # ANNUAL
 GEE_ET_tower_annual <- GEE_ET_tower_all %>% group_by(site_ID,year) %>%
       summarize(ET_UCIsites_annual = sum(ET_mm_d*Days_Month,na.rm=T),
-                ET.predict.annual = sum(ET.predict*Days_Month,na.rm=T),
+                ET.predict.annual = sum(ET.predict.final*Days_Month,na.rm=T),
                 ET_UCIsites_n = n())
     GEE_ET_tower_annual
   
 ETmod <- lm(ET_UCIsites_annual ~ ET.predict.annual, GEE_ET_tower_annual)
 summary(ETmod)
 ETmodRMSE <- sqrt(mean(ETmod$residuals^2))
+ETmodRMSE
 ETmodR2 <- summary(ETmod)$r.squared
- 
-#This isn't quite working yet   
+ETmodR2 
+
+#Add Text labels
+#Rsq for the model
+rsq.et.mod <- data.frame(
+  label = c(as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 =round(ETmodR2, digits =2)))))
+  ),
+  x = 100,
+  y = 1200
+)
+#RMSE for the model
+rmse.et.mod <- data.frame(
+  label = c(as.character(as.expression(substitute(italic(RMSE)~"="~r2, list(r2 =round(ETmodRMSE,digits=2)))))
+  ),
+  x = 100,
+  y = 1100
+)
+
+
+#Overall Model predictions  
 figS2_scaled_observedET <- ggplot(data = GEE_ET_tower_annual %>% filter(year >= 2006 & year <= 2018 & site_ID != 'US-SCg'), 
                            aes(x = ET_UCIsites_annual, y = ET.predict.annual)) +
                            geom_point(alpha = 0.5, size = 2, mapping = aes(color = site_ID)) +
                            geom_abline(slope = 1, linewidth = 2, color = 'blue') +
-                           guides(color=guide_legend(title="Site ID")) +                        
+                           guides(color=guide_legend(title="Site ID")) +    
+                           geom_text(data = rsq.et.mod, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
+                           geom_text(data = rmse.et.mod, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
                            theme_bw() +                         
                            theme(legend.position = c(0.8, 0.3),
-                                 axis.text.x = element_text(size = 8), axis.title.x = element_text(size = 10),
-                                 axis.text.y = element_text(size = 8), axis.title.y = element_text(size = 10)) +  
+                                 axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+                                 axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12)) +  
                            geom_smooth(method = 'lm', formula = y ~ x, color = 'black', linewidth = 2, linetype = 'dashed') + 
-                           stat_cor(mapping = aes(label = after_stat(rr.label))) +
+                           # stat_cor(mapping = aes(label = after_stat(rr.label))) +
+                           xlim(0,1200) + ylim(0,1200) + 
                            xlab(expression('Observed ET (mm year'^-1*')')) + ylab(expression('Predicted ET (mm year'^-1*')'))
 figS2_scaled_observedET
 

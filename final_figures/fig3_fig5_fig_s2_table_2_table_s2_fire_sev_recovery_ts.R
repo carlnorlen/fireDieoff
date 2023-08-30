@@ -7,11 +7,12 @@
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 
-       'sf','gtools', 'tigris', 'patchwork',
+       'sf','gtools', 'tigris', 'patchwork', 'segmented', 'ggsnewscale',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'scales')
 # install.packages(p,repo='https://cran.r-project.org/')
-
+# library(segmented)
+# library(ggnewscale)
 # install.packages(c('scales'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
 
@@ -645,7 +646,7 @@ f3
 #Save the data
 ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
 
-#Table 2 and Table S2
+#Table 2 and Table S2, Barplots and regression analysis
 sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
   dplyr::group_by(system.index, treatment, sev.bin) %>% 
   reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
@@ -1120,3 +1121,176 @@ p6 <- ggplot(data = sev.pixel.filter) +
 p6
 
 ggsave(filename = 'FigS8_frap_rx_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
+
+#Supplementary Correlation Analysis
+sev.hi.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "High")
+sev.hi.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "High")
+sev.mid.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Mid")
+sev.mid.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Mid")
+sev.lo.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Low")
+sev.lo.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Low")  
+
+
+#Models for Wild Fire
+sev.hi.control.lm <- lm(data = sev.hi.control, dTree~ PrET_4yr) 
+sev.hi.disturb.lm <- lm(data = sev.hi.disturb, dTree ~ PrET_4yr) 
+
+#Models for Mid Severity fire
+sev.mid.control.lm <- lm(data = sev.mid.control, dTree~ PrET_4yr) 
+sev.mid.disturb.lm <- lm(data = sev.mid.disturb, dTree ~ PrET_4yr) 
+
+#Models for Rx Fire
+sev.lo.control.lm <- lm(data = sev.lo.control, dTree~ PrET_4yr) 
+sev.lo.disturb.lm <- lm(data = sev.lo.disturb, dTree ~ PrET_4yr) 
+
+#Calculate the sgemented models
+sev.hi.control.seg <- segmented(sev.hi.control.lm)
+sev.hi.disturb.seg <- segmented(sev.hi.disturb.lm)
+sev.mid.control.seg <- segmented(sev.mid.control.lm)
+sev.mid.disturb.seg <- segmented(sev.mid.disturb.lm)
+sev.lo.control.seg <- segmented(sev.lo.control.lm)
+sev.lo.disturb.seg <- segmented(sev.lo.disturb.lm)
+
+#Add predicted dNDMI values
+sev.hi.control$dTree.predict = predict(sev.hi.control.seg)
+sev.hi.disturb$dTree.predict = predict(sev.hi.disturb.seg)
+sev.mid.control$dTree.predict = predict(sev.mid.control.seg)
+sev.mid.disturb$dTree.predict = predict(sev.mid.disturb.seg)
+sev.lo.control$dTree.predict = predict(sev.lo.control.seg)
+sev.lo.disturb$dTree.predict = predict(sev.lo.disturb.seg)
+
+#Add the segmented fits and Standard Errors
+#Fits
+sev.hi.control$dTree.fit = broken.line(sev.hi.control.seg)$fit
+sev.hi.disturb$dTree.fit = broken.line(sev.hi.disturb.seg )$fit
+sev.mid.control$dTree.fit = broken.line(sev.mid.control.seg)$fit
+sev.mid.disturb$dTree.fit = broken.line(sev.mid.disturb.seg )$fit
+sev.lo.control$dTree.fit = broken.line(sev.lo.control.seg)$fit
+sev.lo.disturb$dTree.fit = broken.line(sev.lo.disturb.seg)$fit
+
+#SE fit
+sev.hi.control$dTree.se.fit = broken.line(sev.hi.control.seg)$se.fit
+sev.hi.disturb$dTree.se.fit = broken.line(sev.hi.disturb.seg)$se.fit
+sev.mid.control$dTree.se.fit = broken.line(sev.mid.control.seg)$se.fit
+sev.mid.disturb$dTree.se.fit = broken.line(sev.mid.disturb.seg)$se.fit
+sev.lo.control$dTree.se.fit = broken.line(sev.lo.control.seg)$se.fit
+sev.lo.disturb$dTree.se.fit = broken.line(sev.lo.disturb.seg)$se.fit
+
+#Recombine the data frames with the model fitted dNDMI as a column
+sev.all.models <- rbind(sev.hi.control, sev.hi.disturb, sev.mid.control, sev.mid.disturb, sev.lo.control, sev.lo.disturb)
+
+#R-Squared values for the four models
+r2.a  <- format(summary(sev.hi.control.seg)$r.squared, digits = 2) #I could switch this back to segmented
+r2.b <- format(summary(sev.hi.disturb.seg)$r.squared, digits = 2)
+r2.c  <- format(summary(sev.mid.control.seg)$r.squared, digits = 2) #I could switch this back to segmented
+r2.d <- format(summary(sev.mid.disturb.seg)$r.squared, digits = 2)
+r2.e <- format(summary(sev.lo.control.seg)$r.squared, digits = 2)
+r2.f <- format(summary(sev.lo.disturb.seg)$r.squared, digits = 2) #I could switch this back to segmented
+
+#Create a data.frame of R.squared values
+r2.text <- data.frame(
+  label = c(as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 =r2.a)))), 
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.b)))),
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.c)))),
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.d)))),
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.e)))),
+            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.f))))
+  ),
+  treatment = c('Control', 'Disturb', 'Control', 'Disturb', 'Control', 'Disturb'),
+  sev.bin = c('High', 'High', 'Mid', 'Mid', 'Low', 'Low'),
+  x = c(3500, 3500, 3500, 3500, 3500, 3500),
+  y = c(-20, -20, -20, -20, -20, -20)
+)
+
+#Create the figure
+p1 <- ggplot(data = sev.pixel.filter) + # %>% filter(sev.bin != 'Unchanged')) +
+  geom_bin2d(binwidth = c(200, 2), mapping = aes(x = PrET_4yr, y = dTree, group = ..count.., alpha = ..count..)) +
+  scale_fill_gradient2(limits = c(0,340), breaks = c(5,100,200,300), midpoint = 170, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_alpha(range = c(1, 1), limits = c(5, 340), na.value = 0.4) +labs(fill = "Grid Cells") +
+  #Create the density layer
+  new_scale_fill() +
+  #Piecewise linear regression fit line
+  stat_cor(mapping = aes(x = PrET_4yr, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
+  geom_smooth(method = 'lm', mapping = aes(x = PrET_4yr, y = dTree, color = treatment, linetype = treatment, fill = treatment), se = TRUE, show.legend = FALSE, size = 2) +
+  # geom_line(mapping = aes(x=PrET_4yr, y=ADS.fit, color = treatment, linetype = treatment), size=2) +
+  # #Piecewise fit uncertainty
+  # geom_ribbon(mapping = aes(x = PrET_4yr, y = ADS.fit, ymax = ADS.fit + 1.96*ADS.se.fit, ymin = ADS.fit - 1.96*ADS.se.fit, fill = treatment), alpha = 0.4) +
+  #Do the Formating
+  scale_linetype(name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
+  facet_grid(sev.bin ~ .) +
+  scale_y_reverse() +
+  #Add the R^2 values
+  # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
+  #Add the R^2 text
+  # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
+  theme_bw() +
+  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (% Tree Cover)')
+p1
+
+p2 <- p1 + theme(
+  legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+  legend.justification = c(1, 0),
+  legend.position = c(0.9, 0.83),
+  legend.text = element_text(size = 10),
+  legend.title = element_text(size = 10),
+  legend.direction = "vertical") +
+  guides(fill = guide_colorbar(barwidth = 1, barheight = 3,
+                               title.position = "top",
+                               title.hjust = 0.5,
+                               ticks.colour = "black"))
+
+p2
+
+# ggsave(filename = 'Fig4_frap_rx_water_stress_dTree_300m.png', height=16, width= 8, units = 'cm', dpi=900)
+
+#Create the figure
+p3 <- ggplot(data = sev.pixel.filter) + # %>% filter(sev.bin != 'Unchanged')) +
+  geom_bin2d(binwidth = c(2, 3), mapping = aes(x = Tree_Cover, y = dTree, group = ..count.., alpha = ..count..)) +
+  scale_fill_gradient2(limits = c(0,340), breaks = c(5,100, 200, 300), midpoint = 170, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent', guide = 'none') +
+  scale_alpha(range = c(1, 1), limits = c(5, 340), na.value = 0.4) +labs(fill = "Grid Cells") +
+  labs(fill = "Grid Cells") +
+  #Create the density layer
+  new_scale_fill() +
+  #Piecewise linear regression fit line
+  # geom_line(mapping = aes(x=Water_Stress, y=dTree, color = treatment, linetype = treatment), size=2) +
+  #Piecewise fit uncertainty
+  # geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit, fill = treatment), alpha = 0.4) +
+  stat_cor(mapping = aes(x = Tree_Cover, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
+  geom_smooth(method = 'lm', mapping = aes(x = Tree_Cover, y = dTree, color = treatment, linetype = treatment, fill = treatment),show.legend = TRUE, size = 2) +
+  
+  #Do the Formating
+  scale_linetype(name = 'Treatment') +
+  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
+  facet_grid(sev.bin ~ .) +
+  
+  #Add the R^2 values
+  # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
+  #Add the R^2 text
+  # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(), axis.text.y = element_blank()) +
+  scale_y_reverse() +
+  xlab(expression('Tree Cover (%)')) + ylab(expression('Die-off (trees ha'^-1*')'))
+p3
+
+p4 <- p3 + theme(
+  legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+  legend.justification = c(1, 0),
+  legend.position = c(0.7, 0.9),
+  legend.text = element_text(size = 10),
+  legend.title = element_text(size = 10),
+  legend.direction = "vertical")
+
+p4
+
+
+f1 <- ggarrange(p2, p4, ncol = 2, nrow = 1, common.legend = FALSE, widths = c(1, 0.9), align = "h")
+f1
+
+ggsave(filename = 'FigS9_fire_sev_dieoff_predictors.png', height=32, width= 20, units = 'cm', dpi=900)
+

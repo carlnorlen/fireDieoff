@@ -93,7 +93,7 @@ GEE_ET_tower_all$ET.temp.scalar <- 0.74 + (0.0053 * GEE_ET_tower_all$tmean)
 
 #Do final ET prediction
 GEE_ET_tower_all$ET.predict.scalars <- GEE_ET_tower_all$ET.NDVI.predict * GEE_ET_tower_all$ET.soil.moisture.scalar * GEE_ET_tower_all$ET.solar.rad.scalar * GEE_ET_tower_all$ET.temp.scalar
-GEE_ET_tower_all$ET.predict.final <- 0.71 + 1.2 * GEE_ET_tower_all$ET.predict.scalars
+GEE_ET_tower_all$ET.predict.final <- 1.8 * GEE_ET_tower_all$ET.predict.scalars
 # summary(GEE_ET_tower_all)
   # plot scaling factors
     # figSX_scalingfactors <- ggplot(GEE_GPP) + geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Tcorr,color='T scalar'),alpha=0.5) + 
@@ -207,10 +207,10 @@ p1e <- ggplot(data = GEE_ET_tower_all  %>% filter(!is.na(ET_mm_d) & site_ID != '
               #           site_ID %in% c('US-CZ2', 'US-CZ3', 'US-CZ4', 'US-SCf') ~ month %in% c('06', '07', '08'))), 
               mapping = aes(x = ET.predict.scalars, y = ET.NDVI.predict)) + 
   geom_smooth(linetype = 'dashed',
-              method = 'lm', formula = y ~ x, se=FALSE, color = 'black', linewidth = 2) +
-  stat_cor(label.x.npc = 0.1, label.y.npc = 0.95,mapping = aes(label = paste(..rr.label..)),
+              method = 'lm', formula = y ~ 0 + x, se=FALSE, color = 'black', linewidth = 2) +
+  stat_cor(label.x.npc = 0.1, label.y = 5, mapping = aes(label = paste(..rr.label..)),
            size = 3.5, color = 'black', r.accuracy = 0.001, p.accuracy = 0.001) +
-  stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
+  stat_regline_equation(label.x.npc = 0.1, label.y = 4.5, size = 3.5, formula = y ~ 0 + x) +
   geom_point(alpha = 0.5) +
   theme_bw() +
   ylab(expression('Observed ET (mm day'^-1*')')) +

@@ -7,7 +7,7 @@
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 
-       'sf','gtools', 'tigris', 'patchwork', 'segmented', 'ggsnewscale',
+       'sf','gtools', 'tigris', 'patchwork', 'segmented', 'ggnewscale',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'scales')
 # install.packages(p,repo='https://cran.r-project.org/')
@@ -1203,15 +1203,16 @@ r2.text <- data.frame(
 )
 
 #Create the figure
+#Trying to work on ET prediction figure of Die-off
 p1 <- ggplot(data = sev.pixel.filter) + # %>% filter(sev.bin != 'Unchanged')) +
-  geom_bin2d(binwidth = c(200, 2), mapping = aes(x = PrET_4yr, y = dTree, group = ..count.., alpha = ..count..)) +
+  geom_bin2d(binwidth = c(10, 2), mapping = aes(x = ET, y = dTree, group = ..count.., alpha = ..count..)) +
   scale_fill_gradient2(limits = c(0,340), breaks = c(5,100,200,300), midpoint = 170, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
   scale_alpha(range = c(1, 1), limits = c(5, 340), na.value = 0.4) +labs(fill = "Grid Cells") +
   #Create the density layer
   new_scale_fill() +
   #Piecewise linear regression fit line
-  stat_cor(mapping = aes(x = PrET_4yr, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
-  geom_smooth(method = 'lm', mapping = aes(x = PrET_4yr, y = dTree, color = treatment, linetype = treatment, fill = treatment), se = TRUE, show.legend = FALSE, size = 2) +
+  stat_cor(mapping = aes(x = ET, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
+  geom_smooth(method = 'lm', mapping = aes(x = ET, y = dTree, color = treatment, linetype = treatment, fill = treatment), se = TRUE, show.legend = FALSE, size = 2) +
   # geom_line(mapping = aes(x=PrET_4yr, y=ADS.fit, color = treatment, linetype = treatment), size=2) +
   # #Piecewise fit uncertainty
   # geom_ribbon(mapping = aes(x = PrET_4yr, y = ADS.fit, ymax = ADS.fit + 1.96*ADS.se.fit, ymin = ADS.fit - 1.96*ADS.se.fit, fill = treatment), alpha = 0.4) +

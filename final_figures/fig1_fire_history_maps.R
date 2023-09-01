@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: August 15, 2023
+#Date Update: September 1, 2023
 #Purpose: Explore pixel sampling data with rgee.
 
 #Run the script: R < pixel_sample.r --vanilla
@@ -94,20 +94,26 @@ cols <- c("Wild"=brewer_pal('div', "Set2")(2)[2], "Prescribed" = brewer_pal('div
 #Add the Burned Area Time Series
 p1b <- ggplot() +
   #Line of total FRAP burned area in the South Sierra
-  geom_line(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
-group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
-mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000, color = "Wild"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +  #, color = 'South Wildfire', linetype = 'South Wildfire'), size = 1) + 
+  # geom_line(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
+  #           group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
+  #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000, color = "Wild"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
+  geom_bar(stat = 'identity', data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
+              group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
+            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000, fill = "Wild"), linewidth = 1, alpha = 0.8) +  
   # Line of total RxBurn burned area in the South Sierra
-  geom_line(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
+  # geom_line(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
+  #             group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)),
+  #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area /10000, color = "Prescribed"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
+  geom_bar(stat = 'identity', data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
               group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)),
-            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area /10000, color = "Prescribed"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
+            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area /10000, fill = "Prescribed"), linewidth = 1, alpha = 0.8) +
   theme_bw() + 
   #Figure
   theme(legend.position = c(0.25, 0.8), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
         legend.title = element_text(size = 12), legend.text = element_text(size = 10), 
         axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.text.x = element_blank(), axis.title.x = element_blank()) +
-  scale_colour_manual(name="Fire Type",values=cols, aesthetics = 'color') +
+  scale_fill_manual(name="Fire Type",values=cols, aesthetics = 'fill') +
   # scale_linetype_manual(name="Fire Type (FRAP)", values = lines) +
   ylab('Burned Area (ha)') + xlab(NULL)
 p1b
@@ -118,10 +124,14 @@ mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
 #Create a time series of Fire Severity burned area
 p1c <- ggplot() +
   #Line of total USFS burned area in the South Sierra
-  geom_line(data = fire.sev %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>%
+  # geom_line(data = fire.sev %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>%
+  #             group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
+  #           mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
+  #                         color = as.factor(BURNSEV)), linewidth = 1, linetype = 'dashed', alpha = 0.8) + 
+  geom_bar(stat = 'identity', data = fire.sev %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>%
               group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
             mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
-                          color = as.factor(BURNSEV)), linewidth = 1, linetype = 'dashed', alpha = 0.8) + 
+                          fill = as.factor(BURNSEV)), linewidth = 1, alpha = 0.8) + 
   #Do the black and white theme
   theme_bw() + 
   #Figure
@@ -130,7 +140,7 @@ p1c <- ggplot() +
         legend.text = element_text(size = 10),
         axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
         axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12)) +
-  scale_color_manual(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High'), values = mypalette, aesthetics = 'color') +
+  scale_fill_manual(name="Fire Severity", labels = c('Lowest', 'Low', 'Moderate', 'High'), values = mypalette, aesthetics = 'fill') +
   # scale_linetype_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High')) +
   ylab('Burned Area (ha)') + xlab('Year')
 p1c

@@ -283,11 +283,11 @@ pixel.summary <- pixel.sample %>%
          et.ci.95.upper.pct = AET.mean.pct + 1.96*(sqrt(AET.sd.pct / AET.n)))
 
 #Select the columns I want for the data
-results.data <- sev.pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
-results.data.pct <- sev.pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower.pct, tree.ci.95.upper.pct, shrub.ci.95.lower.pct, shrub.ci.95.upper.pct, et.ci.95.lower.pct, et.ci.95.upper.pct)
+results.data <- pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
+results.data.pct <- pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower.pct, tree.ci.95.upper.pct, shrub.ci.95.lower.pct, shrub.ci.95.upper.pct, et.ci.95.lower.pct, et.ci.95.upper.pct)
 
-sev.results.data
-sev.results.data.pct
+results.data
+results.data.pct
 
 #Create fire recovery curves for Figure 2
 p2a <- ggplot() + 

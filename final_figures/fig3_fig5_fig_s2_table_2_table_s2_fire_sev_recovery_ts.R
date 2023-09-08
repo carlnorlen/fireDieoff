@@ -1,17 +1,17 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: August 23, 2023
-#Purpose: Create figures for EEB GSS presentation
+#Date Updated: September 7, 2023
+#Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 
-       'sf','gtools', 'tigris', 'patchwork', 'segmented', 'ggnewscale',
+       'sf','gtools', 'tigris', 'patchwork', 'segmented', 'ggnewscale', 'relaimpo',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'scales')
 # install.packages(p,repo='https://cran.r-project.org/')
-# library(segmented)
+# library(relaimpo)
 # library(ggnewscale)
 # install.packages(c('scales'),repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
@@ -303,24 +303,43 @@ sev.pixel.summary <- sev.pixel.sample %>%
   filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
   group_by(stand.age, sev.bin) %>% 
   reframe(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
+          Tree_Cover.mean.control = mean(Tree_Cover[treatment == 'Control']),
+          Tree_Cover.mean.pct = Tree_Cover.mean / Tree_Cover.mean.control * 100,
           Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
+          Tree_Cover.sd.pct = Tree_Cover.sd / Tree_Cover.mean.control * 100,
           Tree_Cover.n = n(),
           Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
+          Shrub_Cover.mean.control = mean(Shrub_Cover[treatment == 'Control']),
+          Shrub_Cover.mean.pct = Shrub_Cover.mean / Shrub_Cover.mean.control * 100,
           Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
+          Shrub_Cover.sd.pct = Shrub_Cover.sd / Shrub_Cover.mean.control * 100,
           Shrub_Cover.n = n(),
           AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
+          AET.mean.control = mean(AET[treatment == 'Control']),
+          AET.mean.pct = AET.mean / AET.mean.control * 100,
           AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
+          AET.sd.pct = AET.sd / AET.mean.control * 100,
           AET.n = n()) %>% 
   #Add the upper and lower 95% confidence intervals
   mutate(tree.ci.95.lower = Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
          tree.ci.95.upper = Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         tree.ci.95.lower.pct = Tree_Cover.mean.pct - 1.96*(sqrt(Tree_Cover.sd.pct / Tree_Cover.n)),
+         tree.ci.95.upper.pct = Tree_Cover.mean.pct + 1.96*(sqrt(Tree_Cover.sd.pct / Tree_Cover.n)),
          shrub.ci.95.lower = Shrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
          shrub.ci.95.upper = Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         shrub.ci.95.lower.pct = Shrub_Cover.mean.pct - 1.96*(sqrt(Shrub_Cover.sd.pct / Shrub_Cover.n)),
+         shrub.ci.95.upper.pct = Shrub_Cover.mean.pct + 1.96*(sqrt(Shrub_Cover.sd.pct / Shrub_Cover.n)),
          et.ci.95.lower = AET.mean - 1.96*(sqrt(AET.sd / AET.n)),
-         et.ci.95.upper = AET.mean + 1.96*(sqrt(AET.sd / AET.n)))
+         et.ci.95.upper = AET.mean + 1.96*(sqrt(AET.sd / AET.n)),
+         et.ci.95.lower.pct = AET.mean.pct - 1.96*(sqrt(AET.sd.pct / AET.n)),
+         et.ci.95.upper.pct = AET.mean.pct + 1.96*(sqrt(AET.sd.pct / AET.n)))
 
 #Select the columns I want for the data
 sev.results.data <- sev.pixel.summary %>% dplyr::select(sev.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)
+sev.results.data.pct <- sev.pixel.summary %>% dplyr::select(sev.bin, stand.age, tree.ci.95.lower.pct, tree.ci.95.upper.pct, shrub.ci.95.lower.pct, shrub.ci.95.upper.pct, et.ci.95.lower.pct, et.ci.95.upper.pct)
+
+sev.results.data
+sev.results.data.pct
 
 #Create Figure 3
 #Create a unique palette
@@ -646,6 +665,8 @@ f3
 #Save the data
 ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
 
+# summary(sev.pixel.sample)
+
 #Table 2 and Table S2, Barplots and regression analysis
 sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
   dplyr::group_by(system.index, treatment, sev.bin) %>% 
@@ -657,128 +678,13 @@ sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 
           # Water_Stress = Water_Stress[vi.year == 2015],
           PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
           sev.bin = sev.bin[vi.year == 2010],
+          sev.bin.cat = fire_sev_2010[vi.year == 2010],
+          stand.age = stand.age[vi.year == 2010],
+          treatment.cat = treat[vi.year == 2010],
           treatment = treatment[vi.year == 2010])
+# summary(sev.pixel.filter)
 
-#Create Bar Chart as a Potential Alternative to Table 1
-p7a <- ggbarplot(sev.pixel.filter,
-                 y = "ADS", position = position_dodge(), fill = "sev.bin", x = 'treatment', #x = 'sev.bin',
-                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, #palette = c("gray25", "gray75"),
-                 xlab = NULL, #order = c("1999-2002", "2012-2015")
-) +
-  theme_bw() + guides(color = 'none') +
-  scale_color_manual(values = c("black", "black"),
-                     aesthetics = "color") + #labs(tag = 'b)') +
-  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) + 
-  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
-        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 11), plot.margin = unit(c(0,0,2.5,5), "pt"),
-        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
-        plot.tag = element_text(face = "bold"),
-        strip.text.x = element_text(size = 12, face = 'bold')) +
-  # labs(tag = 'a') +
-  geom_pwc(
-    tip.length = 0, bracket.nudge.y = -0.82,
-    method = "tukey_hsd", label = "p.format", #group.by = 'treatment',
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Die-off Severity','(trees ha'^-1*')')))
-p7a
-
-p7b <- ggbarplot(sev.pixel.filter,
-                 y = "dTree", position = position_dodge(), fill = "sev.bin", x = 'treatment',
-                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
-                 xlab = NULL, #order = c("1999-2002", "2012-2015")
-) +
-  theme_bw() + guides(color = 'none') +
-  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
-  scale_color_manual(values = c("black", "black"),
-                     aesthetics = "color") + #labs(tag = 'b)') +
-  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
-        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
-        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
-        plot.tag = element_text(face = "bold"),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()) +
-  geom_pwc(
-    tip.length = 0, bracket.nudge.y = -0.64, group.by = "sev.bin",
-    method = "tukey_hsd", label = "p.format"
-  ) +
-  scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Die-off Severity', '('*Delta*'Tree %)')))
-p7b
-
-p7c <- ggbarplot(sev.pixel.filter,
-                 y = "Tree_Cover", position = position_dodge(), fill = "sev.bin", x = 'treatment',
-                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
-                 xlab = NULL, #order = c("1999-2002", "2012-2015")
-) +
-  theme_bw() + guides(color = 'none') +
-  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
-  scale_color_manual(values = c("black", "black"),
-                     aesthetics = "color") + #labs(tag = 'b)') +
-  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
-        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
-        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
-        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
-        plot.tag = element_text(face = "bold"),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()) +
-  geom_pwc(
-    tip.length = 0, bracket.nudge.y = -0.57, #p.adjust.method = "bonferroni",
-    method = "tukey_hsd", label = "p.format"
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Pre-Drought','Tree Cover (%)')))
-p7c
-
-p7d <- ggbarplot(sev.pixel.filter,
-                 y = "ET", position = position_dodge(), fill = "sev.bin", x = 'treatment',
-                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
-                 xlab = NULL, #order = c("1999-2002", "2012-2015")
-) +
-  theme_bw() + guides(color = 'none') +
-  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
-  scale_color_manual(values = c("black", "black"),
-                     aesthetics = "color") + #labs(tag = 'b)') +
-  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
-        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
-        legend.direction = "vertical", axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
-        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
-        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
-        plot.tag = element_text(face = "bold"),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()) +
-  geom_pwc(
-    tip.length = 0, bracket.nudge.y = -0.45,
-    method = "tukey_hsd", label = "p.format"
-  ) +
-  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Pre-Drought','ET (mm yr'^-1*')'))) + xlab('Treatment') +
-  scale_x_discrete(labels = c("Unburned", "Burned")) #+
-
-p7d
-
-f7 <- (p7a / p7b / p7c / p7d) + plot_annotation(tag_levels = 'a')
-f7
-
-#Save PNG file
-ggsave(filename = 'Fig7_sev_comparison_barchart.png', height=16, width= 20, units = 'cm', dpi=900)
-#Save SVG file
-ggsave(filename = 'Fig7_sev_comparison_barchart.svg', height=16, width= 20, units = 'cm', dpi=900)
-
-#Calculate the sample sizes for the treatment and controls
-sev.pixel.filter %>% group_by(treatment) %>%
-  summarize(count = n())
-
-#Results for Table summarizing Figures 2 and 3
+#Results for Table S2 summarizing Figures 2 and 3
 aov.dTree.treatment.sev <- aov(dTree ~ treatment * sev.bin, data = sev.pixel.filter)
 summary(aov.dTree.treatment.sev)
 
@@ -794,6 +700,19 @@ summary(aov.tree.treatment.sev)
 aov.ET.treatment.sev <- aov(ET ~ treatment * sev.bin, data = sev.pixel.filter)
 summary(aov.tree.treatment.sev)
 
+# aov.dTree.PrET4yrpredict.treatment.sev <- aov(dTree.PrET_4yr.predict ~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.dTree.treatment.sev)
+# 
+# aov.ADS.predict.treatment.sev <- aov(ADS.PrET_4yr.predict~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.PrET4yrADS.treatment.sev)
+# 
+# aov.dTree.predict.treatment.sev <- aov(dTree.PrET_4yr.predict ~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.dTree.treatment.sev)
+# 
+# aov.ADS.predict.treatment.sev <- aov(ADS.PrET_4yr.predict~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.ADS.treatment.sev)
+
+#Tukey HSD comparison
 tukey.dTree.treatment.sev <- TukeyHSD(aov.dTree.treatment.sev)
 print(tukey.dTree.treatment.sev)
 
@@ -918,6 +837,122 @@ colnames(tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
 tb2 <- kbl(tHSD.filter.sup, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
 as_image(x = tb2, width = 10, file = "TableS2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 
+
+
+#Create Bar Chart as a Potential Alternative to Table 1
+p7a <- ggbarplot(sev.pixel.filter,
+                 y = "ADS", position = position_dodge(), fill = "sev.bin", x = 'treatment', #x = 'sev.bin',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, #palette = c("gray25", "gray75"),
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) + 
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 11), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.text.x = element_text(size = 12, face = 'bold')) +
+  # labs(tag = 'a') +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.82,
+    method = "tukey_hsd", label = "p.format", #group.by = 'treatment',
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Die-off Severity','(trees ha'^-1*')')))
+p7a
+
+p7b <- ggbarplot(sev.pixel.filter,
+                 y = "dTree", position = position_dodge(), fill = "sev.bin", x = 'treatment',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.64, group.by = "sev.bin",
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Die-off Severity', '('*Delta*'Tree %)')))
+p7b
+
+p7c <- ggbarplot(sev.pixel.filter,
+                 y = "Tree_Cover", position = position_dodge(), fill = "sev.bin", x = 'treatment',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_blank(), axis.title.x = element_blank(),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.57, #p.adjust.method = "bonferroni",
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Pre-Drought','Tree Cover (%)')))
+p7c
+
+p7d <- ggbarplot(sev.pixel.filter,
+                 y = "ET", position = position_dodge(), fill = "sev.bin", x = 'treatment',
+                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
+                 xlab = NULL, #order = c("1999-2002", "2012-2015")
+) +
+  theme_bw() + guides(color = 'none') +
+  facet_wrap(. ~ sev.bin, nrow = 1, ncol = 4) +
+  scale_color_manual(values = c("black", "black"),
+                     aesthetics = "color") + #labs(tag = 'b)') +
+  scale_fill_manual(values = mypalette, name = 'Fire Severity') +
+  theme(legend.background = element_rect(colour = NA, fill = NA), legend.justification = c(1, 0),
+        legend.position = 'none', legend.text = element_text(size = 6, angle = 45), legend.title = element_text(size = 8),
+        legend.direction = "vertical", axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
+        axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12), plot.margin = unit(c(0,0,2.5,5), "pt"),
+        panel.spacing = unit(20, "pt"), #plot.tag.position = c(0.53, 0.96), #c(0.52, 0.96)
+        plot.tag = element_text(face = "bold"),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()) +
+  geom_pwc(
+    tip.length = 0, bracket.nudge.y = -0.45,
+    method = "tukey_hsd", label = "p.format"
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
+  ylab(expression(atop('Pre-Drought','ET (mm yr'^-1*')'))) + xlab('Treatment') +
+  scale_x_discrete(labels = c("Unburned", "Burned")) #+
+
+p7d
+
+f7 <- (p7a / p7b / p7c / p7d) + plot_annotation(tag_levels = 'a')
+f7
+
+#Save PNG file
+ggsave(filename = 'Fig7_sev_comparison_barchart.png', height=16, width= 20, units = 'cm', dpi=900)
+#Save SVG file
+ggsave(filename = 'Fig7_sev_comparison_barchart.svg', height=16, width= 20, units = 'cm', dpi=900)
 
 #Create Figure S4
 p3a <- ggplot() + 
@@ -1122,119 +1157,149 @@ p6
 
 ggsave(filename = 'FigS8_frap_rx_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
 
+#Do Correlation Analysis
+# glimpse(sev.pixel.filter)
+sev.ads.lm <- lm(data = sev.pixel.filter %>% filter(treatment == 'Control'), ADS ~ Tree_Cover + PrET_4yr)
+summary(sev.ads.lm)
+
+sev.ads.relimp <- calc.relimp(sev.ads.lm, rela = TRUE, type = "lmg") 
+sev.ads.relimp 
+
+sev.dtree.lm <- lm(data = sev.pixel.filter %>% filter(treatment == 'Control'), dTree ~ Tree_Cover + PrET_4yr)
+summary(sev.dtree.lm)
+
+sev.dtree.relimp <- calc.relimp(sev.dtree.lm, rela = TRUE, type = "lmg") 
+sev.dtree.relimp 
+
+#Switch to a variable importance plot vim package?
+
+
 #Supplementary Correlation Analysis
-sev.hi.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "High")
-sev.hi.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "High")
-sev.mid.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Mid")
-sev.mid.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Mid")
-sev.lo.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Low")
-sev.lo.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Low")  
+sev.control <- sev.pixel.filter %>% filter(treatment == 'Control')
+sev.control.ads <- sev.pixel.filter %>% filter(treatment == 'Control' & !is.na(ADS))
+sev.distrub <- sev.pixel.filter %>% filter(treatment == 'Disturb')
+# sev.hi.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "High")
+# sev.mid.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Mid")
+# # sev.mid.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Mid")
+# sev.lo.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Low")
+# # sev.lo.disturb <- sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == "Low")  
+# sev.lowest.control <- sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == "Lowest")
 
+#Models with Fire Severity Controls for Pr-ET 4-year
+sev.dtree.pet4yr.lm <- lm(data = sev.control, dTree~ PrET_4yr) 
+sev.ads.pet4yr.lm <- lm(data = sev.control.ads, ADS ~ PrET_4yr) 
 
-#Models for Wild Fire
-sev.hi.control.lm <- lm(data = sev.hi.control, dTree~ PrET_4yr) 
-sev.hi.disturb.lm <- lm(data = sev.hi.disturb, dTree ~ PrET_4yr) 
+#Models with Fire Severity Controls for Tree Cover
+sev.dtree.tree.lm <- lm(data = sev.control, dTree~ Tree_Cover) 
+summary(sev.dtree.tree.lm)
+sev.ads.tree.lm <- lm(data = sev.control.ads, ADS ~ Tree_Cover) 
 
 #Models for Mid Severity fire
-sev.mid.control.lm <- lm(data = sev.mid.control, dTree~ PrET_4yr) 
-sev.mid.disturb.lm <- lm(data = sev.mid.disturb, dTree ~ PrET_4yr) 
-
-#Models for Rx Fire
-sev.lo.control.lm <- lm(data = sev.lo.control, dTree~ PrET_4yr) 
-sev.lo.disturb.lm <- lm(data = sev.lo.disturb, dTree ~ PrET_4yr) 
+# sev.mid.control.lm <- lm(data = sev.mid.control, dTree~ PrET_4yr) 
+# sev.mid.disturb.lm <- lm(data = sev.mid.disturb, dTree ~ PrET_4yr) 
+# 
+# #Models for Rx Fire
+# sev.lo.control.lm <- lm(data = sev.lo.control, dTree~ PrET_4yr) 
+# sev.lo.disturb.lm <- lm(data = sev.lo.disturb, dTree ~ PrET_4yr) 
 
 #Calculate the sgemented models
-sev.hi.control.seg <- segmented(sev.hi.control.lm)
-sev.hi.disturb.seg <- segmented(sev.hi.disturb.lm)
-sev.mid.control.seg <- segmented(sev.mid.control.lm)
-sev.mid.disturb.seg <- segmented(sev.mid.disturb.lm)
-sev.lo.control.seg <- segmented(sev.lo.control.lm)
-sev.lo.disturb.seg <- segmented(sev.lo.disturb.lm)
+sev.dtree.pet4yr.seg <- segmented(sev.dtree.pet4yr.lm, npsi = 1)
+summary(sev.dtree.pet4yr.seg)
+sev.ads.pet4yr.seg <- segmented(sev.ads.pet4yr.lm, npsi = 1)
+summary(sev.ads.pet4yr.seg)
+# sev.mid.control.seg <- segmented(sev.mid.control.lm)
+# sev.mid.disturb.seg <- segmented(sev.mid.disturb.lm)
+# sev.lo.control.seg <- segmented(sev.lo.control.lm)
+# sev.lo.disturb.seg <- segmented(sev.lo.disturb.lm)
+
+#Get the predictions for the Pr-ET 4-year models
+sev.pixel.filter$dTree.PrET_4yr.predict <- predict(newdata = sev.pixel.filter, sev.dtree.pet4yr.seg)
+sev.pixel.filter$ADS.PrET_4yr.predict <- predict(newdata = sev.pixel.filter, sev.ads.pet4yr.seg)
+
+#Get the predictions for the Tree Cover models
+sev.pixel.filter$dTree.Tree_Cover.predict <- predict(newdata = sev.pixel.filter, sev.dtree.tree.lm)
+sev.pixel.filter$ADS.Tree_Cover.predict <- predict(newdata = sev.pixel.filter, sev.ads.tree.lm)
+
+#Summary of actual and model reductions in die-off, Die-off (dTree)
+# sev.pixel.filter %>% filter(treatment == 'Control') %>% dplyr::select(dTree.PrET_4yr.predict) %>% summary()
+# sev.pixel.filter %>% filter(treatment == 'Control') %>% dplyr::select(dTree.Tree_Cover.predict) %>% summary()
+# sev.pixel.filter %>% filter(treatment == 'Disturb') %>% dplyr::select(dTree.PrET_4yr.predict) %>% summary()
+# sev.pixel.filter %>% filter(treatment == 'Disturb') %>% dplyr::select(dTree.Tree_Cover.predict) %>% summary()
+# 
+# #Summary of actual and model reductions in die-off, Die-off (ADS)
+# sev.pixel.filter %>% filter(treatment == 'Control' & !is.na(ADS)) %>% dplyr::select(ADS.PrET_4yr.predict) %>% summary()
+# sev.pixel.filter %>% filter(treatment == 'Control' & !is.na(ADS)) %>% dplyr::select(ADS.Tree_Cover.predict) %>% summary()
+# sev.pixel.filter %>% filter(treatment == 'Disturb' & !is.na(ADS)) %>% dplyr::select(ADS.PrET_4yr.predict) %>% summary()
+# sev.pixel.filter %>% filter(treatment == 'Disturb' & !is.na(ADS)) %>% dplyr::select(ADS.Tree_Cover.predict) %>% summary()
+
 
 #Add predicted dNDMI values
-sev.hi.control$dTree.predict = predict(sev.hi.control.seg)
-sev.hi.disturb$dTree.predict = predict(sev.hi.disturb.seg)
-sev.mid.control$dTree.predict = predict(sev.mid.control.seg)
-sev.mid.disturb$dTree.predict = predict(sev.mid.disturb.seg)
-sev.lo.control$dTree.predict = predict(sev.lo.control.seg)
-sev.lo.disturb$dTree.predict = predict(sev.lo.disturb.seg)
+sev.control$dTree.predict = predict(sev.dtree.pet4yr.seg)
+sev.control.ads$ADS.predict = predict(sev.ads.pet4yr.seg)
 
 #Add the segmented fits and Standard Errors
 #Fits
-sev.hi.control$dTree.fit = broken.line(sev.hi.control.seg)$fit
-sev.hi.disturb$dTree.fit = broken.line(sev.hi.disturb.seg )$fit
-sev.mid.control$dTree.fit = broken.line(sev.mid.control.seg)$fit
-sev.mid.disturb$dTree.fit = broken.line(sev.mid.disturb.seg )$fit
-sev.lo.control$dTree.fit = broken.line(sev.lo.control.seg)$fit
-sev.lo.disturb$dTree.fit = broken.line(sev.lo.disturb.seg)$fit
+sev.control$dTree.fit = broken.line(sev.dtree.pet4yr.seg)$fit
+sev.control.ads$ADS.fit = broken.line(sev.ads.pet4yr.seg)$fit
 
 #SE fit
-sev.hi.control$dTree.se.fit = broken.line(sev.hi.control.seg)$se.fit
-sev.hi.disturb$dTree.se.fit = broken.line(sev.hi.disturb.seg)$se.fit
-sev.mid.control$dTree.se.fit = broken.line(sev.mid.control.seg)$se.fit
-sev.mid.disturb$dTree.se.fit = broken.line(sev.mid.disturb.seg)$se.fit
-sev.lo.control$dTree.se.fit = broken.line(sev.lo.control.seg)$se.fit
-sev.lo.disturb$dTree.se.fit = broken.line(sev.lo.disturb.seg)$se.fit
-
-#Recombine the data frames with the model fitted dNDMI as a column
-sev.all.models <- rbind(sev.hi.control, sev.hi.disturb, sev.mid.control, sev.mid.disturb, sev.lo.control, sev.lo.disturb)
+sev.control$dTree.se.fit = broken.line(sev.dtree.pet4yr.seg)$se.fit
+sev.control.ads$ADS.se.fit = broken.line(sev.ads.pet4yr.seg)$se.fit
 
 #R-Squared values for the four models
-r2.a  <- format(summary(sev.hi.control.seg)$r.squared, digits = 2) #I could switch this back to segmented
-r2.b <- format(summary(sev.hi.disturb.seg)$r.squared, digits = 2)
-r2.c  <- format(summary(sev.mid.control.seg)$r.squared, digits = 2) #I could switch this back to segmented
-r2.d <- format(summary(sev.mid.disturb.seg)$r.squared, digits = 2)
-r2.e <- format(summary(sev.lo.control.seg)$r.squared, digits = 2)
-r2.f <- format(summary(sev.lo.disturb.seg)$r.squared, digits = 2) #I could switch this back to segmented
+r2.a  <- format(summary(sev.dtree.pet4yr.seg)$r.squared, digits = 2) #I could switch this back to segmented
+r2.b  <- format(summary(sev.ads.pet4yr.seg)$r.squared, digits = 2) #I could switch this back to segmented
 
 #Create a data.frame of R.squared values
-r2.text <- data.frame(
-  label = c(as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 =r2.a)))), 
-            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.b)))),
-            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.c)))),
-            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.d)))),
-            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.e)))),
-            as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 = r2.f))))
+r2.text.a <- data.frame(
+  label = c(as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 =r2.a)))) 
   ),
-  treatment = c('Control', 'Disturb', 'Control', 'Disturb', 'Control', 'Disturb'),
-  sev.bin = c('High', 'High', 'Mid', 'Mid', 'Low', 'Low'),
-  x = c(3500, 3500, 3500, 3500, 3500, 3500),
-  y = c(-20, -20, -20, -20, -20, -20)
+  x = 2500,
+  y = -65
+)
+
+r2.text.b <- data.frame(
+  label = c(as.character(as.expression(substitute(italic(R)^2~"="~r2, list(r2 =r2.b)))) 
+  ),
+  x = 2500,
+  y = 500
 )
 
 #Create the figure
 #Trying to work on ET prediction figure of Die-off
-p1 <- ggplot(data = sev.pixel.filter) + # %>% filter(sev.bin != 'Unchanged')) +
-  geom_bin2d(binwidth = c(10, 2), mapping = aes(x = ET, y = dTree, group = ..count.., alpha = ..count..)) +
-  scale_fill_gradient2(limits = c(0,340), breaks = c(5,100,200,300), midpoint = 170, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
-  scale_alpha(range = c(1, 1), limits = c(5, 340), na.value = 0.4) +labs(fill = "Grid Cells") +
+#The Tree Cover Models
+p1 <- ggplot(data = sev.control) + # %>% filter(sev.bin != 'Unchanged')) +
+  geom_bin2d(binwidth = c(120, 2), mapping = aes(x = PrET_4yr, y = dTree, group = ..count.., alpha = ..count..)) +
+  scale_fill_gradient2(limits = c(0,280), breaks = c(5,50,100,150, 200, 250), midpoint = 140, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_alpha(range = c(1, 1), limits = c(5, 280), na.value = 0.4) +labs(fill = "Grid Cells") +
   #Create the density layer
   new_scale_fill() +
   #Piecewise linear regression fit line
-  stat_cor(mapping = aes(x = ET, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
-  geom_smooth(method = 'lm', mapping = aes(x = ET, y = dTree, color = treatment, linetype = treatment, fill = treatment), se = TRUE, show.legend = FALSE, size = 2) +
-  # geom_line(mapping = aes(x=PrET_4yr, y=ADS.fit, color = treatment, linetype = treatment), size=2) +
+  # stat_cor(mapping = aes(x = PrET_4yr, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
+  # geom_smooth(method = 'lm', mapping = aes(x = PrET_4yr, y = dTree, color = treatment, linetype = treatment, fill = treatment), se = TRUE, show.legend = FALSE, size = 2) +
+  geom_line(mapping = aes(x=PrET_4yr, y=dTree.fit), linewidth=2, color = 'black', linetype = 'dashed') +
   # #Piecewise fit uncertainty
-  # geom_ribbon(mapping = aes(x = PrET_4yr, y = ADS.fit, ymax = ADS.fit + 1.96*ADS.se.fit, ymin = ADS.fit - 1.96*ADS.se.fit, fill = treatment), alpha = 0.4) +
+  geom_ribbon(mapping = aes(x = PrET_4yr, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit), alpha = 0.4) +
   #Do the Formating
-  scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  # scale_linetype(name = 'Treatment') +
+  # scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
-  facet_grid(sev.bin ~ .) +
+  # facet_grid(sev.bin ~ .) +
   scale_y_reverse() +
   #Add the R^2 values
-  # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
+  geom_text(data = r2.text.a, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
   #Add the R^2 text
   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
   theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
   xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-off (% Tree Cover)')
 p1
 
 p2 <- p1 + theme(
   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
   legend.justification = c(1, 0),
-  legend.position = c(0.9, 0.83),
+  legend.position = c(0.9, 0.4),
   legend.text = element_text(size = 10),
   legend.title = element_text(size = 10),
   legend.direction = "vertical") +
@@ -1248,50 +1313,292 @@ p2
 # ggsave(filename = 'Fig4_frap_rx_water_stress_dTree_300m.png', height=16, width= 8, units = 'cm', dpi=900)
 
 #Create the figure
-p3 <- ggplot(data = sev.pixel.filter) + # %>% filter(sev.bin != 'Unchanged')) +
-  geom_bin2d(binwidth = c(2, 3), mapping = aes(x = Tree_Cover, y = dTree, group = ..count.., alpha = ..count..)) +
-  scale_fill_gradient2(limits = c(0,340), breaks = c(5,100, 200, 300), midpoint = 170, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent', guide = 'none') +
-  scale_alpha(range = c(1, 1), limits = c(5, 340), na.value = 0.4) +labs(fill = "Grid Cells") +
-  labs(fill = "Grid Cells") +
+# p3 <- ggplot(data = sev.control) + # %>% filter(sev.bin != 'Unchanged')) +
+#   geom_bin2d(binwidth = c(3, 2), mapping = aes(x = Tree_Cover, y = dTree, group = ..count.., alpha = ..count..)) +
+#   scale_fill_gradient2(limits = c(0,360), breaks = c(5,100, 200, 300), midpoint = 180, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+#   scale_alpha(range = c(1, 1), limits = c(5, 360), na.value = 0.4) +labs(fill = "Grid Cells") +
+#   labs(fill = "Grid Cells") +
+#   #Create the density layer
+#   new_scale_fill() +
+#   #Piecewise linear regression fit line
+#   # geom_line(mapping = aes(x=Water_Stress, y=dTree, color = treatment, linetype = treatment), size=2) +
+#   #Piecewise fit uncertainty
+#   # geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit, fill = treatment), alpha = 0.4) +
+#   stat_cor(mapping = aes(x = Tree_Cover, y = dTree, label = paste(..rr.label..)), digits = 2, size = 3.5) +
+#   geom_smooth(method = 'lm', mapping = aes(x = Tree_Cover, y = dTree), show.legend = TRUE, linewidth = 2, color = 'black', linetype = 'dashed', se = TRUE) +
+#   #Do the Formating
+#   # scale_linetype(name = 'Treatment') +
+#   # scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+#   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+#   guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
+#   # facet_grid(sev.bin ~ .) +
+#   
+#   #Add the R^2 values
+#   # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
+#   #Add the R^2 text
+#   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
+#   theme_bw() +
+#   theme(axis.title.y = element_blank(), axis.text.y = element_blank(),
+#         axis.title.x = element_blank(), axis.text.x = element_blank()) +
+#   scale_y_reverse() +
+#   xlab(expression('Tree Cover (%)')) + ylab(expression('Die-off (trees ha'^-1*')'))
+# p3
+# 
+# p4 <- p3 + theme(
+#   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+#   legend.justification = c(1, 0),
+#   legend.position = c(0.2, 0.5),
+#   legend.text = element_text(size = 10),
+#   legend.title = element_text(size = 10),
+#   legend.direction = "vertical")
+# 
+# p4
+# 
+# #Do the ADS Models
+p5 <- ggplot(data = sev.control.ads) + # %>% filter(sev.bin != 'Unchanged')) +
+  geom_bin2d(binwidth = c(120, 10), mapping = aes(x = PrET_4yr, y = ADS, group = ..count.., alpha = ..count..)) +
+  scale_fill_gradient2(limits = c(0, 250), breaks = c(5,50,100,150, 200), midpoint = 125, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_alpha(range = c(1, 1), limits = c(5, 250), na.value = 0.4) +labs(fill = "Grid Cells") +
   #Create the density layer
   new_scale_fill() +
   #Piecewise linear regression fit line
-  # geom_line(mapping = aes(x=Water_Stress, y=dTree, color = treatment, linetype = treatment), size=2) +
-  #Piecewise fit uncertainty
-  # geom_ribbon(mapping = aes(x = Water_Stress, y = dTree.fit, ymax = dTree.fit + 1.96*dTree.se.fit, ymin = dTree.fit - 1.96*dTree.se.fit, fill = treatment), alpha = 0.4) +
-  stat_cor(mapping = aes(x = Tree_Cover, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
-  geom_smooth(method = 'lm', mapping = aes(x = Tree_Cover, y = dTree, color = treatment, linetype = treatment, fill = treatment),show.legend = TRUE, size = 2) +
-  
+  # stat_cor(mapping = aes(x = PrET_4yr, y = dTree, color = treatment, label = paste(..rr.label..)), show.legend = FALSE) +
+  # geom_smooth(method = 'lm', mapping = aes(x = PrET_4yr, y = dTree, color = treatment, linetype = treatment, fill = treatment), se = TRUE, show.legend = FALSE, size = 2) +
+  geom_line(mapping = aes(x=PrET_4yr, y=ADS.fit), linewidth=2, color = 'black', linetype = 'dashed') +
+  # #Piecewise fit uncertainty
+  geom_ribbon(mapping = aes(x = PrET_4yr, y = ADS.fit, ymax = ADS.fit + 1.96*ADS.se.fit, ymin = ADS.fit - 1.96*ADS.se.fit), alpha = 0.4) +
   #Do the Formating
-  scale_linetype(name = 'Treatment') +
-  scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
-  scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  # scale_linetype(name = 'Treatment') +
+  # scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+  # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
   guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
-  facet_grid(sev.bin ~ .) +
-  
+  # facet_grid(sev.bin ~ .) +
+  # scale_y_reverse() +
   #Add the R^2 values
-  # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
+  geom_text(data = r2.text.b, mapping = aes(x = x, y = y, label = label), size = 3.5, parse = TRUE) +
   #Add the R^2 text
   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
   theme_bw() +
-  theme(axis.title.y = element_blank(), axis.text.y = element_blank()) +
-  scale_y_reverse() +
-  xlab(expression('Tree Cover (%)')) + ylab(expression('Die-off (trees ha'^-1*')'))
-p3
-
-p4 <- p3 + theme(
+  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab(expression('Die-off (trees ha'^-1*')'))
+p5
+# 
+p6 <- p5 + theme(
   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
   legend.justification = c(1, 0),
-  legend.position = c(0.7, 0.9),
+  legend.position = c(0.95, 0.4),
   legend.text = element_text(size = 10),
   legend.title = element_text(size = 10),
-  legend.direction = "vertical")
+  legend.direction = "vertical") +
+  guides(fill = guide_colorbar(barwidth = 1, barheight = 3,
+                               title.position = "top",
+                               title.hjust = 0.5,
+                               ticks.colour = "black"))
+# 
+# p6
+# 
+# #Create the figure
+# p7 <- ggplot(data = sev.control.ads) + # %>% filter(sev.bin != 'Unchanged')) +
+#   geom_bin2d(binwidth = c(3, 10), mapping = aes(x = Tree_Cover, y = ADS, group = ..count.., alpha = ..count..)) +
+#   scale_fill_gradient2(limits = c(0,430), breaks = c(5,100, 200, 300, 400), midpoint = 215, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+#   scale_alpha(range = c(1, 1), limits = c(5, 430), na.value = 0.4) +labs(fill = "Grid Cells") +
+#   labs(fill = "Grid Cells") +
+#   #Create the density layer
+#   new_scale_fill() +
+#   #Piecewise linear regression fit line
+#   # geom_line(mapping = aes(x=Water_Stress, y=ADS, color = treatment, linetype = treatment), size=2) +
+#   #Piecewise fit uncertainty
+#   # geom_ribbon(mapping = aes(x = Water_Stress, y = ADS.fit, ymax = ADS.fit + 1.96*ADS.se.fit, ymin = ADS.fit - 1.96*ADS.se.fit, fill = treatment), alpha = 0.4) +
+#   stat_cor(mapping = aes(x = Tree_Cover, y = ADS, label = paste(..rr.label..)), digits = 2, size = 3.5) +
+#   geom_smooth(method = 'lm', mapping = aes(x = Tree_Cover, y = ADS), show.legend = TRUE, linewidth = 2, color = 'black', linetype = 'dashed', se = TRUE) +
+#   #Do the Formating
+#   # scale_linetype(name = 'Treatment') +
+#   # scale_fill_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+#   # scale_color_brewer(type = 'div', palette = 'Set1', name = 'Treatment') +
+#   guides(color = guide_legend(), linetype = guide_legend(), fill = guide_legend(), alpha = 'none') +
+#   # facet_grid(sev.bin ~ .) +
+#   
+#   #Add the R^2 values
+#   # geom_text(data = r2.text, mapping = aes(x = x, y = y, label = label, color = treatment), size = 3.5, parse = TRUE) +
+#   #Add the R^2 text
+#   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
+#   theme_bw() +
+#   theme(axis.title.y = element_blank(), axis.text.y = element_blank()) +
+#   # scale_y_reverse() +
+#   xlab(expression('Tree Cover (%)')) + ylab(expression('Die-off (trees ha'^-1*')'))
+# p7
+# 
+# p8 <- p7 + theme(
+#   legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+#   legend.justification = c(1, 0),
+#   legend.position = c(0.2, 0.4),
+#   legend.text = element_text(size = 10),
+#   legend.title = element_text(size = 10),
+#   legend.direction = "vertical")
+# 
+# p8
+# 
+# 
+f6 <- ggarrange(p2, p6, ncol = 1, nrow = 2, common.legend = FALSE, widths = c(1, 1), heights = c(1, 1), align = "hv", labels = c('a', 'b'))
+f6
 
-p4
+ggsave(filename = 'FigS9_fire_sev_dieoff_predictors.png', height=24, width= 12, units = 'cm', dpi=900)
+
+sev.pixel.filter$dTree.Tree_Cover.predict <- predict(newdata = sev.pixel.filter %>% filter(treatment == 'Disturb'), sev.dtree.tree.lm)
+
+#Try to quantify contribution of changes in Pr-ET four-year to the reductions in die-off
+#Doesn't really work
+predict.df <- data.frame(sev.bin = c('Lowest', 'Low', 'Mid', 'High'))
+predict.df$dTree.disturb <- predict(newdata = data.frame(PrET_4yr = c(134.6, 157.2, 113.0, 104.5)), sev.dtree.pet4yr.seg)
+predict.df$ADS.disturb <- predict(newdata = data.frame(PrET_4yr = c(134.6, 157.2, 113.0, 104.5)), sev.ads.pet4yr.seg)
+predict.df$dTree.control <- predict(newdata = data.frame(PrET_4yr = c(63.5, -14.7, -40.2, -75.2)), sev.dtree.pet4yr.seg) #c(-7.993946, -8.017162, -6.3525217, -5.445355)
+predict.df$ADS.control <- predict(newdata = data.frame(PrET_4yr = c(63.5, -14.7, -40.2, -75.2)), sev.ads.pet4yr.seg) #c(78.421628, 78.113012, 64.340774, 60.358279)
+predict.df$dTree.dif <- predict.df$dTree.disturb - predict.df$dTree.control
+predict.df$dTree.dif.pct <- predict.df$dTree.dif / predict.df$dTree.control * 100
+predict.df$ADS.dif <- predict.df$ADS.disturb - predict.df$ADS.control
+predict.df$ADS.dif.pct <- predict.df$ADS.dif / predict.df$ADS.control * 100
+predict.df
+# dTree.predict.disturb$dTree
+# tHSD.filter.sup
 
 
-f1 <- ggarrange(p2, p4, ncol = 2, nrow = 1, common.legend = FALSE, widths = c(1, 0.9), align = "h")
-f1
-
-ggsave(filename = 'FigS9_fire_sev_dieoff_predictors.png', height=32, width= 20, units = 'cm', dpi=900)
-
+# #Create the corresponding Tables for a Tukey HSD Analysis based on the predictions; Should I just use the original table?
+# 
+# #Calculate the sample sizes for the treatment and controls
+# sev.pixel.filter %>% group_by(treatment) %>%
+#   summarize(count = n())
+# 
+# #Comparison of predicted changes to die-off from Tree Cover and Pr-ET models
+# #ANOVA Comparisons
+# aov.dTree.PrET4yr.predict.treatment.sev <- aov(dTree.PrET_4yr.predict ~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.dTree.PrET4yr.predict.treatment.sev)
+# 
+# aov.ADS.PrET4yr.predict.treatment.sev <- aov(ADS.PrET_4yr.predict~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.ADS.PrET4yr.predict.treatment.sev)
+# 
+# aov.dTree.Tree_Cover.predict.treatment.sev <- aov(dTree.Tree_Cover.predict ~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.dTree.Tree_Cover.predict.treatment.sev)
+# 
+# aov.ADS.Tree_Cover.predict.treatment.sev <- aov(ADS.Tree_Cover.predict~ treatment * sev.bin, data = sev.pixel.filter)
+# summary(aov.ADS.Tree_Cover.predict.treatment.sev)
+# 
+# #Tukey HSD comparison
+# tukey.dTree.PrET4yr.predict.treatment.sev <- TukeyHSD(aov.dTree.PrET4yr.predict.treatment.sev)
+# print(tukey.dTree.PrET4yr.predict.treatment.sev)
+# 
+# tukey.ADS.PrET4yr.predict.treatment.sev <- TukeyHSD(aov.ADS.PrET4yr.predict.treatment.sev)
+# print(tukey.ADS.PrET4yr.predict.treatment.sev)
+# 
+# tukey.dTree.Tree_Cover.predict.treatment.sev <- TukeyHSD(aov.dTree.Tree_Cover.predict.treatment.sev)
+# print(tukey.dTree.Tree_Cover.predict.treatment.sev)
+# 
+# tukey.ADS.Tree_Cover.predict.treatment.sev <- TukeyHSD(aov.ADS.Tree_Cover.predict.treatment.sev)
+# print(tukey.ADS.Tree_Cover.predict.treatment.sev)
+# 
+# #Work on combining the different data sets into a table
+# #Tukey HSD posthoc tests
+# #Combine all the t-test results in a list
+# tHSD <- list(#tukey.ADS.treatment.sev, tukey.dTree.treatment.sev, 
+#              # tukey.tree.treatment.sev, tukey.ET.treatment.sev, 
+#              tukey.dTree.PrET4yr.predict.treatment.sev,
+#              tukey.ADS.PrET4yr.predict.treatment.sev,
+#              tukey.dTree.Tree_Cover.predict.treatment.sev,
+#              tukey.ADS.Tree_Cover.predict.treatment.sev)
+# 
+# #Combine the t-test results in a data frame
+# df.tHSD <- as.data.frame(purrr::map_df(tHSD, tidy))
+# tHSD.filter <- df.tHSD %>% filter(contrast %in% c('Disturb:Unchanged-Control:Unchanged', 'Disturb:Low-Control:Low', 
+#                                                   'Disturb:Mid-Control:Mid', 'Disturb:High-Control:High'))
+# 
+# tHSD.filter
+# #Add a variable label column
+# # tHSD.filter$variable
+# tHSD.filter$variable = c('Predicted Die-off (trees ha<sup>-1</sup>)','Predicted Die-off (trees ha<sup>-1</sup>)','Predicted Die-off (trees ha<sup>-1</sup>)','Predicted Die-off (trees ha<sup>-1</sup>)',
+#                          'Predicted Die-off (% Tree Cover)','Predicted Die-off (% Tree Cover)','Predicted Die-off (% Tree Cover)','Predicted Die-off (% Tree Cover)',
+#                          'Predicted Die-off (trees ha<sup>-1</sup>)','Predicted Die-off (trees ha<sup>-1</sup>)','Predicted Die-off (trees ha<sup>-1</sup>)','Predicted Die-off (trees ha<sup>-1</sup>)',
+#                          'Predicted Die-off (% Tree Cover)','Predicted Die-off (% Tree Cover)','Predicted Die-off (% Tree Cover)','Predicted Die-off (% Tree Cover)')
+#                          # 'Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)',
+#                          # 'Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)',
+#                          # 'Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)')
+# 
+# tHSD.filter$fire.severity = c('Lowest', 'Low', 'Moderate', 'High',
+#                               'Lowest', 'Low', 'Moderate', 'High',
+#                               'Lowest', 'Low', 'Moderate', 'High',
+#                               'Lowest', 'Low', 'Moderate', 'High')
+#                               # 'Lowest', 'Low', 'Moderate', 'High')
+# summary(sev.pixel.filter)
+# #Add mean values for Estimate 1
+# tHSD.filter$estimate.1 <- c(
+#   # Die-off (ADS); Pr-ET 4-year Predict
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$ADS.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$ADS.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$ADS.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$ADS.PrET_4yr.predict),
+#   # Die-off (dtree) ; Pr-ET 4-year Predict
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$dTree.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$dTree.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$dTree.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$dTree.PrET_4yr.predict),
+#   # Die-off (ADS); Tree Cover Predict
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$ADS.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$ADS.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$ADS.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$ADS.Tree_Cover.predict),
+#   # Die-off (dtree) ; Tree Cover Predict
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Unchanged'))$dTree.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Low'))$dTree.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'Mid'))$dTree.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Disturb' & sev.bin == 'High'))$dTree.Tree_Cover.predict)
+#   
+# )
+# 
+# #Add mean values for Estimate 2
+# tHSD.filter$estimate.2 <- c(
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$ADS.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$ADS.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$ADS.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$ADS.PrET_4yr.predict),
+#   # Die-off (dtree) ; Pr-ET 4-year Predict
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$dTree.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$dTree.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$dTree.PrET_4yr.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$dTree.PrET_4yr.predict),
+#   # Die-off (ADS); Tree Cover Predict
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$ADS.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$ADS.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$ADS.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$ADS.Tree_Cover.predict),
+#   # Die-off (dtree) ; Tree Cover Predict
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Unchanged'))$dTree.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Low'))$dTree.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'Mid'))$dTree.Tree_Cover.predict),
+#   mean((sev.pixel.filter %>% filter(treatment == 'Control' & sev.bin == 'High'))$dTree.Tree_Cover.predict)
+# )
+# summary(tHSD.filter)
+# 
+# #Calculate proportion differences from Tukey HSD tests
+# tHSD.filter$diff.pct <- tHSD.filter$estimate / tHSD.filter$estimate.2 * 100
+# 
+# tHSD.filter$low.pct <- tHSD.filter$conf.low / tHSD.filter$estimate.2 * 100
+# 
+# tHSD.filter$high.pct <- tHSD.filter$conf.high / tHSD.filter$estimate.2 * 100
+# tHSD.filter
+# #Select and sort the tukey HSD columns and 
+# tHSD.filter.tab <- tHSD.filter %>% dplyr::select(variable, fire.severity, diff.pct, high.pct, low.pct, adj.p.value)
+# 
+# #Name the columns of the data frame
+# colnames(tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low 95% CI', 'High 95% CI', 'p-value')
+# 
+# #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+# tb3 <- kbl(tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb3, width = 10, file = "TableS4_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0)
+# 
+# #Select and sort the tukey HSD columns and 
+# tHSD.filter.sup <- tHSD.filter %>% dplyr::select(variable, fire.severity, estimate.1, estimate.2, estimate, conf.low, conf.high, 
+#                                                  diff.pct, high.pct, low.pct, adj.p.value)
+# 
+# #Name the columns of the data frame
+# colnames(tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 'Control Estimate','Difference', 'Low 95% CI', 'High 95% CI', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
+# # ncol(tHSD.filter.sup)
+# #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+# tb4 <- kbl(tHSD.filter.sup, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+# as_image(x = tb4, width = 10, file = "TableS6_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 

@@ -42,23 +42,38 @@ st_area(usfs.sierra.union) * 0.0001
 #Get the FRAP and FRAP Rx data
 frap <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\firep21_1.shp")
 c <- st_crs(frap)
-# st_crs(frap)
-# st_is_valid(frap)
-# frap$valid <- st_is_valid(frap)
-
 #Add the Wildfire Perimeters
 frap$intersects <- st_intersects(frap, st_transform(usfs.sierra.union,c)) %>% lengths > 0
 frap$title <- 'Wild Fire Perimeters'
+frap.clip <- st_intersection(frap, st_transform(usfs.sierra.union,c))
+frap.clip$area <- st_area(frap.clip)
+frap.clip <- frap.clip %>% mutate(type = 'Wild')
+
 #Add the Prescribed Fire Perimeters
 rxburn <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\rxburn21_1.shp")
 rxburn$intersects <- st_intersects(rxburn, st_transform(usfs.sierra.union,c)) %>% lengths > 0
 rxburn$title <- 'Prescribed Fire Perimeters'
+rxburn.clip <- st_intersection(rxburn, st_transform(usfs.sierra.union,c))
+rxburn.clip$area <- st_area(rxburn.clip)
+rxburn.clip <- rxburn.clip %>% mutate(type = 'Prescribed')
+
+#combined FRAP and Rx
+frap.rxburn.clip <- dplyr::bind_rows(frap.clip, rxburn.clip)
+
 #Add the Fire Severity Perimeters
 fire.sev <- read_sf(file.path(sev_in, "VegBurnSeverity18.shp"))
 fire.sev$intersects <- st_intersects(fire.sev, st_transform(usfs.sierra.union,c)) %>% lengths > 0
+fire.sev.clip <- st_intersection(fire.sev, st_transform(usfs.sierra.union,c))
+fire.sev.clip$area <- st_area(fire.sev.clip)
+
+#Total perimeters
 fire.sev.perimeter <- read_sf("D:\\Large_Files\\Fire_Severity\\veg_severity_perimeters\\veg_severity_perimeters.shp")
 fire.sev.perimeter$intersects <- st_intersects(fire.sev.perimeter, st_transform(usfs.sierra.union,c)) %>% lengths > 0
 fire.sev.perimeter$title <- 'Fire Severity Perimeters'
+fire.sev.perimeter.clip <- st_intersection(fire.sev.perimeter, st_transform(usfs.sierra.union,c))
+fire.sev.perimeter.clip$area <- st_area(fire.sev.perimeter.clip)
+# plot(fire.sev.perimeter)
+# plot(fire.sev.perimeter.clip)
 
 #Number of FRAP fires
 frap %>% filter(intersects == TRUE & YEAR_ <= 2010 & YEAR_ >= 1987) %>% count()
@@ -71,8 +86,8 @@ fire.sev.perimeter %>% filter(intersects == TRUE & FIRE_YEAR <= 2010 & FIRE_YEAR
 
 #FRAP permeters
 p1a <- ggplot() + 
-  geom_sf(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
-  geom_sf(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
+  geom_sf(data = frap.clip %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
+  geom_sf(data = rxburn.clip %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('Longitude') + ylab('Latitude') +
   scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + #facet_wrap(~title) +
@@ -88,25 +103,28 @@ p1a
 
 #Add Fire colors
 #Create the palette
-cols <- c("Wild"=brewer_pal('div', "Set2")(2)[2], "Prescribed" = brewer_pal('div', "Set2")(2)[1])
+cols <- c(brewer_pal('div', "Set2")(2)[2], brewer_pal('div', "Set2")(2)[1])
 # lines <- c("Wild" = "dashed", "Prescribed" = "solid")
-
+# summary(rxburn.clip)
+# summary(frap.clip)
+# summary(fire.sev.clip)
+# summary(frap.rxburn.clip)
 #Add the Burned Area Time Series
 p1b <- ggplot() +
   #Line of total FRAP burned area in the South Sierra
   # geom_line(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
   #           group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
   #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000, color = "Wild"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
-  geom_bar(stat = 'identity', data = frap %>% filter(YEAR_ >= 1987 & intersects == TRUE & YEAR_ <= 2010) %>% #
-              group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
-            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = "Wild"), linewidth = 1, alpha = 0.8) +  
+  geom_bar(stat = 'identity', data = frap.rxburn.clip %>% filter(YEAR_ >= 1987 & intersects == TRUE & YEAR_ <= 2010) %>% #
+              group_by(YEAR_, .groups = 'keep', type) %>% reframe(Area = sum(as.numeric(area))), 
+            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = type), linewidth = 1, alpha = 0.8) +  
   # Line of total RxBurn burned area in the South Sierra
   # geom_line(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
   #             group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)),
   #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area /10000, color = "Prescribed"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
-  geom_bar(stat = 'identity', data = rxburn %>% filter(YEAR_ >= 1987 & intersects == TRUE & YEAR_ <= 2010 ) %>% #& intersects == TRUE
-              group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)),
-            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = "Prescribed"), linewidth = 1, alpha = 0.8) +
+  # geom_bar(stat = 'identity', data = rxburn.clip %>% filter(YEAR_ >= 1987 & intersects == TRUE & YEAR_ <= 2010 ) %>% #& intersects == TRUE
+  #             group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(as.numeric(area))),
+  #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = "Prescribed"), linewidth = 1, alpha = 0.8, position = 'stack') +
   theme_bw() + 
   #Figure
   theme(legend.position = c(0.25, 0.8), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
@@ -129,8 +147,8 @@ p1c <- ggplot() +
   #             group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
   #           mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
   #                         color = as.factor(BURNSEV)), linewidth = 1, linetype = 'dashed', alpha = 0.8) + 
-  geom_bar(stat = 'identity', data = fire.sev %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>% # 
-              group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
+  geom_bar(stat = 'identity', data = fire.sev.clip %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>% # 
+              group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(as.numeric(area))), 
             mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
                           fill = as.factor(BURNSEV)), linewidth = 1, alpha = 0.8) + 
   #Do the black and white theme
@@ -159,7 +177,7 @@ ggsave(filename = 'Fig1_fire_maps.png', height=18, width= 18, units = 'cm', dpi=
 #Supplementary Figure 1 
 #Shows where the different Fire perimeters are
 p2a <- ggplot() + 
-  geom_sf(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
+  geom_sf(data = frap.clip %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('Longitude') + ylab('Latitude') +
   scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + facet_wrap(~title) +
@@ -176,7 +194,7 @@ p2a
 
 #Prescribed Fire Perimeters
 p2b <- ggplot() + 
-  geom_sf(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
+  geom_sf(data = rxburn.clip %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(YEAR_))) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('Longitude') + ylab(NULL) +
   scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + facet_wrap(~title) +
@@ -194,7 +212,7 @@ p2b
 #Fire Severity Perimeters
 p2c <- ggplot() + 
   # geom_sf(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE), mapping = aes(fill = YEAR_), color = 'black', linewidth = 1) +
-  geom_sf(data = fire.sev.perimeter %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(FIRE_YEAR))) +
+  geom_sf(data = fire.sev.perimeter.clip %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE), mapping = aes(fill = as.numeric(FIRE_YEAR))) +
   geom_sf(data = usfs.sierra.union, color='black', size = 0.4,  fill = NA) +
   coord_sf() + xlab('Longitude') + ylab(NULL) +
   scale_fill_viridis_c(name = 'Fire Year', option = 'inferno', na.value = NA) + theme_bw() + facet_wrap(~title) +

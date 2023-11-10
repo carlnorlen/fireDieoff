@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: June 2, 2022
-#Date Update: September 1, 2023
+#Date Update: November 10, 2023
 #Purpose: Explore pixel sampling data with rgee.
 
 #Run the script: R < pixel_sample.r --vanilla
@@ -32,15 +32,10 @@ usfs.sierra.union <- usfs.sierra %>% st_union()
 
 #Calculate the Area of the South Sierra polygons
 st_area(usfs.sierra.union) * 0.0001
-# st_bbox(usfs.sierra.union)
-# usfs.sierra.union$bbox
-# sierra.extent <- st_bbox(usfs.sierra.union)
-# sierra.extent
-
-# frap.files <- list.files(file.path(frap_in))
 
 #Get the FRAP and FRAP Rx data
-frap <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\firep21_1.shp")
+# frap <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\firep21_1.shp")
+frap <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\firep21_1_repair.shp")
 c <- st_crs(frap)
 #Add the Wildfire Perimeters
 frap$intersects <- st_intersects(frap, st_transform(usfs.sierra.union,c)) %>% lengths > 0
@@ -115,9 +110,9 @@ p1b <- ggplot() +
   # geom_line(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
   #           group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
   #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000, color = "Wild"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
-  geom_bar(stat = 'identity', data = frap.rxburn.clip %>% filter(YEAR_ >= 1987 & intersects == TRUE & YEAR_ <= 2010) %>% #
-              group_by(YEAR_, .groups = 'keep', type) %>% reframe(Area = sum(as.numeric(area))), 
-            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = type), linewidth = 1, alpha = 0.8) +  
+  geom_bar(stat = 'identity', data = frap.rxburn.clip %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010) %>% # intersects == TRUE & 
+              group_by(YEAR_, type, .groups = 'keep') %>% reframe(Area = sum(as.numeric(area))), 
+            mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = as.factor(type)), linewidth = 1, alpha = 0.8) +  
   # Line of total RxBurn burned area in the South Sierra
   # geom_line(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
   #             group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)),
@@ -147,7 +142,7 @@ p1c <- ggplot() +
   #             group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
   #           mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
   #                         color = as.factor(BURNSEV)), linewidth = 1, linetype = 'dashed', alpha = 0.8) + 
-  geom_bar(stat = 'identity', data = fire.sev.clip %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>% # 
+  geom_bar(stat = 'identity', data = fire.sev.clip %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & BURNSEV != 255) %>% # intersects == TRUE &
               group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(as.numeric(area))), 
             mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
                           fill = as.factor(BURNSEV)), linewidth = 1, alpha = 0.8) + 

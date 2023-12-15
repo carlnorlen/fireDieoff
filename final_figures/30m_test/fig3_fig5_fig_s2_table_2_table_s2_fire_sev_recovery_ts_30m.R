@@ -18,7 +18,7 @@ lapply(p,require,character.only=TRUE)
 
 # library(scales)
 #Home Computer directories
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/30m test')
+setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/30m_test')
 dir_in <- "D:\\Fire_Dieoff"
 
 
@@ -309,24 +309,31 @@ sev.pixel.sample <- sev.pixel.sample %>%
 sev.pixel.summary <- sev.pixel.sample %>% 
   filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
   group_by(stand.age, sev.bin) %>% 
-  reframe(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
+  reframe(Tree_Cover.mean = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']),
           Tree_Cover.mean.control = mean(Tree_Cover[treatment == 'Control']),
-          Tree_Cover.mean.pct = Tree_Cover.mean / Tree_Cover.mean.control * 100,
-          Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
+          Tree_Cover.sd = sd(Tree_Cover[treatment == 'Disturb'])^2 + sd(Tree_Cover[treatment == 'Control'])^2, 
           Tree_Cover.sd.pct = Tree_Cover.sd / Tree_Cover.mean.control * 100,
           Tree_Cover.n = n(),
-          Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
+          Shrub_Cover.mean = mean(Shrub_Cover[treatment == 'Disturb']) - mean(Shrub_Cover[treatment == 'Control']),
           Shrub_Cover.mean.control = mean(Shrub_Cover[treatment == 'Control']),
-          Shrub_Cover.mean.pct = Shrub_Cover.mean / Shrub_Cover.mean.control * 100,
-          Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
+          # Shrub_Cover.mean.pct = Shrub_Cover.mean / Shrub_Cover.mean.control * 100,
+          Shrub_Cover.sd = sd(Shrub_Cover[treatment == 'Disturb'])^2 + sd(Shrub_Cover[treatment == 'Control'])^2, 
           Shrub_Cover.sd.pct = Shrub_Cover.sd / Shrub_Cover.mean.control * 100,
           Shrub_Cover.n = n(),
-          AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
+          AET.mean = mean(AET[treatment == 'Disturb']) - mean(AET[treatment == 'Control']),
           AET.mean.control = mean(AET[treatment == 'Control']),
-          AET.mean.pct = AET.mean / AET.mean.control * 100,
+          # AET.mean.pct = AET.mean / AET.mean.control * 100,
           AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
           AET.sd.pct = AET.sd / AET.mean.control * 100,
           AET.n = n()) %>% 
+  group_by(sev.bin) %>%
+  mutate(Tree_Cover.mean = Tree_Cover.mean - mean(Tree_Cover.mean[stand.age %in% c(-1, -2)]),
+         Shrub_Cover.mean = Shrub_Cover.mean - mean(Shrub_Cover.mean[stand.age %in% c(-1, -2)]),
+         AET.mean = AET.mean - mean(AET.mean[stand.age %in% c(-1, -2)])) %>% 
+  group_by(stand.age, sev.bin) %>%
+  mutate(Tree_Cover.mean.pct = Tree_Cover.mean / Tree_Cover.mean.control * 100,
+         Shrub_Cover.mean.pct = Shrub_Cover.mean / Shrub_Cover.mean.control * 100,
+         AET.mean.pct = AET.mean / AET.mean.control * 100) %>%
   #Add the upper and lower 95% confidence intervals
   mutate(tree.ci.95.lower = Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
          tree.ci.95.upper = Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),

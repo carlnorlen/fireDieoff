@@ -125,6 +125,8 @@ nlsFit <-
       start = start,
       data = model.data)
 nlsFit
+
+summary(GEE_ET_tower_all)
 # 
 # nlsFitR2 <- summary(nlsFit)$r.squared
 # nlsFitR2
@@ -220,7 +222,7 @@ p1e <- ggplot(data = GEE_ET_tower_all  %>% filter(!is.na(ET_mm_d) & site_ID != '
   stat_cor(label.x.npc = 0.1, label.y = 5, mapping = aes(label = paste(..rr.label..)),
            size = 3.5, color = 'black', r.accuracy = 0.001, p.accuracy = 0.001) +
   stat_regline_equation(label.x.npc = 0.1, label.y = 4.5, size = 3.5, formula = y ~ 0 + x) +
-  
+  # geom_text(data = NULL, label.x.npc = 0.1, label.y = 4.5, size = 3.5, label = "y = 1.8x") +
   theme_bw() +
   theme(legend.position = 'none') +
   ylab(expression('Observed ET (mm day'^-1*')')) +
@@ -247,7 +249,7 @@ f1 <- ggarrange(p1a, p1b, p1c, p1d, p1e, p1f, nrow=3, ncol = 2, common.legend = 
 f1
 
 ggsave(filename = 'figS2_ET_prediction_equations.png', height=24, width= 16, units = 'cm', dpi=900)
-
+ggsave(filename = 'figS2_ET_prediction_equations.svg', height=24, width= 16, units = 'cm', dpi=900)
 # figS1_scalingfactors <- ggplot(data = GEE_ET_tower_all) + geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Tcorr,color='T scalar'),alpha=0.5) + 
 #   geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Kcorr,color='K scalar'),alpha=0.5) + 
 #   geom_boxplot(aes(as.factor(month(date)),GPP_CAsites_Kcorr*GPP_CAsites_Tcorr,color='Combined scalar')) + 

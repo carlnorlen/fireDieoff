@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: January 9, 2024
+#Date Updated: February 20, 2024
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -8,13 +8,13 @@
 #Run the script: R < pixel_sample.r --vanilla
 p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr',  
       'sf', 'ncdf4', 'gtools', 'tigris', 'patchwork', 'ggpubr', 'ggnewscale', 'segmented',
-       'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot', 'stargazer', 'kableExtra',
+       'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot2', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'tidymodels', 'vip')
 # install.packages(p,repo='https://cran.r-project.org/')
 
-install.packages(c('tidymodels', 'vip'),repo='https://cran.r-project.org/')
+# install.packages('webshot2',repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
-# library(ggpubr)
+# library(webshot2)
 #Set the working directory
 
 #Home data directory
@@ -456,7 +456,7 @@ p1a <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + 
-  ylab(expression(atop('Die-back Severity', '(trees ha'^-1*')'))) + xlab('Year') 
+  ylab(expression(atop('Dieback Severity', '(trees ha'^-1*')'))) + xlab('Year') 
 p1a
 
 #Create the 
@@ -678,7 +678,7 @@ p7a <- ggbarplot(pixel.filter,
     method = "tukey_hsd", label = "p.format"
   ) +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Die-off Severity','(trees ha'^-1*')')))
+  ylab(expression(atop('Dieback Severity','(trees ha'^-1*')')))
 p7a
 
 p7b <- ggbarplot(pixel.filter,
@@ -703,7 +703,7 @@ p7b <- ggbarplot(pixel.filter,
     method = "tukey_hsd", label = "p.format"
   ) +
   scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Die-off Severity', '('*Delta*'Tree %)')))
+  ylab(expression(atop('Dieback Severity', '('*Delta*'Tree %)')))
 p7b
 
 p7c <- ggbarplot(pixel.filter,
@@ -833,8 +833,8 @@ df.rxfrap.tHSD <- as.data.frame(purrr::map_df(rxfrap.tHSD, tidy))
 rxfrap.tHSD.filter <- df.rxfrap.tHSD %>% filter(contrast %in% c('Disturb:Rxfire-Control:Rxfire', 'Disturb:Wildfire-Control:Wildfire'))
 
 #Add a variable label column
-rxfrap.tHSD.filter$variable = c('Die-off (trees ha<sup>-1</sup>)','Die-off (trees ha<sup>-1</sup>)',
-                                'Die-off (% Tree Cover)', 'Die-off (% Tree Cover)',
+rxfrap.tHSD.filter$variable = c('Dieback (trees ha<sup>-1</sup>)','Dieback (trees ha<sup>-1</sup>)',
+                                'Dieback (% Tree Cover)', 'Dieback (% Tree Cover)',
                                 'Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)',
                                 'Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)',
                                 'Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)')
@@ -847,10 +847,10 @@ rxfrap.tHSD.filter$fire.type = c('Prescribed Fire', 'Wild Fire',
 
 #Add mean values for Estimate 1
 rxfrap.tHSD.filter$estimate.1 <- c(
-  #Die-off (ADS)
+  #Dieback (ADS)
   mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire'))$ADS, na.rm = T),
   mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire'))$ADS, na.rm = T),
-  #Die-off (dTree)
+  #Dieback (dTree)
   mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire'))$dTree, na.rm = T),
   mean((pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == 'Wildfire'))$dTree, na.rm = T),
   #Tree Cover
@@ -866,10 +866,10 @@ rxfrap.tHSD.filter$estimate.1 <- c(
 
 #Add mean values for Estimate 2
 rxfrap.tHSD.filter$estimate.2 <- c(
-  #Die-off (ADS)
+  #Dieback (ADS)
   mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Rxfire'))$ADS, na.rm = T),
   mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Wildfire'))$ADS, na.rm = T),
-  #Die-off (dTree)
+  #Dieback (dTree)
   mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Rxfire'))$dTree, na.rm = T),
   mean((pixel.filter %>% filter(treatment == 'Control' & fire.type.bin == 'Wildfire'))$dTree, na.rm = T),
   #Tree Cover
@@ -909,9 +909,12 @@ rxfrap.tHSD.filter.sup <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.ty
 colnames(rxfrap.tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 'Control Estimate','Difference', 'Low 95% CI', 'High 95% CI', 'Difference (%)', 'Low (%)', 'High (%)', 'p-value')
 ncol(rxfrap.tHSD.filter.sup)
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
+print(rxfrap.tHSD.filter.sup)
 tb2 <- kbl(rxfrap.tHSD.filter.sup, format = 'html', caption = "Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
-as_image(x = tb2, width = 10, file = "TableS1_fire_type_tHSD_test_results_with_pct.png", zoom = 5.0) 
-
+tb2
+#The as_image command isn't working any more
+#Saved with the viewer window
+as_image(x = tb2, width = 10, file = "TableS1_fire_type_tHSD_test_results_with_pct_v2.png", zoom = 5.0) 
 
 #Figure S3: Vegetation recovery
 p4a <- ggplot() + 
@@ -1111,7 +1114,7 @@ ggsave(filename = 'FigS4_data_check_fire_type.png', height=18, width= 18, units 
 #   geom_smooth(method = 'lm', mapping = aes(x = dTree, y = ADS), color = 'black', size = 2, linetype = 'dashed') +
 #   stat_cor(mapping = aes(x = dTree, y = ADS, label = paste(..rr.label..))) +
 #   theme_bw() +
-#   xlab('Die-off (% Tree Cover)') + ylab(expression('Die-off (trees ha'^-1*')'))
+#   xlab('Dieback (% Tree Cover)') + ylab(expression('Dieback (trees ha'^-1*')'))
 # p6
 # 
 # ggsave(filename = 'FigS7_frap_rx_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
@@ -1249,7 +1252,7 @@ summary(dTree.seg)
 #   #Add the R^2 text
 #   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
 #   theme_bw() +
-#   xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-back (% Tree Cover)')
+#   xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Dieback (% Tree Cover)')
 # p1
 # 
 # p2 <- p1 + theme(
@@ -1297,7 +1300,7 @@ summary(dTree.seg)
 #   theme_bw() +
 #   theme(axis.title.y = element_blank(), axis.text.y = element_blank()) +
 #   scale_y_reverse() +
-#   xlab(expression('Tree Cover (%)')) + ylab(expression('Die-back (trees ha'^-1*')'))
+#   xlab(expression('Tree Cover (%)')) + ylab(expression('Dieback (trees ha'^-1*')'))
 # p3
 # 
 # p4 <- p3 + theme(
@@ -1344,10 +1347,10 @@ pixel.grid.data <- pixel.filter %>%
 tree.xlab <- c('0','','','', '', '25', '', '', '', '', '50', '', '', '', '', '75', '', '', '', '', '100')
 pret.ylab <- c('','','','-2000', '', '', '', '', '-1000', '', '', '', '', '0', '', '', '', '', '1000', '', '', '', '', '2000', '', '', '', '', '3000', '', '')
 
-#Die-off Distribution Chart
+#Dieback Distribution Chart
 p5 <- ggplot(data = pixel.grid.data %>% filter(count >= 5 & !is.na(Tree.bin)), mapping = aes(y = PrET.bin, x = Tree.bin, fill = dTree.mean, group = dTree.mean)) +
   geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Die-back (%)'))) + # (trees ha'^-1*')'))) +
+  scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
   facet_grid(fire.type.bin ~ treatment) +
   theme_bw() +
   # theme(axis.title.y = element_blank(), axis.text.y = element_blank()) +
@@ -1362,7 +1365,7 @@ ggsave(filename = 'FigS10_frap_rx_dtree_tree_pet_4yr_interaction.png', height=12
 
 p6 <- ggplot(data = pixel.grid.data %>% filter(count >= 5 & !is.na(Tree.bin)), mapping = aes(y = PrET.bin, x = Tree.bin, fill = ADS.mean, group = ADS.mean)) +
   geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = ADS.mean)) +
-  scale_fill_gradient(low = 'yellow', high = '#de2d26', name = expression(atop('Observed', 'Die-back (trees ha'^-1*')'))) + # (trees ha'^-1*')'))) +
+  scale_fill_gradient(low = 'yellow', high = '#de2d26', name = expression(atop('Observed', 'Dieback (trees ha'^-1*')'))) + # (trees ha'^-1*')'))) +
   facet_grid(fire.type.bin ~ treatment) +
   theme_bw() +
   # theme(axis.title.y = element_blank(), axis.text.y = element_blank()) +
@@ -1391,7 +1394,7 @@ set.seed(735)
 # # dieoff_train_lm <- training(dieoff_split_lm)
 # # dieoff_test_lm  <-  testing(dieoff_split_lm)
 # 
-# #LM die-off recipe
+# #LM Dieback recipe
 # dieoff_rec_lm <-
 #   recipe(dTree ~ Tree_Cover + PrET_4yr,
 #          #ba_2012 + conifer.2012.frac,

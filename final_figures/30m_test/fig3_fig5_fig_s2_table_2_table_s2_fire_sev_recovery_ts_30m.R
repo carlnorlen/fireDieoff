@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: December 6, 2023
+#Date Updated: February 20, 2023
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -358,7 +358,7 @@ sev.results.data.pct
 #Create Figure 3
 #Create a unique palette
 mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
-# mypalette
+
 #Create fire recover curves
 p2a <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
@@ -511,7 +511,7 @@ p1a <- ggplot() +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
-  ylab(expression(atop('Die-back Severity', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+  ylab(expression(atop('Dieback Severity', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
 p1a
 
 #Create the 
@@ -766,8 +766,8 @@ tHSD.filter <- df.tHSD %>% filter(contrast %in% c('Disturb:Unchanged-Control:Unc
                                                   'Disturb:Mid-Control:Mid', 'Disturb:High-Control:High'))
 #Add a variable label column
 # tHSD.filter$variable
-tHSD.filter$variable = c('Die-back (trees ha<sup>-1</sup>)','Die-back (trees ha<sup>-1</sup>)','Die-back (trees ha<sup>-1</sup>)','Die-back (trees ha<sup>-1</sup>)',
-                         'Die-back (% Tree Cover)','Die-back (% Tree Cover)','Die-back (% Tree Cover)','Die-back (% Tree Cover)',
+tHSD.filter$variable = c('Dieback (trees ha<sup>-1</sup>)','Dieback (trees ha<sup>-1</sup>)','Dieback (trees ha<sup>-1</sup>)','Dieback (trees ha<sup>-1</sup>)',
+                         'Dieback (% Tree Cover)','Dieback (% Tree Cover)','Dieback (% Tree Cover)','Dieback (% Tree Cover)',
                          'Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)','Pre-Drought Tree Cover (%)',
                          'Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)','Pre-Drought ET (mm yr<sup>-1</sup>)',
                          'Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)','Pr-ET (mm 4yr<sup>-1</sup>)')
@@ -851,6 +851,7 @@ colnames(tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'L
 
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
 tb1 <- kbl(tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+tb1
 as_image(x = tb1, width = 10, file = "Table2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 
 
 #Select and sort the tukey HSD columns and 
@@ -862,6 +863,7 @@ colnames(tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 
 # ncol(tHSD.filter.sup)
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
 tb2 <- kbl(tHSD.filter.sup, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
+tb2
 as_image(x = tb2, width = 10, file = "TableS2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 
 
 #Create Bar Chart as a Potential Alternative to Table 1
@@ -888,7 +890,7 @@ p7a <- ggbarplot(sev.pixel.filter,
     method = "tukey_hsd", label = "p.format", #group.by = 'treatment',
   ) +
   scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Die-back Severity','(trees ha'^-1*')')))
+  ylab(expression(atop('Dieback Severity','(trees ha'^-1*')')))
 p7a
 
 p7b <- ggbarplot(sev.pixel.filter,
@@ -914,7 +916,7 @@ p7b <- ggbarplot(sev.pixel.filter,
     method = "tukey_hsd", label = "p.format"
   ) +
   scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
-  ylab(expression(atop('Die-back Severity', '('*Delta*'Tree %)')))
+  ylab(expression(atop('Dieback Severity', '('*Delta*'Tree %)')))
 p7b
 
 p7c <- ggbarplot(sev.pixel.filter,
@@ -1205,7 +1207,7 @@ p6 <- ggplot(data = sev.pixel.filter) +
   geom_smooth(method = 'lm', mapping = aes(x = dTree, y = ADS), color = 'black', size = 2, linetype = 'dashed') +
   stat_cor(mapping = aes(x = dTree, y = ADS, label = paste(..rr.label..))) +
   theme_bw() +
-  xlab('Die-back (% Tree Cover)') + ylab(expression('Die-back (trees ha'^-1*')'))
+  xlab('Dieback (% Tree Cover)') + ylab(expression('Dieback (trees ha'^-1*')'))
 p6
 
 ggsave(filename = 'FigS8_frap_rx_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
@@ -1346,7 +1348,7 @@ p1 <- ggplot(data = sev.control) + # %>% filter(sev.bin != 'Unchanged')) +
   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
-  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Die-back (% Tree Cover)')
+  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab('Dieback (% Tree Cover)')
 p1
 
 p2 <- p1 + theme(
@@ -1432,7 +1434,7 @@ p5 <- ggplot(data = sev.control.ads) + # %>% filter(sev.bin != 'Unchanged')) +
   #Add the R^2 text
   # geom_text(data = letter.text, mapping = aes(x = x, y = y, label = label), size = 5, fontface = "bold") +
   theme_bw() +
-  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab(expression('Die-back (trees ha'^-1*')'))
+  xlab(expression('Four-year Pr-ET (mm 4yr'^-1*')')) + ylab(expression('Dieback (trees ha'^-1*')'))
 p5
 # 
 p6 <- p5 + theme(

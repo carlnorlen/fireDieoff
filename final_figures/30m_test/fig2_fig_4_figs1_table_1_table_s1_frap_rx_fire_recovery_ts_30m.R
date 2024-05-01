@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: February 20, 2024
+#Date Updated: April 30, 2024
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -10,11 +10,11 @@ p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr',
       'sf', 'ncdf4', 'gtools', 'tigris', 'patchwork', 'ggpubr', 'ggnewscale', 'segmented',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot2', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'tidymodels', 'vip')
-# install.packages(p,repo='https://cran.r-project.org/')
+# install.packages('magick',repo='https://cran.r-project.org/')
 
-# install.packages('webshot2',repo='https://cran.r-project.org/')
+# install.packages('devtools',repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
-# library(webshot2)
+# library(magick)
 #Set the working directory
 
 #Home data directory
@@ -914,7 +914,7 @@ tb2 <- kbl(rxfrap.tHSD.filter.sup, format = 'html', caption = "Tukey HSD Compari
 tb2
 #The as_image command isn't working any more
 #Saved with the viewer window
-as_image(x = tb2, width = 10, file = "TableS1_fire_type_tHSD_test_results_with_pct_v2.png", zoom = 5.0) 
+as_image(x = tb2, width = 14, file = "TableS1_fire_type_tHSD_test_results_with_pct_v2.png", zoom = 6.0)
 
 #Figure S3: Vegetation recovery
 p4a <- ggplot() + 
@@ -1127,20 +1127,20 @@ ggsave(filename = 'FigS4_data_check_fire_type.png', height=18, width= 18, units 
 # # rx.disturb <- pixel.filter %>% filter(treatment == 'Disturb' & fire.type.bin == "Rxfire" & !is.na(ADS))  
 # 
 # #Models for Wild Fire with ADS
-ADS.lm <- lm(data = pixel.filter, ADS ~ Tree_Cover + PrET_4yr)
-summary(ADS.lm)
-
-# #Calculate the sgemented models
-ADS.seg <- segmented(ADS.lm, seg.Z=~PrET_4yr)
-summary(ADS.seg)
-
-#Models for Wildfire with dTree
-dTree.lm <- lm(data = pixel.filter, dTree ~ Tree_Cover + PrET_4yr)
-summary(dTree.lm)
-
-# #Calculate the sgemented models
-dTree.seg <- segmented(dTree.lm, seg.Z=~PrET_4yr)
-summary(dTree.seg)
+# ADS.lm <- lm(data = pixel.filter, ADS ~ Tree_Cover + PrET_4yr)
+# summary(ADS.lm)
+# 
+# # #Calculate the sgemented models
+# ADS.seg <- segmented(ADS.lm, seg.Z=~PrET_4yr)
+# summary(ADS.seg)
+# 
+# #Models for Wildfire with dTree
+# dTree.lm <- lm(data = pixel.filter, dTree ~ Tree_Cover + PrET_4yr)
+# summary(dTree.lm)
+# 
+# # #Calculate the sgemented models
+# dTree.seg <- segmented(dTree.lm, seg.Z=~PrET_4yr)
+# summary(dTree.seg)
 # wild.disturb.seg <- segmented(wild.disturb.lm)
 # # rx.control.seg <- segmented(rx.control.lm)
 # # rx.disturb.seg <- segmented(rx.disturb.lm)
@@ -1378,7 +1378,7 @@ p6
 ggsave(filename = 'FigS11_frap_rx_ads_tree_pet_4yr_interaction.png', height=12, width= 14, units = 'cm', dpi=900)
 
 #Simple Model to calculate impact of changing tree cover and Pr-ET four-year levels.
-set.seed(735)
+# set.seed(735)
 
 #Set up the linear model
 # input_lm <- data %>%
@@ -1412,6 +1412,6 @@ set.seed(735)
 # lm_fit <- fit(lm_wflow, dieoff_train_lm)
 
 #Testing out the linear model
-dieoff_train_lm$ADS.predict <- predict(lm_fit, dieoff_train_lm)$.pred
-rsq_trad(dieoff_train_lm, ADS, ADS.predict)
-rmse(dieoff_train_lm, ADS, ADS.predict)
+# dieoff_train_lm$ADS.predict <- predict(lm_fit, dieoff_train_lm)$.pred
+# rsq_trad(dieoff_train_lm, ADS, ADS.predict)
+# rmse(dieoff_train_lm, ADS, ADS.predict)

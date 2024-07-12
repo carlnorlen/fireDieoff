@@ -1,16 +1,16 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: June 3, 2024
+#Date Updated: July 12, 2024
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
 # cd /C/Users/can02/mystuff/Goulden_Lab/CECS/pixel_sample
 #Run the script: R < pixel_sample.r --vanilla
-p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr',  
+p <- c('ggpubr', 'viridis', 'tidyr', 'dplyr', 'ggmap', 'ggplot2', 'magrittr', 'gstat',
       'sf', 'ncdf4', 'gtools', 'tigris', 'patchwork', 'ggpubr', 'ggnewscale', 'segmented',
        'rlist', 'ggspatial', 'svglite', 'mgcv', 'zoo', 'purrr', 'webshot2', 'stargazer', 'kableExtra',
        'broom', 'svglite','sjPlot','purrr', 'sjmisc', 'magick', 'magrittr', 'knitr', 'xtable', 'tidymodels', 'vip')
-# install.packages('magick',repo='https://cran.r-project.org/')
+# install.packages('gstat',repo='https://cran.r-project.org/')
 
 # install.packages('devtools',repo='https://cran.r-project.org/')
 lapply(p,require,character.only=TRUE)
@@ -302,7 +302,10 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (
           PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
           # Water_Stress = Water_Stress[vi.year == 2015],
           ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]), 
-          dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)])
+          dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)]),
+          latitude = first(latitude),
+          longitude = first(longitude),
+          elevation = first(elevation)
   )
 
 #Create fire recovery curves for Figure 2
@@ -1295,6 +1298,46 @@ f7
 
 ggsave(filename = 'FigS12_forest_type_figure.png', height=12, width= 14, units = 'cm', dpi=900)
 
+summary(pixel.filter)
+
+#Check for spatial autocorrelation
+#Does this matter?
+#Is there an easier way to do this
+#Make the data a spatial data frame
+pixel.spatial <- st_as_sf(pixel.filter, coords = c("longitude", "latitude"), crs = 4326) 
+
+#Calculate a distance matrix
+dist.mat <- st_distance(pixel.spatial)
+
+pixel.spatial.lm <- lm(dTree ~ PrET_4yr + Tree_Cover + ET, pixel.spatial)
+rstandard(pixel.spatial.lm)
+
+#Calculate teh variogram values for the standardized linear model residuals
+var.lm <- gstat::variogram(rstandard(pixel.spatial.lm) ~ 1, data = pixel.spatial, cutoff = 6)
+
+all.ca.prop.lm <- lm(dNDMI ~ drought.f * sequence.f + PET_4yr + tmax_4yr + biomass, all.ca.prop)
+summary(all.ca.prop.lm)
+#Calculate teh variogram values for the standardized linear model residuals
+var.prop.lm <- gstat::variogram(rstandard(all.ca.prop.lm) ~ 1, data = all.ca.prop, cutoff = 6)
+
+#Define the colore
+cols <- c("All" = "black", "5% Sample" ="gray")
+
+p.var.prop.lm <- ggplot() + 
+  #Full Data set
+  geom_point(data = var.lm, mapping = aes(x = dist, y = gamma, color = 'All')) + #Linear model data
+  geom_line(data = var.lm, mapping = aes(x = dist, y = gamma, color = 'All'), linetype = 'dashed') + #Linear model data
+  #Sampled data set
+  # geom_point(data = var.prop.lm, mapping = aes(x = dist, y = gamma, color = '5% Sample')) + #Linear model data
+  # geom_line(data = var.prop.lm, mapping = aes(x = dist, y = gamma, color = '5% Sample'), linetype = 'solid') + #Linear model data
+  geom_hline(yintercept = 0, linetype = 'solid', linewidth = 0.5) +
+  scale_colour_manual(name="Data",values=cols, aesthetics = 'color') +
+  theme_bw() + theme(legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+                     legend.position = c(0.85, 0.2)) + #Presentation text sizes.) + 
+  ylim(0,1) + xlab('Distance (km)') + ylab('Semivariance')
+
+p.var.prop.lm
+ggsave(filename = 'SFig16_variogram_lm_sampled_residuals.png', height=8, width= 12, units = 'cm', dpi=900)
 
 #Set up the linear model
 # input_lm <- data %>%

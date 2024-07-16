@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 12, 2024
+#Date Updated: July 15, 2024
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -298,6 +298,7 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (
   reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
           RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)])) / mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
           Tree_Cover = mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          Shrub_Cover = mean(Shrub_Cover[vi.year %in% c(2010, 2011)]),
           ET = mean(AET[vi.year %in% c(2010, 2011)]),
           PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]),
           # Water_Stress = Water_Stress[vi.year == 2015],
@@ -704,7 +705,8 @@ p7b <- ggbarplot(pixel.filter,
   geom_pwc(
     tip.length = 0, bracket.nudge.y = -0.52,
     method = "tukey_hsd", label = "p.format"
-  ) +
+  ) +l;
+
   scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
   ylab(expression(atop('Dieback Severity', '('*Delta*'Tree %)')))
 p7b
@@ -1106,6 +1108,124 @@ f6
 
 #Save the data
 ggsave(filename = 'FigS4_data_check_fire_type.png', height=18, width= 18, units = 'cm', dpi=900)
+
+#Elevation Separation Data
+pixel.elev.data <- pixel.filter %>% 
+  #filter(!is.na(ADS)) %>%
+  # left_join(y = data %>% dplyr::select(c(latitude, longitude, system.index)), by = join_by(system.index == system.index)) %>%
+  # dplyr::mutate(socal = as.integer(USFS_zone == 262), sierra = as.integer(USFS_zone == 261)) %>% #Make new columns that have 0,1 for Sierra and socal to calculate proportions later
+  dplyr::mutate(elev.bin = cut(elevation, breaks = seq(0, 4000, by = 400))#,
+                #lat.bin = cut(latitude, breaks = seq(34.8, 39.0, by = 0.2))),
+  ) %>%
+  dplyr::group_by(elev.bin, fire.type.bin, treatment) %>%
+  dplyr::mutate(count = n()) %>%
+  dplyr::mutate(ADS.mean = mean(ADS, na.rm = TRUE)) %>%
+  dplyr::mutate(ADS.sd = sd(ADS, na.rm = TRUE)) %>%
+  dplyr::mutate(dTree.mean = mean(dTree)) %>%
+  dplyr::mutate(dTree.sd = sd(dTree)) %>%
+  dplyr::mutate(dTree.n = length(dTree)) %>%
+  dplyr::mutate(Tree.mean = mean(Tree_Cover)) %>%
+  dplyr::mutate(Tree.sd = sd(Tree_Cover)) %>%
+  dplyr::mutate(Shrub.mean = mean(Shrub_Cover)) %>%
+  dplyr::mutate(Shrub.sd = sd(Shrub_Cover)) %>%
+  dplyr::mutate(PrET_4yr.mean = mean(PrET_4yr)) %>%
+  dplyr::mutate(PrET_4yr.sd = sd(PrET_4yr)) %>%
+  dplyr::mutate(ET.mean = mean(ET)) %>%
+  dplyr::mutate(ET.sd = sd(ET)) %>%
+  dplyr::mutate(elevation.mean = mean(elevation)) #%>%
+  # dplyr::mutate(ADS_2017.mean = mean(ADS_2017)) %>%
+  # dplyr::mutate(ADS.predict.overall.mean = mean(ADS.predict * dead_ADS.num)) %>%
+  # dplyr::mutate(ADS.predict.mean = mean(ADS.predict)) %>%
+  # dplyr::mutate(dead_ADS.predict.mean = mean(dead_ADS.predict * 100)) %>%
+  # dplyr::mutate(ADS.mag.2012.mean = mean(ADS.mag.2012)) %>%
+  # dplyr::mutate(dead_ADS_2012.predict.mean = mean((dead_ADS_2012.predict) * 100)) %>%
+  # dplyr::mutate(ADS.mag.change.mean = mean(ADS.mag.2019 - ADS.mag.2012)) %>%
+  # dplyr::mutate(dead_ADS.predict.change.mean = mean((dead_ADS_2019.predict - dead_ADS_2012.predict) * 100)) %>%
+  # dplyr::mutate(stdht.change.mean = mean(stdht_2017 - stdht_2012)) %>%
+  # dplyr::mutate(dieoff.risk.change.mean = mean(dieoff.risk.2019 - dieoff.risk.2012)) %>%
+  # ungroup()
+
+summary(pixel.filter)
+sqrt(9)
+#Elevation Chart
+#Dieback Distribution Chart
+p6a <- ggplot(data = pixel.elev.data %>% filter(count >= 5)) +
+  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
+  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
+  facet_grid(. ~ fire.type.bin) +
+  scale_y_reverse() +
+  geom_line(mapping = aes(y = dTree.mean, x = elevation.mean, color = fire.type.bin, linetype = treatment), linewidth = 1) +
+  geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + 1.96*(dTree.sd / sqrt(count)), ymin = dTree.mean - 1.96*(dTree.sd / sqrt(count)), color = fire.type.bin, linetype = treatment), linewidth = 1) +
+  theme_bw() +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  xlab(expression('Elevation')) + ylab('Dieback (Tree Cover %)')
+p6a
+
+p6b <- ggplot(data = pixel.elev.data %>% filter(count >= 5)) +
+  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
+  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
+  facet_grid(. ~ fire.type.bin) +
+  # scale_y_reverse() +
+  geom_line(mapping = aes(y = ADS.mean, x = elevation.mean, color = fire.type.bin, linetype = treatment), linewidth = 1) +
+  # geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + dTree.sd, ymin = dTree.mean - dTree.sd, color = fire.type.bin, linetype = treatment)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  xlab(expression('Elevation')) + ylab(expression('Dieback (tree ha'^-1*')'))
+p6b
+
+p6c <- ggplot(data = pixel.elev.data %>% filter(count >= 5)) +
+  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
+  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
+  facet_grid(. ~ fire.type.bin) +
+  # scale_y_reverse() +
+  geom_line(mapping = aes(y = Tree.mean, x = elevation.mean, color = fire.type.bin, linetype = treatment), linewidth = 1) +
+  # geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + dTree.sd, ymin = dTree.mean - dTree.sd, color = fire.type.bin, linetype = treatment)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  xlab(expression('Elevation')) + ylab('Tree Cover (%)')
+p6c
+
+p6d <- ggplot(data = pixel.elev.data %>% filter(count >= 5)) +
+  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
+  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
+  facet_grid(. ~ fire.type.bin) +
+  # scale_y_reverse() +
+  geom_line(mapping = aes(y = Shrub.mean, x = elevation.mean, color = fire.type.bin, linetype = treatment), linewidth = 1) +
+  # geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + dTree.sd, ymin = dTree.mean - dTree.sd, color = fire.type.bin, linetype = treatment)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  xlab(expression('Elevation')) + ylab('Shrub Cover (%)')
+p6d
+
+p6e <- ggplot(data = pixel.elev.data %>% filter(count >= 5)) +
+  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
+  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
+  facet_grid(. ~ fire.type.bin) +
+  # scale_y_reverse() +
+  geom_line(mapping = aes(y = ET.mean, x = elevation.mean, color = fire.type.bin, linetype = treatment), linewidth = 1) +
+  # geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + dTree.sd, ymin = dTree.mean - dTree.sd, color = fire.type.bin, linetype = treatment)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  xlab(expression('Elevation')) + ylab(expression('ET (mm yr'^-1*')'))
+p6e
+
+p6f <- ggplot(data = pixel.elev.data %>% filter(count >= 5)) +
+  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
+  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
+  facet_grid(. ~ fire.type.bin) +
+  # scale_y_reverse() +
+  geom_line(mapping = aes(y = PrET_4yr.mean, x = elevation.mean, color = fire.type.bin, linetype = treatment), linewidth = 1) +
+  # geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + dTree.sd, ymin = dTree.mean - dTree.sd, color = fire.type.bin, linetype = treatment)) +
+  theme_bw() +
+  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+  xlab(expression('Elevation')) + ylab(expression('Pr-ET (mm 4yr'^-1*')'))
+p6f
 
 pixel.grid.data <- pixel.filter %>% 
   filter(!is.na(ADS)) %>%

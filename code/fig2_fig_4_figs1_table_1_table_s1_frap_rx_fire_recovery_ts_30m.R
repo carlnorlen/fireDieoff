@@ -18,7 +18,7 @@ lapply(p,require,character.only=TRUE)
 #Set the working directory
 
 #Home data directory
-setwd('C:/Users/can02/mystuff/fireDieoff/code')
+setwd('C://Users/can02/mystuff/fireDieoff/figures')
 dir_in <- "D:\\Fire_Dieoff"
 # fire_in <- "D:\\Large_Files\\Fire_Dieoff"
 
@@ -306,7 +306,8 @@ pixel.filter <- pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (
           dNDMI = mean(NDMI[vi.year %in% c(2016, 2017)]) - mean(NDMI[vi.year %in% c(2009, 2010, 2011)]),
           latitude = first(latitude),
           longitude = first(longitude),
-          elevation = first(elevation)
+          elevation = first(elevation),
+          stand.age = first(stand.age[vi.year == 2010])
   )
 
 #Create fire recovery curves for Figure 2
@@ -1239,11 +1240,47 @@ p6f <- ggplot(data = pixel.elev.data %>% filter(count >= 5)) +
   xlab(expression('Elevation')) + ylab(expression('Pr-ET (mm 4yr'^-1*')'))
 p6f
 
-f1 <- ggarrange(p6a,p6b,p6c,p6d,p6e,p6f, nrow = 6, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c', 'd', 'e', 'f'))
-f1
+f7 <- ggarrange(p6a,p6b,p6c,p6d,p6e,p6f, nrow = 6, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c', 'd', 'e', 'f'))
+f7
 
-setwd('C://Users/can02/mystuff/fireDieoff/figures')
 ggsave(filename = 'FigS12_forest_type_comparison_by_elevation_bin.png', height=32, width= 16, units = 'cm', dpi=900)
+
+#Stand Age Die-off comparison
+p7a <- ggplot(data = pixel.filter) +
+  #Create the density layer
+  geom_bin2d(binwidth = c(1, 10), mapping = aes(x = stand.age, y = ADS)) + #, group = after_stat(count), alpha = after_stat(count))) +
+  scale_fill_gradient2(limits = c(0,700), breaks = c(0,200,400,600), midpoint = 350, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  # scale_alpha(range = c(1, 1), limits = c(5, 1600), na.value = 0.4) +labs(fill = "Grid Cells") +
+  guides(alpha = 'none') +
+  geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = ADS), color = 'black', size = 2, linetype = 'dashed') +
+  stat_cor(mapping = aes(x = stand.age, y = ADS, label = paste(..rr.label..))) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  # xlim(0, 30) +
+  facet_wrap(. ~ fire.type.bin) +
+  xlab('Years Since Fire') + ylab(expression('Dieback (trees ha'^-1*')'))
+p7a
+
+p7b <- ggplot(data = pixel.filter) +
+  #Create the density layer
+  geom_bin2d(binwidth = c(1, 5), mapping = aes(x = stand.age, y = dTree)) + #, group = after_stat(count), alpha = after_stat(count))) +
+  scale_fill_gradient2(limits = c(0,1200), breaks = c(0,300,600,900,1200), midpoint = 600, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  # scale_alpha(range = c(1, 1), limits = c(5, 1600), na.value = 0.4) +labs(fill = "Grid Cells") +
+  guides(alpha = 'none') +
+  geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), color = 'black', size = 2, linetype = 'dashed') +
+  stat_cor(mapping = aes(x = stand.age, y = dTree, label = paste(..rr.label..))) +
+  theme_bw() +
+  # xlim(0, 30) +
+  scale_y_reverse() +
+  facet_wrap(. ~ fire.type.bin) +
+  ylim(50, -105) +
+  xlab('Years Since Fire') + ylab('Dieback (Tree Cover %)')
+p7b
+
+f8 <- ggarrange(p7a, p7b, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a', 'b'))
+f8
+
+ggsave(filename = 'FigS14_frap_rx_stand_age_dieoff_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
 
 # pixel.grid.data <- pixel.filter %>% 
 #   filter(!is.na(ADS)) %>%
@@ -1307,208 +1344,208 @@ ggsave(filename = 'FigS12_forest_type_comparison_by_elevation_bin.png', height=3
 summary(pixel.sample)
 
 #Figure 4 of Dead Trees per acre separated by fire years with time series
-p7a <- ggplot() + 
-  geom_hline(yintercept = 0) +
-  geom_line(data = pixel.sample %>%
-              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
-              group_by(date, treatment, fire.type.bin, veg_name) %>%
-              summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), 
-            mapping = aes(x = date, y = tpa_max.mean, color = fire.type.bin, linetype = treatment), 
-            size = 1
-  ) +
-  #Dead Trees 95% CI
-  geom_ribbon(data = pixel.sample %>%
-                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
-                
-                group_by(date, treatment, fire.type.bin, veg_name) %>%
-                summarize(tpa_max.mean = mean(tpa_max),
-                          tpa_max.sd = sd(tpa_max), tpa_max.n = n()), 
-              mapping = aes(ymin=tpa_max.mean - 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
-                            ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
-                            x = date, fill = fire.type.bin, alpha = treatment)) +
-  #Do the Formating
-  scale_linetype(name = 'Treatment', labels = c('Unburned', 'Burned')) +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
-  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
-  #Pick the plot theme
-  theme_bw() + 
-  #Do the faceting
-  facet_grid(fire.type.bin ~ veg_name) +
-  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
-        axis.title.x = element_blank(), legend.position = c(0.15, 0.6), legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, "pt"),
-        legend.title = element_text(size = 10), legend.text = element_text(size = 8),
-        strip.text = element_text(size = 12)) +
-  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + 
-  ylab(expression(atop('Dieback Severity', '(trees ha'^-1*')'))) + xlab('Year') 
-p7a
-
-#Create the 
-p7b <- ggplot() + 
-  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
-  geom_line(data = pixel.sample %>%
-              filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
-              group_by(date, treatment, fire.type.bin, veg_name) %>%
-              summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()), 
-            # filter(if_else(treatment == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
-            mapping = aes(x = date, y = Tree_Cover.mean, color = fire.type.bin, linetype = treatment), 
-            size = 1) + 
-  #Tree Cover 95% CI
-  geom_ribbon(data = pixel.sample %>%
-                filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
-                group_by(date, treatment, fire.type.bin, veg_name) %>%
-                summarize(Tree_Cover.mean = mean(Tree_Cover),
-                          Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()),  
-              # filter(if_else(treatment == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
-              mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
-                            ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
-                            x = date, fill = fire.type.bin, alpha = treatment)) +
-  #Do the Formatting
-  scale_linetype(name = 'Treatment') +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
-  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
-  #Pick the plot theme
-  theme_bw() + 
-  #Do the faceting
-  facet_grid(fire.type.bin ~ veg_name) +
-  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
-        axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, "pt"),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()) +
-  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) + 
-  #ylim(18, 55) +
-  ylab(expression(atop('Tree Cover', '(%)'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
-p7b
-
-p7c <- ggplot() +
-  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
-  geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
-  geom_line(data = pixel.sample %>%
-              filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-              group_by(date, treatment, fire.type.bin) %>%
-              summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()),
-            mapping = aes(x = date, y = PrET.mean, color = fire.type.bin, linetype = treatment),
-            size = 1) +
-  #Water Stress 95% CI
-  geom_ribbon(data = pixel.sample %>%
-                filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                group_by(date, treatment, fire.type.bin) %>%
-                summarize(PrET.mean = mean(PrET),
-                          PrET.sd = sd(PrET), PrET.n = n(), count = n()),
-              mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
-                            ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
-                            x = date, fill = fire.type.bin, alpha = treatment)) +
-  #Do the Formatting
-  scale_linetype(name = 'Treatment') +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
-  scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-  scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
-  guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
-  #Pick the plot theme
-  theme_bw() + 
-  #Do the faceting
-  facet_grid(. ~ fire.type.bin) +
-  theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 13),
-        axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
-        legend.key = element_rect(fill = NA),  axis.text.x = element_text(size = 8),
-        legend.title = element_text(size = 8), legend.text = element_text(size = 6),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()) +
-  geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
-            fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) +
-  ylab(expression(atop('Pr-ET', '(mm yr'^-1*')'))) + xlab('Year')
-p7c
-
-f7 <- ggarrange(p7a, p7b, p7c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 0.9, 1.1), align = "v", labels = c('a', 'b', 'c'))
-f7
-
-ggsave(filename = 'FigS12_forest_type_figure.png', height=12, width= 14, units = 'cm', dpi=900)
-
-summary(pixel.filter)
-
-#Check for spatial autocorrelation
-#Does this matter?
-#Is there an easier way to do this
-#Make the data a spatial data frame
-pixel.spatial <- st_as_sf(pixel.filter, coords = c("longitude", "latitude"), crs = 4326) 
-
-#Calculate a distance matrix
-dist.mat <- st_distance(pixel.spatial)
-
-pixel.spatial.lm <- lm(dTree ~ PrET_4yr + Tree_Cover + ET, pixel.spatial)
-rstandard(pixel.spatial.lm)
-
-#Calculate teh variogram values for the standardized linear model residuals
-var.lm <- gstat::variogram(rstandard(pixel.spatial.lm) ~ 1, data = pixel.spatial, cutoff = 6)
-
-all.ca.prop.lm <- lm(dNDMI ~ drought.f * sequence.f + PET_4yr + tmax_4yr + biomass, all.ca.prop)
-summary(all.ca.prop.lm)
-#Calculate teh variogram values for the standardized linear model residuals
-var.prop.lm <- gstat::variogram(rstandard(all.ca.prop.lm) ~ 1, data = all.ca.prop, cutoff = 6)
-
-#Define the colore
-cols <- c("All" = "black", "5% Sample" ="gray")
-
-p.var.prop.lm <- ggplot() + 
-  #Full Data set
-  geom_point(data = var.lm, mapping = aes(x = dist, y = gamma, color = 'All')) + #Linear model data
-  geom_line(data = var.lm, mapping = aes(x = dist, y = gamma, color = 'All'), linetype = 'dashed') + #Linear model data
-  #Sampled data set
-  # geom_point(data = var.prop.lm, mapping = aes(x = dist, y = gamma, color = '5% Sample')) + #Linear model data
-  # geom_line(data = var.prop.lm, mapping = aes(x = dist, y = gamma, color = '5% Sample'), linetype = 'solid') + #Linear model data
-  geom_hline(yintercept = 0, linetype = 'solid', linewidth = 0.5) +
-  scale_colour_manual(name="Data",values=cols, aesthetics = 'color') +
-  theme_bw() + theme(legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
-                     legend.position = c(0.85, 0.2)) + #Presentation text sizes.) + 
-  ylim(0,1) + xlab('Distance (km)') + ylab('Semivariance')
-
-p.var.prop.lm
-ggsave(filename = 'SFig16_variogram_lm_sampled_residuals.png', height=8, width= 12, units = 'cm', dpi=900)
-
-#Set up the linear model
-# input_lm <- data %>%
-#   # filter(dead_ADS_2017 == 1) %>%
-#   ungroup %>%
-#   # st_drop_geometry() %>% #Drop the geometry
-#   as.data.frame() %>%
-#   dplyr::select(c(ADS_2017, dieoff.risk.2012, stdht_2012, 
-#                   SPI48_2015)) %>%
-#   rename(ADS = ADS_2017, dieoff.risk = dieoff.risk.2012, SPI48 = SPI48_2015, stdht = stdht_2012)
+# p7a <- ggplot() + 
+#   geom_hline(yintercept = 0) +
+#   geom_line(data = pixel.sample %>%
+#               filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+#               group_by(date, treatment, fire.type.bin, veg_name) %>%
+#               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), 
+#             mapping = aes(x = date, y = tpa_max.mean, color = fire.type.bin, linetype = treatment), 
+#             size = 1
+#   ) +
+#   #Dead Trees 95% CI
+#   geom_ribbon(data = pixel.sample %>%
+#                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+#                 
+#                 group_by(date, treatment, fire.type.bin, veg_name) %>%
+#                 summarize(tpa_max.mean = mean(tpa_max),
+#                           tpa_max.sd = sd(tpa_max), tpa_max.n = n()), 
+#               mapping = aes(ymin=tpa_max.mean - 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
+#                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
+#                             x = date, fill = fire.type.bin, alpha = treatment)) +
+#   #Do the Formating
+#   scale_linetype(name = 'Treatment', labels = c('Unburned', 'Burned')) +
+#   scale_alpha_discrete(range = c(0.3, 0.3)) +
+#   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+#   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+#   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
+#   #Pick the plot theme
+#   theme_bw() + 
+#   #Do the faceting
+#   facet_grid(fire.type.bin ~ veg_name) +
+#   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+#         axis.title.x = element_blank(), legend.position = c(0.15, 0.6), legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, "pt"),
+#         legend.title = element_text(size = 10), legend.text = element_text(size = 8),
+#         strip.text = element_text(size = 12)) +
+#   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+#             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+#   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + 
+#   ylab(expression(atop('Dieback Severity', '(trees ha'^-1*')'))) + xlab('Year') 
+# p7a
 # 
-# # dieoff_split_lm <- initial_split(input_lm, prop = 0.6)
-# # dieoff_train_lm <- training(dieoff_split_lm)
-# # dieoff_test_lm  <-  testing(dieoff_split_lm)
+# #Create the 
+# p7b <- ggplot() + 
+#   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+#   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+#   geom_line(data = pixel.sample %>%
+#               filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & stratlayer %in% strat.list & stratlayer %in% strat.list
+#               group_by(date, treatment, fire.type.bin, veg_name) %>%
+#               summarize(Tree_Cover.mean = mean(Tree_Cover), Tree_Cover.n = n()), 
+#             # filter(if_else(treatment == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
+#             mapping = aes(x = date, y = Tree_Cover.mean, color = fire.type.bin, linetype = treatment), 
+#             size = 1) + 
+#   #Tree Cover 95% CI
+#   geom_ribbon(data = pixel.sample %>%
+#                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
+#                 group_by(date, treatment, fire.type.bin, veg_name) %>%
+#                 summarize(Tree_Cover.mean = mean(Tree_Cover),
+#                           Tree_Cover.sd = sd(Tree_Cover), Tree_Cover.n = n()),  
+#               # filter(if_else(treatment == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
+#               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
+#                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
+#                             x = date, fill = fire.type.bin, alpha = treatment)) +
+#   #Do the Formatting
+#   scale_linetype(name = 'Treatment') +
+#   scale_alpha_discrete(range = c(0.3, 0.3)) +
+#   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+#   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+#   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
+#   #Pick the plot theme
+#   theme_bw() + 
+#   #Do the faceting
+#   facet_grid(fire.type.bin ~ veg_name) +
+#   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
+#         axis.title.x = element_blank(), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, "pt"),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6),
+#         strip.background = element_blank(),
+#         strip.text.x = element_blank()) +
+#   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+#             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+#   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) + 
+#   #ylim(18, 55) +
+#   ylab(expression(atop('Tree Cover', '(%)'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+# p7b
 # 
-# #LM Dieback recipe
-# dieoff_rec_lm <-
-#   recipe(dTree ~ Tree_Cover + PrET_4yr,
-#          #ba_2012 + conifer.2012.frac,
-#          data = dieoff_train_lm) %>%
-#   # step_ns(SPI48, deg_free = 3) %>%
-#   step_interact(terms = ~ Tree_Cover * PrET_4yr)
+# p7c <- ggplot() +
+#   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
+#   geom_hline(yintercept = 0) + #geom_vline(xintercept = 0, linetype = 'dashed') +
+#   geom_line(data = pixel.sample %>%
+#               filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+#               group_by(date, treatment, fire.type.bin) %>%
+#               summarize(PrET.mean = mean(PrET), PrET.n = n(), count = n()),
+#             mapping = aes(x = date, y = PrET.mean, color = fire.type.bin, linetype = treatment),
+#             size = 1) +
+#   #Water Stress 95% CI
+#   geom_ribbon(data = pixel.sample %>%
+#                 filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
+#                 group_by(date, treatment, fire.type.bin) %>%
+#                 summarize(PrET.mean = mean(PrET),
+#                           PrET.sd = sd(PrET), PrET.n = n(), count = n()),
+#               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
+#                             ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
+#                             x = date, fill = fire.type.bin, alpha = treatment)) +
+#   #Do the Formatting
+#   scale_linetype(name = 'Treatment') +
+#   scale_alpha_discrete(range = c(0.3, 0.3)) +
+#   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+#   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
+#   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
+#   #Pick the plot theme
+#   theme_bw() + 
+#   #Do the faceting
+#   facet_grid(. ~ fire.type.bin) +
+#   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 13),
+#         axis.title.x = element_text(size = 10), legend.position = "none", legend.background = element_rect(colour = NA, fill = NA),
+#         legend.key = element_rect(fill = NA),  axis.text.x = element_text(size = 8),
+#         legend.title = element_text(size = 8), legend.text = element_text(size = 6),
+#         strip.background = element_blank(),
+#         strip.text.x = element_blank()) +
+#   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
+#             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
+#   xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + #facet_grid(. ~ treatment) +
+#   ylab(expression(atop('Pr-ET', '(mm yr'^-1*')'))) + xlab('Year')
+# p7c
 # 
-# lm_model <- linear_reg() %>% set_engine("lm")
+# f7 <- ggarrange(p7a, p7b, p7c, ncol = 1, nrow = 3, common.legend = FALSE, heights = c(1, 0.9, 1.1), align = "v", labels = c('a', 'b', 'c'))
+# f7
 # 
-# lm_wflow <-
-#   workflow() %>%
-#   add_model(lm_model) %>%
-#   add_recipe(dieoff_rec_lm)
+# ggsave(filename = 'FigS12_forest_type_figure.png', height=12, width= 14, units = 'cm', dpi=900)
 # 
-# lm_fit <- fit(lm_wflow, dieoff_train_lm)
-
-#Testing out the linear model
-# dieoff_train_lm$ADS.predict <- predict(lm_fit, dieoff_train_lm)$.pred
-# rsq_trad(dieoff_train_lm, ADS, ADS.predict)
-# rmse(dieoff_train_lm, ADS, ADS.predict)
+# summary(pixel.filter)
+# 
+# #Check for spatial autocorrelation
+# #Does this matter?
+# #Is there an easier way to do this
+# #Make the data a spatial data frame
+# pixel.spatial <- st_as_sf(pixel.filter, coords = c("longitude", "latitude"), crs = 4326) 
+# 
+# #Calculate a distance matrix
+# dist.mat <- st_distance(pixel.spatial)
+# 
+# pixel.spatial.lm <- lm(dTree ~ PrET_4yr + Tree_Cover + ET, pixel.spatial)
+# rstandard(pixel.spatial.lm)
+# 
+# #Calculate teh variogram values for the standardized linear model residuals
+# var.lm <- gstat::variogram(rstandard(pixel.spatial.lm) ~ 1, data = pixel.spatial, cutoff = 6)
+# 
+# all.ca.prop.lm <- lm(dNDMI ~ drought.f * sequence.f + PET_4yr + tmax_4yr + biomass, all.ca.prop)
+# summary(all.ca.prop.lm)
+# #Calculate teh variogram values for the standardized linear model residuals
+# var.prop.lm <- gstat::variogram(rstandard(all.ca.prop.lm) ~ 1, data = all.ca.prop, cutoff = 6)
+# 
+# #Define the colore
+# cols <- c("All" = "black", "5% Sample" ="gray")
+# 
+# p.var.prop.lm <- ggplot() + 
+#   #Full Data set
+#   geom_point(data = var.lm, mapping = aes(x = dist, y = gamma, color = 'All')) + #Linear model data
+#   geom_line(data = var.lm, mapping = aes(x = dist, y = gamma, color = 'All'), linetype = 'dashed') + #Linear model data
+#   #Sampled data set
+#   # geom_point(data = var.prop.lm, mapping = aes(x = dist, y = gamma, color = '5% Sample')) + #Linear model data
+#   # geom_line(data = var.prop.lm, mapping = aes(x = dist, y = gamma, color = '5% Sample'), linetype = 'solid') + #Linear model data
+#   geom_hline(yintercept = 0, linetype = 'solid', linewidth = 0.5) +
+#   scale_colour_manual(name="Data",values=cols, aesthetics = 'color') +
+#   theme_bw() + theme(legend.background = element_rect(colour = NA, fill = NA), # This removes the white square behind the legend
+#                      legend.position = c(0.85, 0.2)) + #Presentation text sizes.) + 
+#   ylim(0,1) + xlab('Distance (km)') + ylab('Semivariance')
+# 
+# p.var.prop.lm
+# ggsave(filename = 'SFig16_variogram_lm_sampled_residuals.png', height=8, width= 12, units = 'cm', dpi=900)
+# 
+# #Set up the linear model
+# # input_lm <- data %>%
+# #   # filter(dead_ADS_2017 == 1) %>%
+# #   ungroup %>%
+# #   # st_drop_geometry() %>% #Drop the geometry
+# #   as.data.frame() %>%
+# #   dplyr::select(c(ADS_2017, dieoff.risk.2012, stdht_2012, 
+# #                   SPI48_2015)) %>%
+# #   rename(ADS = ADS_2017, dieoff.risk = dieoff.risk.2012, SPI48 = SPI48_2015, stdht = stdht_2012)
+# # 
+# # # dieoff_split_lm <- initial_split(input_lm, prop = 0.6)
+# # # dieoff_train_lm <- training(dieoff_split_lm)
+# # # dieoff_test_lm  <-  testing(dieoff_split_lm)
+# # 
+# # #LM Dieback recipe
+# # dieoff_rec_lm <-
+# #   recipe(dTree ~ Tree_Cover + PrET_4yr,
+# #          #ba_2012 + conifer.2012.frac,
+# #          data = dieoff_train_lm) %>%
+# #   # step_ns(SPI48, deg_free = 3) %>%
+# #   step_interact(terms = ~ Tree_Cover * PrET_4yr)
+# # 
+# # lm_model <- linear_reg() %>% set_engine("lm")
+# # 
+# # lm_wflow <-
+# #   workflow() %>%
+# #   add_model(lm_model) %>%
+# #   add_recipe(dieoff_rec_lm)
+# # 
+# # lm_fit <- fit(lm_wflow, dieoff_train_lm)
+# 
+# #Testing out the linear model
+# # dieoff_train_lm$ADS.predict <- predict(lm_fit, dieoff_train_lm)$.pred
+# # rsq_trad(dieoff_train_lm, ADS, ADS.predict)
+# # rmse(dieoff_train_lm, ADS, ADS.predict)

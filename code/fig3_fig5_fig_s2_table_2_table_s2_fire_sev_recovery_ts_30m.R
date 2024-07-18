@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 16, 2024
+#Date Updated: July 17, 2024
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -18,7 +18,7 @@ lapply(p,require,character.only=TRUE)
 
 # library(scales)
 #Home Computer directories
-setwd('C:/Users/can02/mystuff/fireDieoff/figures')
+setwd('C://Users/can02/mystuff/fireDieoff/figures')
 dir_in <- "D:\\Fire_Dieoff"
 
 
@@ -359,6 +359,26 @@ sev.results.data.pct
 #Create a unique palette
 mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
 
+#Table 2 and Table S2, Barplots and regression analysis
+sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
+  dplyr::group_by(system.index, treatment, sev.bin) %>% 
+  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2012,2013)])) / mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          Tree_Cover = mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
+          Shrub_Cover = mean(Shrub_Cover[vi.year %in% c(2010, 2011)]),
+          ET = mean(AET[vi.year %in% c(2010, 2011)]),
+          ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]),
+          # Water_Stress = Water_Stress[vi.year == 2015],
+          PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
+          sev.bin = sev.bin[vi.year == 2010],
+          sev.bin.cat = fire_sev_2010[vi.year == 2010],
+          stand.age = stand.age[vi.year == 2010],
+          treatment.cat = treat[vi.year == 2010],
+          treatment = treatment[vi.year == 2010],
+          latitude = first(latitude),
+          longitude = first(longitude),
+          elevation = first(elevation))
+
 #Create fire recover curves
 p2a <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
@@ -692,26 +712,6 @@ f3
 
 #Save the data
 ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
-
-#Table 2 and Table S2, Barplots and regression analysis
-sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
-  dplyr::group_by(system.index, treatment, sev.bin) %>% 
-  reframe(dTree = mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
-          RdTree = (mean(Tree_Cover[vi.year %in% c(2017, 2018)]) - mean(Tree_Cover[vi.year %in% c(2012,2013)])) / mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
-          Tree_Cover = mean(Tree_Cover[vi.year %in% c(2010, 2011)]),
-          Shrub_Cover = mean(Shrub_Cover[vi.year %in% c(2010, 2011)]),
-          ET = mean(AET[vi.year %in% c(2010, 2011)]),
-          ADS = sum(tpa_max[vi.year %in% c(2015, 2016, 2017, 2018)]),
-          # Water_Stress = Water_Stress[vi.year == 2015],
-          PrET_4yr = sum(PrET[vi.year %in% c(2012,2013,2014,2015)]), 
-          sev.bin = sev.bin[vi.year == 2010],
-          sev.bin.cat = fire_sev_2010[vi.year == 2010],
-          stand.age = stand.age[vi.year == 2010],
-          treatment.cat = treat[vi.year == 2010],
-          treatment = treatment[vi.year == 2010],
-          latitude = first(latitude),
-          longitude = first(longitude),
-          elevation = first(elevation))
 
 #Results for Table S2 summarizing Figures 2 and 3
 aov.dTree.treatment.sev <- aov(dTree ~ treatment * sev.bin, data = sev.pixel.filter)
@@ -1329,12 +1329,47 @@ p5f <- ggplot(data = sev.pixel.elev.data %>% filter(count >= 5)) +
   xlab(expression('Elevation')) + ylab(expression('Pr-ET (mm 4yr'^-1*')'))
 p5f
 
-f1 <- ggarrange(p5a,p5b,p5c,p5d,p5e,p5f, nrow = 6, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c', 'd', 'e', 'f'))
-f1
+f6 <- ggarrange(p5a,p5b,p5c,p5d,p5e,p5f, nrow = 6, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c', 'd', 'e', 'f'))
+f6
 
-setwd('C://Users/can02/mystuff/fireDieoff/figures')
 ggsave(filename = 'FigS13_forest_type_comparison_by_elevation_bin.png', height=32, width= 32, units = 'cm', dpi=900)
 
+#Stand Age Die-off comparison
+p7a <- ggplot(data = sev.pixel.filter) +
+  #Create the density layer
+  geom_bin2d(binwidth = c(1, 10), mapping = aes(x = stand.age, y = ADS)) + #, group = after_stat(count), alpha = after_stat(count))) +
+  scale_fill_gradient2(limits = c(0,700), breaks = c(0,200,400,600), midpoint = 350, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  # scale_alpha(range = c(1, 1), limits = c(5, 1600), na.value = 0.4) +labs(fill = "Grid Cells") +
+  guides(alpha = 'none') +
+  geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = ADS), color = 'black', size = 2, linetype = 'dashed') +
+  stat_cor(mapping = aes(x = stand.age, y = ADS, label = paste(..rr.label..))) +
+  theme_bw() +
+  theme(axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  # xlim(0, 30) +
+  facet_grid(. ~ sev.bin) +
+  xlab('Years Since Fire') + ylab(expression('Dieback (trees ha'^-1*')'))
+p7a
+
+p7b <- ggplot(data = sev.pixel.filter) +
+  #Create the density layer
+  geom_bin2d(binwidth = c(1, 5), mapping = aes(x = stand.age, y = dTree)) + #, group = after_stat(count), alpha = after_stat(count))) +
+  scale_fill_gradient2(limits = c(0,600), breaks = c(0,100,200,300,400,500), midpoint = 300, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  # scale_alpha(range = c(1, 1), limits = c(5, 1600), na.value = 0.4) +labs(fill = "Grid Cells") +
+  guides(alpha = 'none') +
+  geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), color = 'black', size = 2, linetype = 'dashed') +
+  stat_cor(mapping = aes(x = stand.age, y = dTree, label = paste(..rr.label..))) +
+  theme_bw() +
+  # xlim(0, 30) +
+  scale_y_reverse() +
+  facet_grid(. ~ sev.bin) +
+  ylim(50, -110) +
+  xlab('Years Since Fire') + ylab('Dieback (Tree Cover %)')
+p7b
+
+f7 <- ggarrange(p7a, p7b, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a', 'b'))
+f7
+
+ggsave(filename = 'FigS15_fire_sev_stand_age_dieoff_comparison.png', height=16, width= 32, units = 'cm', dpi=900)
 
 #Do Correlation Analysis
 # glimpse(sev.pixel.filter)

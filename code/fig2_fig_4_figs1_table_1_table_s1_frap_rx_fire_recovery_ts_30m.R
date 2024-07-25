@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 15, 2024
+#Date Updated: July 25, 2024
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -1246,10 +1246,10 @@ f7
 ggsave(filename = 'FigS12_forest_type_comparison_by_elevation_bin.png', height=32, width= 16, units = 'cm', dpi=900)
 
 #Stand Age Die-off comparison
-p7a <- ggplot(data = pixel.filter) +
+p7a <- ggplot(data = pixel.filter %>% filter(treatment == 'Disturb')) +
   #Create the density layer
   geom_bin2d(binwidth = c(1, 10), mapping = aes(x = stand.age, y = ADS)) + #, group = after_stat(count), alpha = after_stat(count))) +
-  scale_fill_gradient2(limits = c(0,700), breaks = c(0,200,400,600), midpoint = 350, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_fill_gradient2(limits = c(0,400), breaks = c(0,100,200,300), midpoint = 200, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
   # scale_alpha(range = c(1, 1), limits = c(5, 1600), na.value = 0.4) +labs(fill = "Grid Cells") +
   guides(alpha = 'none') +
   geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = ADS), color = 'black', size = 2, linetype = 'dashed') +
@@ -1261,10 +1261,10 @@ p7a <- ggplot(data = pixel.filter) +
   xlab('Years Since Fire') + ylab(expression('Dieback (trees ha'^-1*')'))
 p7a
 
-p7b <- ggplot(data = pixel.filter) +
+p7b <- ggplot(data = pixel.filter %>% filter(treatment == 'Disturb')) +
   #Create the density layer
   geom_bin2d(binwidth = c(1, 5), mapping = aes(x = stand.age, y = dTree)) + #, group = after_stat(count), alpha = after_stat(count))) +
-  scale_fill_gradient2(limits = c(0,1200), breaks = c(0,300,600,900,1200), midpoint = 600, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
+  scale_fill_gradient2(limits = c(0,500), breaks = c(0,100,200,300,400), midpoint = 250, low = "cornflowerblue", mid = "yellow", high = "red", na.value = 'transparent') +
   # scale_alpha(range = c(1, 1), limits = c(5, 1600), na.value = 0.4) +labs(fill = "Grid Cells") +
   guides(alpha = 'none') +
   geom_smooth(method = 'lm', mapping = aes(x = stand.age, y = dTree), color = 'black', size = 2, linetype = 'dashed') +

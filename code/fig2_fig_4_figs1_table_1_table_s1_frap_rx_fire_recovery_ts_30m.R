@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 25, 2024
+#Date Updated: July 26, 2024
 #Purpose: Create figures for publication
 
 # cd /C/Users/Carl/mystuff/Goulden_Lab/CECS/pixel_sample
@@ -253,35 +253,42 @@ pixel.summary <- pixel.sample %>%
   reframe(Tree_Cover.mean = mean(dTree_Cover[treatment == 'Disturb']) - mean(dTree_Cover[treatment == 'Control']),
           Tree_Cover.mean.control = mean(Tree_Cover[treatment == 'Control']),
           Tree_Cover.mean.disturb = mean(Tree_Cover[treatment == 'Disturb']),
-          Tree_Cover.mean.pct = Tree_Cover.mean / Tree_Cover.mean.control * 100,
           Tree_Cover.sd = sd(dTree_Cover[treatment == 'Disturb'])^2 + sd(dTree_Cover[treatment == 'Control'])^2, 
           Tree_Cover.sd.pct = Tree_Cover.sd / Tree_Cover.mean.control * 100,
           Tree_Cover.n = n(),
           Shrub_Cover.mean = mean(dShrub_Cover[treatment == 'Disturb']) - mean(dShrub_Cover[treatment == 'Control']),
           Shrub_Cover.mean.control = mean(Shrub_Cover[treatment == 'Control']),
-          Shrub_Cover.mean.pct = Shrub_Cover.mean / Shrub_Cover.mean.control * 100,
+          # Shrub_Cover.mean.pct = Shrub_Cover.mean / Shrub_Cover.mean.control * 100,
           Shrub_Cover.sd = sd(dShrub_Cover[treatment == 'Disturb'])^2 + sd(dShrub_Cover[treatment == 'Control'])^2, 
           Shrub_Cover.sd.pct = Shrub_Cover.sd / Shrub_Cover.mean.control * 100,
           Shrub_Cover.n = n(),
           AET.mean = mean(dAET[treatment == 'Disturb']) - mean(dAET[treatment == 'Control']),
           AET.mean.control = mean(AET[treatment == 'Control']),
-          AET.mean.pct = AET.mean / AET.mean.control * 100,
           AET.sd = sd(dAET[treatment == 'Disturb'])^2 + sd(dAET[treatment == 'Control'])^2, 
           AET.sd.pct = AET.sd / AET.mean.control * 100,
           AET.n = n()) %>% 
+  #Remove the pre-fire means
+  mutate(#Corrected means
+         dTree_Cover.mean = Tree_Cover.mean - mean(Tree_Cover.mean[stand.age %in% c(-1, -2)]),
+         dShrub_Cover.mean = Shrub_Cover.mean - mean(Shrub_Cover.mean[stand.age %in% c(-1, -2)]),
+         dAET.mean = AET.mean - mean(AET.mean[stand.age %in% c(-1, -2)])) %>%
+         #Percentage Means
+  mutate(dTree_Cover.mean.pct = dTree_Cover.mean / Tree_Cover.mean.control * 100,
+         dShrub_Cover.mean.pct = dShrub_Cover.mean / Shrub_Cover.mean.control * 100,
+         dAET.mean.pct = dAET.mean / AET.mean.control * 100) %>%
   #Add the upper and lower 95% confidence intervals
-  mutate(tree.ci.95.lower = Tree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
-         tree.ci.95.upper = Tree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
-         tree.ci.95.lower.pct = Tree_Cover.mean.pct - 1.96*(sqrt(Tree_Cover.sd.pct / Tree_Cover.n)),
-         tree.ci.95.upper.pct = Tree_Cover.mean.pct + 1.96*(sqrt(Tree_Cover.sd.pct / Tree_Cover.n)),
-         shrub.ci.95.lower = Shrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
-         shrub.ci.95.upper = Shrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
-         shrub.ci.95.lower.pct = Shrub_Cover.mean.pct - 1.96*(sqrt(Shrub_Cover.sd.pct / Shrub_Cover.n)),
-         shrub.ci.95.upper.pct = Shrub_Cover.mean.pct + 1.96*(sqrt(Shrub_Cover.sd.pct / Shrub_Cover.n)),
-         et.ci.95.lower = AET.mean - 1.96*(sqrt(AET.sd / AET.n)),
-         et.ci.95.upper = AET.mean + 1.96*(sqrt(AET.sd / AET.n)),
-         et.ci.95.lower.pct = AET.mean.pct - 1.96*(sqrt(AET.sd.pct / AET.n)),
-         et.ci.95.upper.pct = AET.mean.pct + 1.96*(sqrt(AET.sd.pct / AET.n)))
+  mutate(tree.ci.95.lower = dTree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         tree.ci.95.upper = dTree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
+         tree.ci.95.lower.pct = dTree_Cover.mean.pct - 1.96*(sqrt(Tree_Cover.sd.pct / Tree_Cover.n)),
+         tree.ci.95.upper.pct = dTree_Cover.mean.pct + 1.96*(sqrt(Tree_Cover.sd.pct / Tree_Cover.n)),
+         shrub.ci.95.lower = dShrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         shrub.ci.95.upper = dShrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
+         shrub.ci.95.lower.pct = dShrub_Cover.mean.pct - 1.96*(sqrt(Shrub_Cover.sd.pct / Shrub_Cover.n)),
+         shrub.ci.95.upper.pct = dShrub_Cover.mean.pct + 1.96*(sqrt(Shrub_Cover.sd.pct / Shrub_Cover.n)),
+         et.ci.95.lower = dAET.mean - 1.96*(sqrt(AET.sd / AET.n)),
+         et.ci.95.upper = dAET.mean + 1.96*(sqrt(AET.sd / AET.n)),
+         et.ci.95.lower.pct = dAET.mean.pct - 1.96*(sqrt(AET.sd.pct / AET.n)),
+         et.ci.95.upper.pct = dAET.mean.pct + 1.96*(sqrt(AET.sd.pct / AET.n)))
 
 #Select the columns I want for the data
 results.data <- pixel.summary %>% dplyr::select(fire.type.bin, stand.age, tree.ci.95.lower, tree.ci.95.upper, shrub.ci.95.lower, shrub.ci.95.upper, et.ci.95.lower, et.ci.95.upper)

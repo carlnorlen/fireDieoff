@@ -3,25 +3,22 @@
 #Date Update: November 10, 2023
 #Purpose: Explore pixel sampling data with rgee.
 
-#Run the script: R < pixel_sample.r --vanilla
+#Add the needed R packages
 p <- c('sf', 'ggplot2', 'tidyterra', 'viridis', 'tigris','terra', 'ggpubr', 'scales', 'dplyr', 'tidyr', 'svglite', 'patchwork') 
-# install.packages(p,repo='https://cran.r-project.org/')
+
+#Load the packages
 lapply(p,require,character.only=TRUE)
-# library(patchwork)
-# library(svglite)
 
 #Home Computer directories
-setwd('C:/Users/can02/mystuff/fireDieoff/final_figures/30m_test')
+setwd('C:/Users/can02/mystuff/fireDieoff/figures')
 usfs_in <- "D:\\Large_Files\\USFS\\data\\subsections"
 frap_in <- "D:\\Large_Files\\FRAP\\fire21_1_shp"
 sev_in <- "D:\\Large_Files\\USFS\\Fire_Severity\\VebBurnSeverity18_1_shp"
 
 #Add California Boundary shape file
 us_states_20m <- states(cb = TRUE, resolution = "20m", class = "sf")
-# us_states_20m <- st_transform(us_states_20m, c)
 ca_20m <- us_states_20m[us_states_20m$NAME == "California", ]
 ca_20m <- st_as_sf(ca_20m)
-# ca_20m <- st_transform(ca_20m, c)
 
 #Select USFS EcoRegion for South Sierra Nevada
 usfs.regions <- st_read(file.path(usfs_in, 'S_USA.EcomapSubsections.shp'))
@@ -108,33 +105,20 @@ p1.inset <-
                   panel.grid.major = element_blank(),
                   panel.grid.minor = element_blank(),
                   panel.background = element_rect(fill=NULL, colour=NULL))
-p1.inset
+
 p1a.inset <- (p1a + inset_element(p1.inset, 0.5, 0.75, 0.99, 0.99))
-p1a.inset
+
+
 #Add Fire colors
 #Create the palette
 cols <- c(brewer_pal('div', "Set2")(2)[2], brewer_pal('div', "Set2")(2)[1])
-# lines <- c("Wild" = "dashed", "Prescribed" = "solid")
-# summary(rxburn.clip)
-# summary(frap.clip)
-# summary(fire.sev.clip)
-# summary(frap.rxburn.clip)
+
 #Add the Burned Area Time Series
 p1b <- ggplot() +
-  #Line of total FRAP burned area in the South Sierra
-  # geom_line(data = frap %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
-  #           group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
-  #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area / 10000, color = "Wild"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
+  #Bar chart total FRAP burned area in the South Sierra
   geom_bar(stat = 'identity', data = frap.rxburn.clip %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010) %>% # intersects == TRUE & 
               group_by(YEAR_, type, .groups = 'keep') %>% reframe(Area = sum(as.numeric(area))), 
             mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = as.factor(type)), linewidth = 1, alpha = 0.8) +  
-  # Line of total RxBurn burned area in the South Sierra
-  # geom_line(data = rxburn %>% filter(YEAR_ >= 1987 & YEAR_ <= 2010 & intersects == TRUE) %>%
-  #             group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)),
-  #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area /10000, color = "Prescribed"), linewidth = 1, linetype = 'dashed', alpha = 0.8) +
-  # geom_bar(stat = 'identity', data = rxburn.clip %>% filter(YEAR_ >= 1987 & intersects == TRUE & YEAR_ <= 2010 ) %>% #& intersects == TRUE
-  #             group_by(YEAR_, .groups = 'keep') %>% reframe(Area = sum(as.numeric(area))),
-  #           mapping = aes(x = as.Date(as.character(YEAR_), format = "%Y"), y = Area * 1/10000, fill = "Prescribed"), linewidth = 1, alpha = 0.8, position = 'stack') +
   theme_bw() + 
   #Figure
   theme(legend.position = c(0.25, 0.8), legend.background = element_rect(colour = NA, fill = NA), legend.direction = "vertical",
@@ -142,7 +126,6 @@ p1b <- ggplot() +
         axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.text.x = element_blank(), axis.title.x = element_blank()) +
   scale_fill_manual(name="Fire Type",values=cols, aesthetics = 'fill') +
-  # scale_linetype_manual(name="Fire Type (FRAP)", values = lines) +
   scale_y_continuous(labels = comma) +
   ylab('Burned Area (ha)') + xlab(NULL)
 p1b
@@ -152,11 +135,6 @@ mypalette <- brewer_pal('seq', "YlOrRd")(5)[2:5]
 
 #Create a time series of Fire Severity burned area
 p1c <- ggplot() +
-  #Line of total USFS burned area in the South Sierra
-  # geom_line(data = fire.sev %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & intersects == TRUE & BURNSEV != 255) %>%
-  #             group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(Shape_Area)), 
-  #           mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 
-  #                         color = as.factor(BURNSEV)), linewidth = 1, linetype = 'dashed', alpha = 0.8) + 
   geom_bar(stat = 'identity', data = fire.sev.clip %>% filter(FIRE_YEAR >= 1987 & FIRE_YEAR <= 2010 & BURNSEV != 255) %>% # intersects == TRUE &
               group_by(FIRE_YEAR, BURNSEV, .groups = 'keep') %>% reframe(Area = sum(as.numeric(area))), 
             mapping = aes(x = as.Date(as.character(FIRE_YEAR), format = "%Y"), y = Area * 1/10000, 

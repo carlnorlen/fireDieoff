@@ -21,16 +21,9 @@ data %>% summary()
 GEE_NDVI <- data %>% 
             dplyr::select(-c('system.index','.geo')) %>%
   mutate(site_ID=Site,date=as.Date(paste0(as.character(year_month), '01'), format='%Y%m%d'),
-         NDVI_mean = na_if(NDVI_mean, 0)#, # exported zeroes are missing NIRv data
-         # GPP_CAsites_Kcorr = na_if(GPP_CAsites_Kcorr,0),
-         # GPP_CAsites_Tcorr = na_if(GPP_CAsites_Tcorr,0),
-         # GPP_CAsites_raw = na_if(GPP_CAsites_raw,0),
-         # GPP_CAsites_raw_gf = na_if(GPP_CAsites_raw_gf,0),
-         # NIRv_monthly = na_if(NIRv_monthly,0),
-         # NIRv_monthly_gf = na_if(NIRv_monthly_gf,0),
-         # GPPgf_CAsites = na_if(GPPgf_CAsites,0)
+         NDVI_mean = na_if(NDVI_mean, 0)
          ) %>%
-  dplyr::select(-Site) #%>%
+  dplyr::select(-Site) 
 
 # GEE_NDVI
 # # take mean of 9 pixels footprint for each site
@@ -40,7 +33,7 @@ GEE_NDVI_mean <- GEE_NDVI %>% group_by(site_ID,date) %>% # mean and std
 
 # readxl
     # 1.) Ingest flux data
-UCI_tower_good <- read_excel(paste0(dir_in,'\\Monthly_towerdata3.xlsx'),sheet='All sites good4') %>% # new gC/m2/day
+UCI_tower_good <- read.csv(paste0(dir_in,'\\Monthly_towerdata3_all_sites_good4.csv')) %>% # new gC/m2/day
       # dplyr::select(Site,Efill.1,`Mean date`) %>%
       mutate(site_ID = as.factor(Site), date=floor_date(as.Date(`Mean date`),unit='month'), Days_Month = days_in_month(date),
       ET_mm_d=Efill.1) 
@@ -170,7 +163,6 @@ p1e <- ggplot(data = GEE_ET_tower_all  %>% filter(!is.na(ET_mm_d) & site_ID != '
   stat_cor(label.x.npc = 0.1, label.y = 5, mapping = aes(label = paste(..rr.label..)),
            size = 3.5, color = 'black', r.accuracy = 0.001, p.accuracy = 0.001) +
   stat_regline_equation(label.x.npc = 0.1, label.y = 4.5, size = 3.5, formula = y ~ 0 + x) +
-  # geom_text(data = NULL, label.x.npc = 0.1, label.y = 4.5, size = 3.5, label = "y = 1.8x") +
   theme_bw() +
   theme(legend.position = 'none') +
   ylab(expression('Observed ET (mm day'^-1*')')) +
@@ -184,7 +176,6 @@ p1f <- ggplot(data = GEE_ET_tower_all  %>% filter(!is.na(ET_mm_d) & site_ID != '
   lims(x = c(0,0), y = c(0,0))+
   theme_void()+
   labs(color = 'Site ID') +
-  # guides(color = guide_legend()) +
   theme(legend.position = c(0.5,0.5),
         legend.key.size = unit(1, "cm"),
         legend.text = element_text(size =  12),
@@ -245,7 +236,6 @@ figS2_scaled_observedET <- ggplot(data = GEE_ET_tower_annual %>% filter(year >= 
                                  axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
                                  axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12)) +  
                            geom_smooth(method = 'lm', formula = y ~ x, color = 'black', linewidth = 2, linetype = 'dashed') + 
-                           # stat_cor(mapping = aes(label = after_stat(rr.label))) +
                            xlim(0,1200) + ylim(0,1200) + 
                            xlab(expression('Observed ET (mm year'^-1*')')) + ylab(expression('Predicted ET (mm year'^-1*')'))
 

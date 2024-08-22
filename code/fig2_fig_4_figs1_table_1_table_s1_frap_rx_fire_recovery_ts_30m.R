@@ -137,7 +137,7 @@ rx.sample <- pixel.data %>%
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
-#Sample the Wildfire Control control pixels
+#Sample the Wildfire control pixels
 frap.sample <- pixel.data %>%
   filter(treatment == 'Control' & fire.type.bin == 'Wildfire' & stratlayer %in% (frap.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
@@ -148,11 +148,7 @@ frap.sample <- pixel.data %>%
   dplyr::select(-c(data, n)) %>% #Get rid of the data column
   unnest(samp) #unnest the data
 
-#Sample the moderate severity control pixels
-
-#Make sure the stratlayer bins match with the sampled control bins
-#Make sure the stratlayer bins match with the sampled control bins
-#Make sure the stratlayer disturb bins match with the sampled control bins
+#Sample the prescribed fire control pixels
 rx.disturb <- pixel.data %>%
   filter(treatment == 'Disturb' & fire.type.bin == 'Rxfire' & stratlayer %in% (rx.strat %>% pull(stratlayer))) %>% #Get just the unchanged control stratification layers
   group_by(stratlayer) %>% #Group by Stratification layer
@@ -197,23 +193,23 @@ pixel.sample$vi.year <- pixel.sample$year
 pixel.sample$stand.age <- as.numeric(pixel.sample$year) - as.numeric(pixel.sample$fire.year) 
 
 #Update Cover data to 100% scale
-pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover / 100
-pixel.sample$Shrub_Cover.2 <- pixel.sample$Shrub_Cover / 100
-pixel.sample$Herb_Cover.2 <- pixel.sample$Herb_Cover / 100
-pixel.sample$Bare_Cover.2 <- pixel.sample$Bare_Cover / 100
+# pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover / 100
+# pixel.sample$Shrub_Cover.2 <- pixel.sample$Shrub_Cover / 100
+# pixel.sample$Herb_Cover.2 <- pixel.sample$Herb_Cover / 100
+# pixel.sample$Bare_Cover.2 <- pixel.sample$Bare_Cover / 100
 # pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover
 
 #Rename Montana Tree Cover
 pixel.sample$Tree_Cover <- pixel.sample$TRE
 pixel.sample$Shrub_Cover <- pixel.sample$SHR
-pixel.sample$Herb_Cover <- pixel.sample$AFG + pixel.sample$PFG
-pixel.sample$Bare_Cover <- pixel.sample$BGR 
+# pixel.sample$Herb_Cover <- pixel.sample$AFG + pixel.sample$PFG
+# pixel.sample$Bare_Cover <- pixel.sample$BGR 
 
 #Convert the SPI48 scale back to decimal
 pixel.sample$SPI48 <- pixel.sample$SPI48 / 100
 
 #Try to fix soil moisture by dividing by 10
-pixel.sample$Soil_Moisture <- pixel.sample$Soil_Moisture / 10
+# pixel.sample$Soil_Moisture <- pixel.sample$Soil_Moisture / 10
 
 #Calculate Pr-ET
 pixel.sample$PrET <- pixel.sample$ppt - pixel.sample$AET

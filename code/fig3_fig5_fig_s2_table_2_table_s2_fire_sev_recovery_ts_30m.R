@@ -232,28 +232,28 @@ sev.pixel.sample$vi.year <- sev.pixel.sample$year
 sev.pixel.sample$stand.age <- as.numeric(sev.pixel.sample$year) - as.numeric(sev.pixel.sample$fire.year) 
 
 #Update Cover data to 100% scale
-sev.pixel.sample$Tree_Cover.2 <- sev.pixel.sample$Tree_Cover / 100
-sev.pixel.sample$Shrub_Cover.2 <- sev.pixel.sample$Shrub_Cover / 100
-sev.pixel.sample$Herb_Cover.2 <- sev.pixel.sample$Herb_Cover / 100
-sev.pixel.sample$Bare_Cover.2 <- sev.pixel.sample$Bare_Cover / 100
+# sev.pixel.sample$Tree_Cover.2 <- sev.pixel.sample$Tree_Cover / 100
+# sev.pixel.sample$Shrub_Cover.2 <- sev.pixel.sample$Shrub_Cover / 100
+# sev.pixel.sample$Herb_Cover.2 <- sev.pixel.sample$Herb_Cover / 100
+# sev.pixel.sample$Bare_Cover.2 <- sev.pixel.sample$Bare_Cover / 100
 
 #Add Montana Veg Cover
 sev.pixel.sample$Tree_Cover <- sev.pixel.sample$TRE
 sev.pixel.sample$Shrub_Cover <- sev.pixel.sample$SHR
-sev.pixel.sample$Herb_Cover <- sev.pixel.sample$AFG + sev.pixel.sample$PFG
-sev.pixel.sample$Bare_Cover <- sev.pixel.sample$BGR 
+# sev.pixel.sample$Herb_Cover <- sev.pixel.sample$AFG + sev.pixel.sample$PFG
+# sev.pixel.sample$Bare_Cover <- sev.pixel.sample$BGR 
 
 #Convert the SPI48 scale back to decimal
 sev.pixel.sample$SPI48 <- sev.pixel.sample$SPI48 / 100
 
 #Try to fix soil moisture by dividing by 10
-sev.pixel.sample$Soil_Moisture <- sev.pixel.sample$Soil_Moisture / 10
+# sev.pixel.sample$Soil_Moisture <- sev.pixel.sample$Soil_Moisture / 10
 
 #Rename ppt and Water Stress
-sev.pixel.sample$Water_Stress <- sev.pixel.sample$Water_Stress
+# sev.pixel.sample$Water_Stress <- sev.pixel.sample$Water_Stress
 sev.pixel.sample$ppt <- sev.pixel.sample$ppt
 sev.pixel.sample$AET <- sev.pixel.sample$AET
-sev.pixel.sample$GPP <- sev.pixel.sample$GPP
+# sev.pixel.sample$GPP <- sev.pixel.sample$GPP
 sev.pixel.sample$elevation <- sev.pixel.sample$elevation
 sev.pixel.sample$PrET <- sev.pixel.sample$ppt - sev.pixel.sample$AET
 

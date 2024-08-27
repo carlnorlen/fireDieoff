@@ -31,9 +31,9 @@ usfs.sierra.union <- usfs.sierra %>% st_union()
 st_area(usfs.sierra.union) * 0.0001
 
 #Get the FRAP and FRAP Rx data
-# frap <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\firep21_1.shp")
 frap <- read_sf("D:\\Large_Files\\FRAP\\fire21_1_shp\\firep21_1_repair.shp")
 c <- st_crs(frap)
+
 #Add the Wildfire Perimeters
 frap$intersects <- st_intersects(frap, st_transform(usfs.sierra.union,c)) %>% lengths > 0
 frap$title <- 'Wild Fire Perimeters'
@@ -64,8 +64,6 @@ fire.sev.perimeter$intersects <- st_intersects(fire.sev.perimeter, st_transform(
 fire.sev.perimeter$title <- 'Fire Severity Perimeters'
 fire.sev.perimeter.clip <- st_intersection(fire.sev.perimeter, st_transform(usfs.sierra.union,c))
 fire.sev.perimeter.clip$area <- st_area(fire.sev.perimeter.clip)
-# plot(fire.sev.perimeter)
-# plot(fire.sev.perimeter.clip)
 
 #Number of FRAP fires
 frap %>% filter(intersects == TRUE & YEAR_ <= 2010 & YEAR_ >= 1987) %>% count()
@@ -148,7 +146,6 @@ p1c <- ggplot() +
         axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 12),
         axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(name="Fire Severity", labels = c('Lowest', 'Low', 'Moderate', 'High'), values = mypalette, aesthetics = 'fill') +
-  # scale_linetype_discrete(name="Fire Severity", labels = c('Unchanged', 'Low', 'Moderate', 'High')) +
   scale_y_continuous(labels = comma) +
   ylab('Burned Area (ha)') + xlab('Year')
 p1c

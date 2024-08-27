@@ -42,7 +42,7 @@ CSV files of annual data from 10 eddy covariance tower locations used to create 
 CSV file of system index (system:index), annual NDVI (NDVI_mean, unit less), Pixel #	year, Pixel # (Number of 9 upwind Landsat pixels from tower), Site (FluxNext Site ID), precipitation (ppt, mm/yr), solar radiation (srad, W/m^2), temprature (tmean, C), year and month (yearmonth), geographic coordinates (.geo) extracted from PRISM, GRDMET, and Landsat for each of the 10 eddy covariance sites used to create Figure S6, S7.
   * UCIupwind_pixels_NDVI_met_30m_export.csv
   
-CSV file of FluxNext Site (Site), date (Mean date), daily ET (Efill.1, mm/day), Predicted ET from Predicted Gross Ecosystem Exchange (Predicted E from predicted GEE, mm/day), Predicted ET (Predicted ET, mm/day), Dry Season Drawdown (Bucket 2 DSD, mm), Measured ET divided by Predicted ET (MeasureE/Predicted E, unitless) from combined records of 10 eddy covariance sites.
+CSV file of FluxNext Site (Site), date (Mean date), daily ET (Efill.1, mm/day), Predicted ET (Predicted ET, mm/day), Dry Season Drawdown (Bucket 2 DSD, mm), Measured ET divided by Predicted ET (MeasureE/Predicted E, unitless) from combined records of 10 eddy covariance sites.
   * Monthly_towerdata3_publish.csv
 
 ## Sharing/Access information

@@ -38,7 +38,6 @@ UCI_tower_good <- read.csv(paste0(dir_in,'\\Monthly_towerdata3_publish.csv')) %>
       ET_mm_d=Efill.1) 
 
 #Fix the column name
-UCI_tower_good$ET.GEE.predict <- UCI_tower_good$'Predicted E from predicted GEE'
 UCI_tower_good$ET.predict <- UCI_tower_good$'Predicted ET'
 UCI_tower_good$soil.bucket.2dsd <- UCI_tower_good$'Bucket 2 DSD'
 UCI_tower_good$et.mes.div.et.pred <- UCI_tower_good$'MeasureE/Predicted E'

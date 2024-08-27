@@ -701,18 +701,6 @@ summary(aov.tree.treatment.sev)
 aov.ET.treatment.sev <- aov(ET ~ treatment * sev.bin, data = sev.pixel.filter)
 summary(aov.tree.treatment.sev)
 
-# aov.dTree.PrET4yrpredict.treatment.sev <- aov(dTree.PrET_4yr.predict ~ treatment * sev.bin, data = sev.pixel.filter)
-# summary(aov.dTree.treatment.sev)
-# 
-# aov.ADS.predict.treatment.sev <- aov(ADS.PrET_4yr.predict~ treatment * sev.bin, data = sev.pixel.filter)
-# summary(aov.PrET4yrADS.treatment.sev)
-# 
-# aov.dTree.predict.treatment.sev <- aov(dTree.PrET_4yr.predict ~ treatment * sev.bin, data = sev.pixel.filter)
-# summary(aov.dTree.treatment.sev)
-# 
-# aov.ADS.predict.treatment.sev <- aov(ADS.PrET_4yr.predict~ treatment * sev.bin, data = sev.pixel.filter)
-# summary(aov.ADS.treatment.sev)
-
 #Tukey HSD comparison
 tukey.dTree.treatment.sev <- TukeyHSD(aov.dTree.treatment.sev)
 print(tukey.dTree.treatment.sev)
@@ -817,17 +805,6 @@ tHSD.filter$diff.pct <- tHSD.filter$estimate / tHSD.filter$estimate.2 * 100
 tHSD.filter$low.pct <- tHSD.filter$conf.low / tHSD.filter$estimate.2 * 100
 
 tHSD.filter$high.pct <- tHSD.filter$conf.high / tHSD.filter$estimate.2 * 100
-
-#Select and sort the tukey HSD columns and 
-tHSD.filter.tab <- tHSD.filter %>% dplyr::select(variable, fire.severity, diff.pct, high.pct, low.pct, adj.p.value) 
-
-#Name the columns of the data frame
-colnames(tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low 95% CI', 'High 95% CI', 'p-value')
-
-#ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
-tb1 <- kbl(tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
-tb1
-as_image(x = tb1, width = 10, file = "Table2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 
 
 #Select and sort the tukey HSD columns and 
 tHSD.filter.sup <- tHSD.filter %>% dplyr::select(variable, fire.severity, estimate.1, estimate.2, estimate, conf.low, conf.high, 
@@ -984,7 +961,7 @@ ggsave(filename = 'Fig7_sev_comparison_barchart.png', height=20, width= 20, unit
 #Save SVG file
 ggsave(filename = 'Fig7_sev_comparison_barchart.svg', height=20, width= 20, units = 'cm', dpi=900)
 
-#Create Figure S4
+#Create Figure S5
 p3a <- ggplot() + 
   # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
@@ -1093,7 +1070,7 @@ f4
 #Save the data
 ggsave(filename = 'FigS5_sev_stand_age_treatment_veg_cover.png', height=18, width= 20, units = 'cm', dpi=900)
 
-#Create Fig S5, the data check figure
+#Create Fig S6: Data check figure
 p4a <- ggplot() + 
   geom_hline(yintercept = 0) + 
   geom_vline(xintercept = 0, linetype = 'dashed') +
@@ -1185,7 +1162,7 @@ p6 <- ggplot(data = sev.pixel.filter) +
   xlab('Dieback (% Tree Cover)') + ylab(expression('Dieback (trees ha'^-1*')'))
 p6
 
-ggsave(filename = 'FigS8_frap_rx_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = 'FigS8_fire_sev_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
 
 #Elevation Analysis
 #Elevation Separation Data
@@ -1209,94 +1186,70 @@ sev.pixel.ADS.count <- sev.pixel.filter %>%
   dplyr::summarize(ADS.count = n()) %>%
   ungroup()
 
-# pixel.ADS.count$ADS.count
 
 #Combined pixel elevation data
 sev.pixel.elev.merge <- merge(sev.pixel.elev.data, sev.pixel.ADS.count %>% dplyr::select(sev.bin, treatment, elev.bin, ADS.count), by = c("treatment", "sev.bin", "elev.bin"))
 
-#Elevation Chart
+#Figure S13: Elevation Chart
 #Dieback Distribution Chart
 p5a <- ggplot(data = sev.pixel.elev.merge) +
-  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
   facet_grid(. ~ sev.bin) +
   scale_y_reverse() +
   geom_line(mapping = aes(y = dTree.mean, x = elevation.mean, color = sev.bin, linetype = treatment), linewidth = 1) +
   geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + 1.96*(dTree.sd / sqrt(count)), ymin = dTree.mean - 1.96*(dTree.sd / sqrt(count)), color = sev.bin, linetype = treatment), linewidth = 1) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), legend.position = c(0.95, 0.7)) +
-  # scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_color_manual(values = mypalette, name = 'Fire Severity', guide = 'none') +
   scale_linetype(name = 'Treatment') +
   xlab(expression('Elevation')) + ylab('Dieback (Tree Cover %)')
 p5a
 
 p5b <- ggplot(data = sev.pixel.elev.merge %>% filter(count >= 5)) +
-  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
   facet_grid(. ~ sev.bin) +
-  # scale_y_reverse() +
   geom_line(mapping = aes(y = ADS.mean, x = elevation.mean, color = sev.bin, linetype = treatment), linewidth = 1) +
   geom_errorbar(mapping = aes(y = ADS.mean, x = elevation.mean, ymax = ADS.mean + 1.96*(ADS.sd / sqrt(count)), ymin = ADS.mean - 1.96*(ADS.sd / sqrt(count)), color = sev.bin, linetype = treatment), linewidth = 1) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), legend.position = 'none') +
-  # scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   xlab(expression('Elevation')) + ylab(expression('Dieback (tree ha'^-1*')'))
 p5b
 
 p5c <- ggplot(data = sev.pixel.elev.merge %>% filter(count >= 5)) +
-  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
   facet_grid(. ~ sev.bin) +
-  # scale_y_reverse() +
   geom_line(mapping = aes(y = Tree.mean, x = elevation.mean, color = sev.bin, linetype = treatment), linewidth = 1) +
   geom_errorbar(mapping = aes(y = Tree.mean, x = elevation.mean, ymax = Tree.mean + 1.96*(Tree.sd / sqrt(count)), ymin = Tree.mean - 1.96*(Tree.sd / sqrt(count)), color = sev.bin, linetype = treatment), linewidth = 1) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), legend.position = 'none') +
-  # scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   xlab(expression('Elevation')) + ylab('Tree Cover (%)')
 p5c
 
 p5d <- ggplot(data = sev.pixel.elev.data %>% filter(count >= 5)) +
-  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
   facet_grid(. ~ sev.bin) +
-  # scale_y_reverse() +
   geom_line(mapping = aes(y = Shrub.mean, x = elevation.mean, color = sev.bin, linetype = treatment), linewidth = 1) +
   geom_errorbar(mapping = aes(y = Shrub.mean, x = elevation.mean, ymax = Shrub.mean + 1.96*(Shrub.sd / sqrt(count)), ymin = Shrub.mean - 1.96*(Shrub.sd / sqrt(count)), color = sev.bin, linetype = treatment), linewidth = 1) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), legend.position = 'none') +
-  # scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   xlab(expression('Elevation')) + ylab('Shrub Cover (%)')
 p5d
 
 p5e <- ggplot(data = sev.pixel.elev.data %>% filter(count >= 5)) +
-  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
   facet_grid(. ~ sev.bin) +
-  # scale_y_reverse() +
   geom_line(mapping = aes(y = ET.mean, x = elevation.mean, color = sev.bin, linetype = treatment), linewidth = 1) +
   geom_errorbar(mapping = aes(y = ET.mean, x = elevation.mean, ymax = ET.mean + 1.96*(ET.sd / sqrt(count)), ymin = ET.mean - 1.96*(ET.sd / sqrt(count)), color = sev.bin, linetype = treatment), linewidth = 1) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), legend.position = 'none') +
-  # scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   xlab(expression('Elevation')) + ylab(expression('ET (mm yr'^-1*')'))
 p5e
 
 p5f <- ggplot(data = sev.pixel.elev.data %>% filter(count >= 5)) +
-  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
   facet_grid(. ~ sev.bin) +
-  # scale_y_reverse() +
   geom_line(mapping = aes(y = PrET_4yr.mean, x = elevation.mean, color = sev.bin, linetype = treatment), linewidth = 1) +
   geom_errorbar(mapping = aes(y = PrET_4yr.mean, x = elevation.mean, ymax = PrET_4yr.mean + 1.96*(PrET_4yr.sd / sqrt(count)), ymin = PrET_4yr.mean - 1.96*(PrET_4yr.sd / sqrt(count)), color = sev.bin, linetype = treatment), linewidth = 1) +
   theme_bw() +
   theme(legend.position = 'none') +
-  # scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   xlab(expression('Elevation')) + ylab(expression('Pr-ET (mm 4yr'^-1*')'))
 p5f
@@ -1306,7 +1259,7 @@ f6
 
 ggsave(filename = 'FigS13_forest_type_comparison_by_elevation_bin.png', height=32, width= 32, units = 'cm', dpi=900)
 
-#Stand Age Die-off comparison
+#Figure R4 (or S14), Stand Age Die-off comparison
 p7a <- ggplot(data = sev.pixel.filter %>% filter(treatment == 'Disturb')) +
   #Create the density layer
   geom_bin2d(binwidth = c(1, 10), mapping = aes(x = stand.age, y = ADS)) + #, group = after_stat(count), alpha = after_stat(count))) +

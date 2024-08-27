@@ -78,10 +78,8 @@ rx.pixel.data <- rbind(rx.data, rx.control.data)
 pixel.data <- rbind(frap.pixel.data, rx.pixel.data)
 
 `%notin%` <- Negate(`%in%`)
-# summary(pixel.data)
+
 #Convert fire data -9999 to NAs
-# pixel.data[pixel.data$fire_type_2010 == -9999,]$fire_type_2010 <- NA
-# pixel.data[pixel.data$fire_year_2010 == -9999,]$fire_year_2010 <- NA
 pixel.data[pixel.data$fire_type_2019 == -9999,]$fire_type_2019 <- NA
 pixel.data[pixel.data$fire_year_2019 == -9999,]$fire_year_2019 <- NA
 pixel.data[pixel.data$fire_type_2020 == -9999,]$fire_type_2020 <- NA
@@ -193,17 +191,19 @@ pixel.sample$vi.year <- pixel.sample$year
 pixel.sample$stand.age <- as.numeric(pixel.sample$year) - as.numeric(pixel.sample$fire.year) 
 
 #Update Cover data to 100% scale
-# pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover / 100
-# pixel.sample$Shrub_Cover.2 <- pixel.sample$Shrub_Cover / 100
-# pixel.sample$Herb_Cover.2 <- pixel.sample$Herb_Cover / 100
-# pixel.sample$Bare_Cover.2 <- pixel.sample$Bare_Cover / 100
-# pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover
+#Vegetation Cover from Wang et al, 2022
+pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover / 100
+pixel.sample$Shrub_Cover.2 <- pixel.sample$Shrub_Cover / 100
+pixel.sample$Herb_Cover.2 <- pixel.sample$Herb_Cover / 100
+pixel.sample$Bare_Cover.2 <- pixel.sample$Bare_Cover / 100
+pixel.sample$Tree_Cover.2 <- pixel.sample$Tree_Cover
 
 #Rename Montana Tree Cover
+#Vegetation Cover from Allred et al, 2021
 pixel.sample$Tree_Cover <- pixel.sample$TRE
 pixel.sample$Shrub_Cover <- pixel.sample$SHR
-# pixel.sample$Herb_Cover <- pixel.sample$AFG + pixel.sample$PFG
-# pixel.sample$Bare_Cover <- pixel.sample$BGR 
+pixel.sample$Herb_Cover <- pixel.sample$AFG + pixel.sample$PFG
+pixel.sample$Bare_Cover <- pixel.sample$BGR
 
 #Convert the SPI48 scale back to decimal
 pixel.sample$SPI48 <- pixel.sample$SPI48 / 100
@@ -235,8 +235,7 @@ pixel.sample <- pixel.sample %>%
                 dTree_Cover = Tree_Cover - mean(Tree_Cover[stand.age %in% c(-1, -2)]),
                 dShrub_Cover = Shrub_Cover - mean(Shrub_Cover[stand.age %in% c(-1, -2)])) %>%
          ungroup()
-  # group_by(stand.age, fire.type.bin) %>%
-  # summarize(Tree_Cover.mean = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']))
+
 summary(pixel.sample)
 
 #Do some calculations for the results section of the manuscript
@@ -342,8 +341,6 @@ p2a <- ggplot() +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  # scale_fill_manual(values = fills) + 
-  # guides(fill = "none") +
   ylab(expression(atop('Tree Cover', 'Change (%)'))) + xlab('Years Since Fire')
 p2a
 
@@ -423,7 +420,7 @@ f1
 #Save the data
 ggsave(filename = '../figures/Fig2_frap_stand_age_tree_shrub_ET.png', height=15, width= 20, units = 'cm', dpi=900)
 
-#Figure 4 of Dead Trees per acre separated by fire years with time series
+#Create Figure 4: Dead Trees per acre separated by fire years with time series
 p1a <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
@@ -659,8 +656,7 @@ f3
 # #Save the data
 ggsave(filename = 'FigS1_frap_rx_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
 
-#Create Table 1 for the manuscript and Table S1 for the supplement
-#Create Bar Chart as a Potential Alternative to Table 1
+#Create Figure 5: Bar Chart with statistical comparisons
 p7a <- ggbarplot(pixel.filter,
                 y = "ADS", position = position_dodge(), facet.by = "fire.type.bin", fill = "fire.type.bin", x = 'treatment',
                 add = "mean_ci" , error.plot = "errorbar", alpha = 0.8, width = 0.5, 
@@ -796,6 +792,7 @@ f7
 
 ggsave(filename = 'Fig5_frap_rx_comparison_barchart.png', height=20, width= 12, units = 'cm', dpi=900)
 
+#Create Table 1 for the manuscript and Table S1 for the supplement
 #Calculate the sample sizes for the treatment and controls
 pixel.filter %>% group_by(treatment, fire.type.bin) %>%
   summarize(count = n())
@@ -895,17 +892,6 @@ rxfrap.tHSD.filter$diff.pct <- rxfrap.tHSD.filter$estimate / rxfrap.tHSD.filter$
 rxfrap.tHSD.filter$low.pct <- rxfrap.tHSD.filter$conf.low / rxfrap.tHSD.filter$estimate.2 * 100
 
 rxfrap.tHSD.filter$high.pct <- rxfrap.tHSD.filter$conf.high / rxfrap.tHSD.filter$estimate.2 * 100
-
-#Select and sort the tukey HSD columns and 
-# rxfrap.tHSD.filter.tab <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, 
-#                                                                diff.pct, high.pct, low.pct, adj.p.value)
-# 
-# #Name the columns of the data frame
-# colnames(rxfrap.tHSD.filter.tab) <- c('Variable', 'Fire Severity', 'Difference (%)', 'Low 95% CI', 'High 95% CI', 'p-value')
-# 
-# #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
-# tb1 <- kbl(rxfrap.tHSD.filter.tab, format = 'html', caption = "Tukey HSD Comparisons between Fire Type Groups", digits = c(0,0,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
-# as_image(x = tb1, width = 10, file = "Table1_fire_type_tHSD_test_results_with_pct.png", zoom = 5.0) 
 
 #Select and sort the tukey HSD columns and 
 rxfrap.tHSD.filter.sup <- rxfrap.tHSD.filter %>% dplyr::select(variable, fire.type, estimate.1, estimate.2, estimate, conf.low, conf.high, 
@@ -1123,48 +1109,30 @@ pixel.elev.data <- pixel.filter %>%
                    dTree.mean = mean(dTree), dTree.sd = sd(dTree), Tree.mean = mean(Tree_Cover), Tree.sd = sd(Tree_Cover),
                    Shrub.mean = mean(Shrub_Cover), Shrub.sd = sd(Shrub_Cover), PrET_4yr.mean = mean(PrET_4yr), PrET_4yr.sd = sd(PrET_4yr), 
                    ET.mean = mean(ET), ET.sd = sd(ET), elevation.mean = mean(elevation)) %>%
-  # dplyr::mutate(ADS_2017.mean = mean(ADS_2017)) %>%
-  # dplyr::mutate(ADS.predict.overall.mean = mean(ADS.predict * dead_ADS.num)) %>%
-  # dplyr::mutate(ADS.predict.mean = mean(ADS.predict)) %>%
-  # dplyr::mutate(dead_ADS.predict.mean = mean(dead_ADS.predict * 100)) %>%
-  # dplyr::mutate(ADS.mag.2012.mean = mean(ADS.mag.2012)) %>%
-  # dplyr::mutate(dead_ADS_2012.predict.mean = mean((dead_ADS_2012.predict) * 100)) %>%
-  # dplyr::mutate(ADS.mag.change.mean = mean(ADS.mag.2019 - ADS.mag.2012)) %>%
-  # dplyr::mutate(dead_ADS.predict.change.mean = mean((dead_ADS_2019.predict - dead_ADS_2012.predict) * 100)) %>%
-  # dplyr::mutate(stdht.change.mean = mean(stdht_2017 - stdht_2012)) %>%
-  # dplyr::mutate(dieoff.risk.change.mean = mean(dieoff.risk.2019 - dieoff.risk.2012)) %>%
   ungroup()
 
 #calculate the number o samples 
 pixel.ADS.count <- pixel.filter %>% 
 filter(!is.na(ADS)) %>%
-  # left_join(y = data %>% dplyr::select(c(latitude, longitude, system.index)), by = join_by(system.index == system.index)) %>%
-  # dplyr::mutate(socal = as.integer(USFS_zone == 262), sierra = as.integer(USFS_zone == 261)) %>% #Make new columns that have 0,1 for Sierra and socal to calculate proportions later
   dplyr::mutate(elev.bin = cut(elevation, breaks = seq(0, 4000, by = 500))#,
                 #lat.bin = cut(latitude, breaks = seq(34.8, 39.0, by = 0.2))),
   ) %>%
   dplyr::group_by(elev.bin, fire.type.bin, treatment) %>%
   dplyr::summarize(ADS.count = n()) %>%
-  # dplyr::mutate(ADS.mean = mean(ADS, na.rm = TRUE)) %>%
-  # dplyr::mutate(ADS.sd = sd(ADS, na.rm = TRUE)) %>%
   ungroup()
-# pixel.ADS.count$ADS.count
 
 #Combined pixel elevation data
 pixel.elev.merge <- merge(pixel.elev.data, pixel.ADS.count %>% dplyr::select(fire.type.bin, treatment, elev.bin, ADS.count), by = c("treatment", "fire.type.bin", "elev.bin"))
 
-#Elevation Chart
+#Create Figure S12: Comparing dieback and dieback predictors by elevation
 #Dieback Distribution Chart
-p6a <- ggplot(data = pixel.elev.merge) +  #%>% filter(count >= 5)) +
-  #geom_bin_2d(binwidth = c(5, 200), mapping = aes(group = dTree.mean)) +
-  #scale_fill_gradient(high = 'yellow', low = '#de2d26', name = expression(atop('Observed', 'Dieback (%)'))) + # (trees ha'^-1*')'))) +
+p6a <- ggplot(data = pixel.elev.merge) +  
   facet_grid(. ~ fire.type.bin) +
   scale_y_reverse() +
   geom_line(mapping = aes(y = dTree.mean, x = elevation.mean, color = fire.type.bin, linetype = treatment), linewidth = 1) +
   geom_errorbar(mapping = aes(y = dTree.mean, x = elevation.mean, ymax = dTree.mean + 1.96*(dTree.sd / sqrt(count)), ymin = dTree.mean - 1.96*(dTree.sd / sqrt(count)), color = fire.type.bin, linetype = treatment), linewidth = 1) +
   theme_bw() +
   theme(axis.title.x = element_blank(), axis.text.x = element_blank(), legend.position = c(0.9, 0.7)) +
-  # scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1, guide = 'none') +
   scale_linetype(name = 'Treatment') +
   xlab(expression('Elevation')) + ylab('Dieback (Tree Cover %)')
@@ -1245,7 +1213,7 @@ f7
 
 ggsave(filename = 'FigS12_forest_type_comparison_by_elevation_bin.png', height=32, width= 16, units = 'cm', dpi=900)
 
-#Stand Age Die-off comparison
+#Create Figure R3 (or S14): Stand Age Die-off comparison for response to reviewers
 p7a <- ggplot(data = pixel.filter %>% filter(treatment == 'Disturb')) +
   #Create the density layer
   geom_bin2d(binwidth = c(1, 10), mapping = aes(x = stand.age, y = ADS)) + #, group = after_stat(count), alpha = after_stat(count))) +

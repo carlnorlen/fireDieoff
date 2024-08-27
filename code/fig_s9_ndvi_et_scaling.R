@@ -33,8 +33,7 @@ GEE_NDVI_mean <- GEE_NDVI %>% group_by(site_ID,date) %>% # mean and std
 
 # readxl
     # 1.) Ingest flux data
-UCI_tower_good <- read.csv(paste0(dir_in,'\\Monthly_towerdata3_all_sites_good4.csv')) %>% # new gC/m2/day
-      # dplyr::select(Site,Efill.1,`Mean date`) %>%
+UCI_tower_good <- read.csv(paste0(dir_in,'\\Monthly_towerdata3_publish.csv')) %>% 
       mutate(site_ID = as.factor(Site), date=floor_date(as.Date(`Mean date`),unit='month'), Days_Month = days_in_month(date),
       ET_mm_d=Efill.1) 
 

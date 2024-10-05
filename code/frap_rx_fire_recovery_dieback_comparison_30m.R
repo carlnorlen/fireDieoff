@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 26, 2024
+#Date Updated: October 5, 2024
 #Purpose: Create figures for publication
 
 #Add the needed R packages
@@ -702,8 +702,7 @@ p7b <- ggbarplot(pixel.filter,
   geom_pwc(
     tip.length = 0, bracket.nudge.y = -0.52,
     method = "tukey_hsd", label = "p.format"
-  ) +l;
-
+  ) +
   scale_y_reverse(expand = expansion(mult = c(0.05, 0.15))) +
   ylab(expression(atop('Dieback Severity', '('*Delta*'Tree %)')))
 p7b
@@ -906,7 +905,7 @@ tb2 <- kbl(rxfrap.tHSD.filter.sup, format = 'html', caption = "Tukey HSD Compari
 tb2
 #The as_image command isn't working any more
 #Saved with the viewer window
-as_image(x = tb2, width = 14, file = "TableS1_fire_type_tHSD_test_results_with_pct_v2.png", zoom = 6.0)
+as_image(x = tb2, width = 10, file = "TableS1_fire_type_tHSD_test_results_with_pct_v2.png", zoom = 5.0)
 
 #Figure S3: Vegetation recovery
 p4a <- ggplot() + 

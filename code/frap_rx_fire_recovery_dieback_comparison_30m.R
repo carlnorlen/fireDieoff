@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: October 5, 2024
+#Date Updated: October 16, 2024
 #Purpose: Create figures for publication
 
 #Add the needed R packages
@@ -338,6 +338,7 @@ p2a <- ggplot() +
         axis.title.x = element_blank(), legend.position = c(0.065, 0.4), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 12), legend.text = element_text(size = 10)) +
+  annotate("text", x = 19, y = -7.5, label = "95% CI", size = 4) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +

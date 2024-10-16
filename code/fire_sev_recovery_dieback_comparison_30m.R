@@ -1,6 +1,6 @@
 #Author: Carl Norlen
 #Date Created: May 11, 2022
-#Date Updated: July 25, 2024
+#Date Updated: October 16, 2024
 #Purpose: Create figures for publication
 
 #Packages for the script
@@ -419,6 +419,7 @@ p2b <- ggplot() +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
+  annotate("text", x = 19, y = 5.75, label = "95% CI", size = 4) +
   ylab(expression(atop('Shrub Cover', 'Change (%)'))) + xlab('Years Since Fire')
 p2b
 

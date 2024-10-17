@@ -353,7 +353,6 @@ sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 
 
 #Create fire recover curves
 p2a <- ggplot() + 
-  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
   geom_line(data = sev.pixel.sample %>%
@@ -364,7 +363,7 @@ p2a <- ggplot() +
               mutate(dTree_Cover.mean = Tree_Cover.mean - mean(Tree_Cover.mean[stand.age %in% c(-1, -2)])),
             mapping = aes(x = stand.age, y = dTree_Cover.mean, color = sev.bin), linewidth = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = sev.pixel.sample %>%
+  geom_errorbar(data = sev.pixel.sample %>%
                   filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                   group_by(stand.age, sev.bin) %>%
                   summarize(Tree_Cover.mean = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']),
@@ -374,7 +373,7 @@ p2a <- ggplot() +
                 mutate(dTree_Cover.mean = Tree_Cover.mean - mean(Tree_Cover.mean[stand.age %in% c(-1, -2)])),
                 mapping = aes(ymin=dTree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
                               ymax= dTree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
-                              x = stand.age, fill = sev.bin), alpha = 0.3) +
+                              x = stand.age, color = sev.bin), linewidth = 1, width = 0.2, alpha = 0.5) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
@@ -388,7 +387,6 @@ p2a
 
 #Pr-ET change with wildfire (FRAP)
 p2b <- ggplot() + 
-  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + 
   geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
@@ -400,7 +398,7 @@ p2b <- ggplot() +
               mutate(dShrub_Cover.mean = Shrub_Cover.mean - mean(Shrub_Cover.mean[stand.age %in% c(-1, -2)])),
             mapping = aes(x = stand.age, y = dShrub_Cover.mean, color = sev.bin), linewidth = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = sev.pixel.sample %>%
+  geom_errorbar(data = sev.pixel.sample %>%
                   filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                   group_by(stand.age, sev.bin) %>%
                   summarize(Shrub_Cover.mean = mean(Shrub_Cover[treatment == 'Disturb']) - mean(Shrub_Cover[treatment == 'Control']),
@@ -410,7 +408,7 @@ p2b <- ggplot() +
                 mutate(dShrub_Cover.mean = Shrub_Cover.mean - mean(Shrub_Cover.mean[stand.age %in% c(-1, -2)])),
                 mapping = aes(ymin=dShrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
                               ymax=dShrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
-                              x = stand.age, fill = sev.bin), alpha = 0.3) +
+                              x = stand.age, color = sev.bin), linewidth = 1, width = 0.2, alpha = 0.5) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
@@ -419,13 +417,13 @@ p2b <- ggplot() +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
-  annotate("text", x = 19, y = 5.75, label = "95% CI", size = 4) +
+  #Add 95% CI annotation
+  annotate("text", x = 15.8, y = 8.2, label = "95% CI", size = 3) +
   ylab(expression(atop('Shrub Cover', 'Change (%)'))) + xlab('Years Since Fire')
 p2b
 
 #AET change with wildfire (FRAP)
 p2c <- ggplot() + 
-  # geom_line(mapping = aes(group = .geo), color = 'dark gray', size = 0.2, alpha = 0.2) +
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
   geom_line(data = sev.pixel.sample %>%
@@ -436,7 +434,7 @@ p2c <- ggplot() +
               mutate(dAET.mean = AET.mean - mean(AET.mean[stand.age %in% c(-1, -2)])), 
             mapping = aes(x = stand.age, y = dAET.mean, color = sev.bin), size = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = sev.pixel.sample %>%
+  geom_errorbar(data = sev.pixel.sample %>%
                   filter(stand.age >= -2 & stand.age <= 20 & !is.na(Shrub_Cover) & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>%
                   group_by(stand.age, sev.bin) %>%
                   summarize(AET.mean = mean(AET[treatment == 'Disturb']) - mean(AET[treatment == 'Control']),
@@ -446,7 +444,7 @@ p2c <- ggplot() +
                 mutate(dAET.mean = AET.mean - mean(AET.mean[stand.age %in% c(-1, -2)])), 
                 mapping = aes(ymin= dAET.mean - 1.96*(sqrt(AET.sd / AET.n)),
                               ymax= dAET.mean + 1.96*(sqrt(AET.sd / AET.n)),
-                              x = stand.age, fill = sev.bin), alpha = 0.3) +
+                              x = stand.age, color = sev.bin), linewidth = 1, width = 0.2, alpha = 0.5) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_text(size = 12), legend.position = c(0.8, 0.25), legend.background = element_rect(colour = NA, fill = NA),
@@ -463,9 +461,18 @@ f2 <- ggarrange(p2a, p2b, p2c, nrow = 3, ncol = 1, common.legend = FALSE, height
 f2
 
 #Save the data
-ggsave(filename = 'Fig3_sev_fire_stand_age_tree_shrub_ET.png', height=15, width= 20, units = 'cm', dpi=900)
+ggsave(filename = '../figures/Fig3_sev_fire_stand_age_tree_shrub_ET.png', height=15, width= 20, units = 'cm', dpi=900)
 
-#Figure of Dead Trees per acre separated by fire years with time series
+#Figure 6: Dead Trees per acre separated by fire years with time series
+
+#Text annotation for 95% CI
+sev.text <- data.frame(
+  label = c("", "", "","95% CI"),
+  sev.bin = as.factor(c("Unchanged", "Low", "Mid", "High")),
+  x     = c(as.Date('2017-06-01'), as.Date('2016-02-01'), as.Date('2016-06-01'), as.Date('2017-10-01')),
+  y     = c(22, 30, 30, 30)
+)
+
 p1a <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = sev.pixel.sample %>%
@@ -473,12 +480,11 @@ p1a <- ggplot() +
               filter(vi.year >= 2010) %>%
               group_by(date, sev.bin, treatment) %>%
               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), # %>%
-            # filter(if_else(sev.bin == '1985-2010', tpa_max.n >= 6000, tpa_max.n >= 0)), 
             mapping = aes(x = date, y = tpa_max.mean, color = sev.bin, linetype = treatment), 
             size = 1
   ) +
   #Dead Trees 95% CI
-  geom_ribbon(data = sev.pixel.sample %>%
+  geom_errorbar(data = sev.pixel.sample %>%
                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                 filter(vi.year >= 2010) %>%
                 group_by(date, sev.bin, treatment) %>%
@@ -487,12 +493,14 @@ p1a <- ggplot() +
               # filter(if_else(sev.bin == '1985-2010', tpa_max.n >= 6000, tpa_max.n >= 0)),
               mapping = aes(ymin=tpa_max.mean - 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
-                            x = date, fill = sev.bin, alpha = treatment)) +
-  #Do the Formating
+                            x = date, color = sev.bin, alpha = treatment), linewidth = 1, width = 80) +
+  #Add annotation
+  geom_text(data = sev.text, mapping = aes(x = x, y = y, label = label), size = 2) +
+  #Do the Formatting
   scale_linetype(name = 'Treatment', labels = c('Unburned', 'Burned')) +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  scale_alpha_discrete(range = c(0.5, 0.5)) +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
@@ -503,8 +511,9 @@ p1a <- ggplot() +
         strip.text.x = element_text(size = 12)) +
   geom_rect(data = data.frame(xmin = as.Date('2011-10-01'), xmax = as.Date('2015-09-30'), ymin = -Inf, ymax = Inf),
             fill = "red", alpha = 0.3, mapping = aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax)) +
-  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
-  ylab(expression(atop('Dieback Severity', '(trees ha'^-1*')'))) + xlab('Year') #+ facet_wrap(. ~ fire_type_last, labeller = as_labeller(c('1' = 'Wild', '2' = 'Prescribed')))
+  xlim(as.Date('2010-01-01'),as.Date('2020-01-01')) + 
+  facet_grid(. ~ sev.bin, labeller = as_labeller(c('Unchanged' = 'Lowest', 'Low' = 'Low', 'Mid' = 'Mid', 'High' = 'High'))) +
+  ylab(expression(atop('Dieback Severity', '(trees ha'^-1*')'))) + xlab('Year') 
 p1a
 
 #Create the 
@@ -520,21 +529,20 @@ p1b <- ggplot() +
             mapping = aes(x = date, y = Tree_Cover.mean, color = sev.bin, linetype = treatment), 
             size = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = sev.pixel.sample %>%
+  geom_errorbar(data = sev.pixel.sample %>%
                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>% # &
                 filter(vi.year >= 2010) %>%
                 group_by(date, sev.bin, treatment) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
                           Tree_Cover.sd = sd(Tree_Cover), count = n()), # %>%  
-              # filter(case_when(sev.bin == 'Unchanged or Low' ~ count >= 2500, sev.bin == 'Mid or High' ~ count >= 2700, sev.bin == 'No Fire' ~ count >= 0)),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(count)),
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(count)),
-                            x = date, fill = sev.bin, alpha = treatment)) +
+                            x = date, color = sev.bin, alpha = treatment), linewidth = 1, width = 80) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  scale_alpha_discrete(range = c(0.5, 0.5)) +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
@@ -560,7 +568,7 @@ p1c <- ggplot() +
             mapping = aes(x = date, y = PrET.mean, color = sev.bin, linetype = treatment), 
             size = 1) + 
   #Water Stress 95% CI
-  geom_ribbon(data = sev.pixel.sample %>%
+  geom_errorbar(data = sev.pixel.sample %>%
                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & !is.na(sev.bin) & (fire_year_2019 <=2010 | treatment == 'Control')) %>%  
                 filter(vi.year >= 2010) %>%
                 group_by(date, sev.bin, treatment) %>%
@@ -568,12 +576,12 @@ p1c <- ggplot() +
                           PrET.sd = sd(PrET), PrET.n = n(), count = n()), #%>%  
               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
                             ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
-                            x = date, fill = sev.bin, alpha = treatment)) +
+                            x = date, color = sev.bin, alpha = treatment), linewidth = 1, width = 80) +
   #Do the Formating
   scale_linetype(name = 'Treatment') +
   scale_color_manual(values = mypalette, name = 'Fire Severity') +
   scale_fill_manual(values = mypalette, name = 'Fire Severity') +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  scale_alpha_discrete(range = c(0.5, 0.5)) +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
   #Pick the plot theme
   theme_bw() + 
@@ -594,7 +602,7 @@ f2 <- ggarrange(p1a, p1b, p1c, ncol = 1, nrow = 3, common.legend = FALSE, height
 f2
 
 #Save the data
-ggsave(filename = 'Fig6_dieoff_tree_cover_severity_time_series.png', height=12, width= 22, units = 'cm', dpi=900)
+ggsave(filename = '../figures/Fig6_dieoff_tree_cover_severity_time_series.png', height=12, width= 22, units = 'cm', dpi=900)
 
 #Create a Precip time series figure
 p2a <- ggplot() + 
@@ -684,7 +692,7 @@ f3 <- ggarrange(p2a, p2b, ncol = 1, nrow = 2, common.legend = FALSE, heights = c
 f3
 
 #Save the data
-ggsave(filename = 'FigS2_sev_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
+ggsave(filename = '../figures/FigS2_sev_water_fluxes_time_series.png', height=12, width= 18, units = 'cm', dpi=900)
 
 #Results for Table S2 summarizing Figures 2 and 3
 aov.dTree.treatment.sev <- aov(dTree ~ treatment * sev.bin, data = sev.pixel.filter)
@@ -817,7 +825,7 @@ colnames(tHSD.filter.sup) <- c('Variable', 'Fire Severity', 'Disturb Estimate', 
 #ANOVA and Tukey HSD comparing by time period and drought sequence, same as Table S2 plus % changes
 tb2 <- kbl(tHSD.filter.sup, format = 'html', caption = "Tukey HSD Comparisons between Fire Severity Groups", digits = c(0,0,1,1,1,1,1,1,1,1,3), escape = F) %>% kable_classic_2(font_size = 14, full_width = F)
 tb2
-as_image(x = tb2, width = 10, file = "TableS2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 
+as_image(x = tb2, width = 10, file = "../figures/TableS2_fire_severity_tHSD_test_results_with_pct.png", zoom = 5.0) 
 
 #Create Bar Chart as a Potential Alternative to Table 1
 p7a <- ggbarplot(sev.pixel.filter,
@@ -958,9 +966,9 @@ f7 <- (p7a / p7b / p7c / p7d / p7e) + plot_annotation(tag_levels = 'a')
 f7
 
 #Save PNG file
-ggsave(filename = 'Fig7_sev_comparison_barchart.png', height=20, width= 20, units = 'cm', dpi=900)
+ggsave(filename = '../figures/Fig7_sev_comparison_barchart.png', height=20, width= 20, units = 'cm', dpi=900)
 #Save SVG file
-ggsave(filename = 'Fig7_sev_comparison_barchart.svg', height=20, width= 20, units = 'cm', dpi=900)
+ggsave(filename = '../figures/Fig7_sev_comparison_barchart.svg', height=20, width= 20, units = 'cm', dpi=900)
 
 #Create Figure S5
 p3a <- ggplot() + 
@@ -1069,7 +1077,7 @@ f4 <- ggarrange(p3a, p3b, p3c, ncol = 1, nrow = 3, common.legend = FALSE, height
 f4
 
 #Save the data
-ggsave(filename = 'FigS5_sev_stand_age_treatment_veg_cover.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = '../figures/FigS5_sev_stand_age_treatment_veg_cover.png', height=18, width= 20, units = 'cm', dpi=900)
 
 #Create Fig S6: Data check figure
 p4a <- ggplot() + 
@@ -1148,7 +1156,7 @@ f5 <- ggarrange(p4a, p4b, p4c, ncol = 1, nrow = 3, common.legend = FALSE, height
 f5
 
 #Save the data
-ggsave(filename = 'FigS6_data_check_fire_sev.png', height=18, width= 20, units = 'cm', dpi=900)
+ggsave(filename = '../figures/FigS6_data_check_fire_sev.png', height=18, width= 20, units = 'cm', dpi=900)
 
 #Figure S8: ADS vs. dTree
 p6 <- ggplot(data = sev.pixel.filter) +
@@ -1163,7 +1171,7 @@ p6 <- ggplot(data = sev.pixel.filter) +
   xlab('Dieback (% Tree Cover)') + ylab(expression('Dieback (trees ha'^-1*')'))
 p6
 
-ggsave(filename = 'FigS8_fire_sev_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
+ggsave(filename = '../figures/FigS8_fire_sev_dieoff_comparison.png', height=16, width= 16, units = 'cm', dpi=900)
 
 #Elevation Analysis
 #Elevation Separation Data
@@ -1258,7 +1266,7 @@ p5f
 f6 <- ggarrange(p5a,p5b,p5c,p5d,p5e,p5f, nrow = 6, ncol = 1, common.legend = FALSE, heights = c(0.9, 0.9, 0.9, 0.9, 0.9, 1), align = "v", labels = c('a', 'b', 'c', 'd', 'e', 'f'))
 f6
 
-ggsave(filename = 'FigS13_forest_type_comparison_by_elevation_bin.png', height=32, width= 32, units = 'cm', dpi=900)
+ggsave(filename = '../figures/FigS13_forest_type_comparison_by_elevation_bin.png', height=32, width= 32, units = 'cm', dpi=900)
 
 #Figure R4 (or S14), Stand Age Die-off comparison
 p7a <- ggplot(data = sev.pixel.filter %>% filter(treatment == 'Disturb')) +
@@ -1295,4 +1303,4 @@ p7b
 f7 <- ggarrange(p7a, p7b, ncol = 1, nrow = 2, common.legend = FALSE, heights = c(0.9, 1), align = "v", labels = c('a', 'b'))
 f7
 
-ggsave(filename = 'FigS15_fire_sev_stand_age_dieoff_comparison.png', height=16, width= 32, units = 'cm', dpi=900)
+ggsave(filename = '../figures/FigS15_fire_sev_stand_age_dieoff_comparison.png', height=16, width= 32, units = 'cm', dpi=900)

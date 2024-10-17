@@ -322,7 +322,7 @@ p2a <- ggplot() +
               mutate(dTree_Cover.mean = Tree_Cover.mean - mean(Tree_Cover.mean[stand.age %in% c(-1, -2)])),
             mapping = aes(x = stand.age, y = dTree_Cover.mean, color = fire.type.bin), linewidth = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = pixel.sample %>% #stand.age <= 20 & 
+  geom_errorbar(data = pixel.sample %>% #stand.age <= 20 & 
                   filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                   group_by(stand.age, fire.type.bin) %>%
                   summarize(Tree_Cover.mean = mean(Tree_Cover[treatment == 'Disturb']) - mean(Tree_Cover[treatment == 'Control']),
@@ -332,13 +332,14 @@ p2a <- ggplot() +
                 mutate(dTree_Cover.mean = Tree_Cover.mean - mean(Tree_Cover.mean[stand.age %in% c(-1, -2)])),
                 mapping = aes(ymin= dTree_Cover.mean - 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
                               ymax= dTree_Cover.mean + 1.96*(sqrt(Tree_Cover.sd / Tree_Cover.n)),
-                              x = stand.age, fill = fire.type.bin), alpha = 0.3) +
+                              x = stand.age, color = fire.type.bin), linewidth = 1, width = 0.2, alpha = 0.5) + #, alpha = 0.3) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = c(0.065, 0.4), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(),
         legend.title = element_text(size = 12), legend.text = element_text(size = 10)) +
-  annotate("text", x = 19, y = -7.5, label = "95% CI", size = 4) +
+  #Add text annotation
+  annotate("text", x = 18.8, y = -7.6, label = "95% CI", size = 3) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
@@ -357,7 +358,7 @@ p2b <- ggplot() +
               mutate(dShrub_Cover.mean = Shrub_Cover.mean - mean(Shrub_Cover.mean[stand.age %in% c(-1, -2)])),
             mapping = aes(x = stand.age, y = dShrub_Cover.mean , color = fire.type.bin), linewidth = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = pixel.sample %>% #stand.age <= 20 
+  geom_errorbar(data = pixel.sample %>% #stand.age <= 20 
                   filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                   group_by(stand.age, fire.type.bin) %>%
                   summarize(Shrub_Cover.mean = mean(Shrub_Cover[treatment == 'Disturb']) - mean(Shrub_Cover[treatment == 'Control']),
@@ -367,7 +368,7 @@ p2b <- ggplot() +
                 mutate(dShrub_Cover.mean = Shrub_Cover.mean - mean(Shrub_Cover.mean[stand.age %in% c(-1, -2)])),
                 mapping = aes(ymin= dShrub_Cover.mean - 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
                               ymax= dShrub_Cover.mean + 1.96*(sqrt(Shrub_Cover.sd / Shrub_Cover.n)),
-                              x = stand.age, fill = fire.type.bin), alpha = 0.3) +
+                              x = stand.age, color = fire.type.bin), linewidth = 1, width = 0.2, alpha = 0.5) + #, alpha = 0.3) +
   theme_bw() +
   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
@@ -392,7 +393,7 @@ geom_line(data = pixel.sample %>%
             mutate(dAET.mean = AET.mean - mean(AET.mean[stand.age %in% c(-1, -2)])), 
           mapping = aes(x = stand.age, y = dAET.mean, color = fire.type.bin), linewidth = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = pixel.sample %>%
+  geom_errorbar(data = pixel.sample %>%
                   filter(stand.age >= -2 & stand.age <= 20 & vi.year <= 2012 & fire.year > 1986 & fire.year <= 2010 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # & #& elevation >= elev.lower & clm_temp_mean_mean >= temp.lower & clm_precip_sum_mean <= ppt.upper & stratlayer %in% strat.list
                   group_by(stand.age, fire.type.bin) %>%
                   summarize(AET.mean = mean(AET[treatment == 'Disturb']) - mean(AET[treatment == 'Control']),
@@ -402,13 +403,12 @@ geom_line(data = pixel.sample %>%
                 mutate(dAET.mean = AET.mean - mean(AET.mean[stand.age %in% c(-1, -2)])),
                 mapping = aes(ymin= dAET.mean - 1.96*(sqrt(AET.sd / AET.n)),
                               ymax= dAET.mean + 1.96*(sqrt(AET.sd / AET.n)),
-                              x = stand.age, fill = fire.type.bin), alpha = 0.3) +
-theme_bw() +
+                              x = stand.age, color = fire.type.bin), linewidth = 1, width = 0.2, alpha = 0.5) + 
+  theme_bw() +
   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_text(size = 12), legend.position = 'none', legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_text(size = 10),
         legend.title = element_text(size = 8), legend.text = element_text(size = 6)) +
-  #scale_colour_manual(name="Vegetation Type",values=cols, aesthetics = 'color') +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = guide_legend(), linetype = 'none', fill = 'none') +
@@ -422,6 +422,15 @@ f1
 ggsave(filename = '../figures/Fig2_frap_stand_age_tree_shrub_ET.png', height=15, width= 20, units = 'cm', dpi=900)
 
 #Create Figure 4: Dead Trees per acre separated by fire years with time series
+
+#Text annotation for 95% CI
+text <- data.frame(
+  label = c("95% CI", ""),
+  fire.type.bin = c("Rxfire", "Wildfire"),
+  x     = c(as.Date('2019-06-01'), as.Date('2019-02-01')),
+  y     = c(21.25, 18.5)
+)
+
 p1a <- ggplot() + 
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
@@ -429,10 +438,10 @@ p1a <- ggplot() +
               group_by(date, treatment, fire.type.bin) %>%
               summarize(tpa_max.mean = mean(tpa_max), tpa_max.n = n()), 
             mapping = aes(x = date, y = tpa_max.mean, color = fire.type.bin, linetype = treatment), 
-            size = 1
+            linewidth = 1
   ) +
   #Dead Trees 95% CI
-  geom_ribbon(data = pixel.sample %>%
+  geom_errorbar(data = pixel.sample %>%
                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                 
                 group_by(date, treatment, fire.type.bin) %>%
@@ -440,10 +449,12 @@ p1a <- ggplot() +
                           tpa_max.sd = sd(tpa_max), tpa_max.n = n()), 
               mapping = aes(ymin=tpa_max.mean - 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
                             ymax=tpa_max.mean + 1.96*(tpa_max.sd / sqrt(tpa_max.n)),
-                            x = date, fill = fire.type.bin, alpha = treatment)) +
+                            x = date, color = fire.type.bin, alpha = treatment), linewidth = 1, width = 80) +
+  #Add annotation
+  geom_text(data = text, mapping = aes(x = x, y = y, label = label), size = 2) +
   #Do the Formating
   scale_linetype(name = 'Treatment', labels = c('Unburned', 'Burned')) +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  scale_alpha_discrete(range = c(0.5, 0.5)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
@@ -451,6 +462,7 @@ p1a <- ggplot() +
   theme_bw() + 
   #Do the faceting
   facet_grid(. ~ fire.type.bin) +
+  #Add the themes
   theme(axis.text.y = element_text(size = 10), axis.title.y = element_text(size = 12),
         axis.title.x = element_blank(), legend.position = c(0.15, 0.6), legend.background = element_rect(colour = NA, fill = NA),
         legend.key = element_rect(fill = NA), axis.text.x = element_blank(), panel.spacing = unit(20, "pt"),
@@ -474,7 +486,7 @@ p1b <- ggplot() +
             mapping = aes(x = date, y = Tree_Cover.mean, color = fire.type.bin, linetype = treatment), 
             size = 1) + 
   #Tree Cover 95% CI
-  geom_ribbon(data = pixel.sample %>%
+  geom_errorbar(data = pixel.sample %>%
                 filter(!is.na(tpa_max) & fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% 
                 group_by(date, treatment, fire.type.bin) %>%
                 summarize(Tree_Cover.mean = mean(Tree_Cover),
@@ -482,10 +494,10 @@ p1b <- ggplot() +
               # filter(if_else(treatment == '1980-2010', Tree_Cover.n >= 2500, Tree_Cover.n >= 0)),
               mapping = aes(ymin=Tree_Cover.mean - 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
                             ymax=Tree_Cover.mean + 1.96*(Tree_Cover.sd / sqrt(Tree_Cover.n)),
-                            x = date, fill = fire.type.bin, alpha = treatment)) +
+                            x = date, color = fire.type.bin, alpha = treatment), linewidth = 1, width = 80) +
   #Do the Formatting
   scale_linetype(name = 'Treatment') +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  scale_alpha_discrete(range = c(0.5, 0.5)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
@@ -516,17 +528,17 @@ p1c <- ggplot() +
             mapping = aes(x = date, y = PrET.mean, color = fire.type.bin, linetype = treatment),
             size = 1) +
   #Water Stress 95% CI
-  geom_ribbon(data = pixel.sample %>%
+  geom_errorbar(data = pixel.sample %>%
                 filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
                 group_by(date, treatment, fire.type.bin) %>%
                 summarize(PrET.mean = mean(PrET),
                           PrET.sd = sd(PrET), PrET.n = n(), count = n()),
               mapping = aes(ymin=PrET.mean - 1.96*(PrET.sd / sqrt(PrET.n)),
                             ymax=PrET.mean + 1.96*(PrET.sd / sqrt(PrET.n)),
-                            x = date, fill = fire.type.bin, alpha = treatment)) +
+                            x = date, color = fire.type.bin, alpha = treatment), linewidth = 1, width = 80) +
   #Do the Formatting
   scale_linetype(name = 'Treatment') +
-  scale_alpha_discrete(range = c(0.3, 0.3)) +
+  scale_alpha_discrete(range = c(0.5, 0.5)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   scale_fill_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +
   guides(color = 'none', linetype = guide_legend(), fill = 'none', alpha = 'none') +
@@ -557,11 +569,6 @@ p3a <- ggplot() +
   geom_hline(yintercept = 0) +
   geom_line(data = pixel.sample %>%
               filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-              # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-              #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
-              # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
-              # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower &
-              # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
               group_by(date, treatment, fire.type.bin) %>%
               summarize(ppt.mean = mean(ppt), ppt.n = n(), count = n()),
             mapping = aes(x = date, y = ppt.mean, color = fire.type.bin, linetype = treatment),
@@ -569,18 +576,13 @@ p3a <- ggplot() +
   #AET 95% CI
   geom_ribbon(data = pixel.sample %>%
                 filter(fire.year <= 2010 & fire.year > 1986 & (fire_year_2019 <= 2010 | is.na(fire_year_2019))) %>% # &
-                # filter(case_when(fire.type.bin == 'Wildfire' ~ stratlayer %in% frap.strat,
-                #                  fire.type.bin == 'Rxfire' ~ stratlayer %in% rx.strat)) %>%
-                # filter(lf_evt_2001 %in% c(2031, 2173, 2027, 2019, 2032, 2033, 2172, 2053)) %>%
-                # elevation <= elev.upper & clm_precip_sum_mean >= ppt.lower &
-                # if_else(treatment == 'Wildfire', fire.year == fire_year_2019_mode, is.na(fire_year_2019_mode))) %>%
                 group_by(date, treatment, fire.type.bin) %>%
                 summarize(ppt.mean = mean(ppt),
                           ppt.sd = sd(ppt), ppt.n = n(), count = n()),
               mapping = aes(ymin=ppt.mean - 1.96*(ppt.sd / sqrt(ppt.n)),
                             ymax=ppt.mean + 1.96*(ppt.sd / sqrt(ppt.n)),
                             x = date, fill = fire.type.bin, alpha = treatment)) +
-  #Do the Formating
+  #Do the Formatting
   scale_linetype(name = 'Treatment') +
   scale_alpha_discrete(range = c(0.3, 0.3)) +
   scale_color_brewer(type = 'qual', palette = 'Set2', name = 'Fire Type', direction = 1) +

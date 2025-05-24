@@ -1,4 +1,4 @@
-# Datasets and R scripts used in "Recent fire history enhances semi-arid conifer forest drought resistance"
+# Datasets, R, and Google Earth Engine scripts used in "Recent fire history enhances semi-arid conifer forest drought resistance"
 ---
 
 These data sets and scripts allow for the creation of all figures and supplementary figures and tables in the following manuscript. When using these data and script please cite the following manuscript.

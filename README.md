@@ -64,7 +64,8 @@ Data was derived from these publicly available sources:
 
 ## Code/Software
 The code shared with this submission were written in JavaScript for Google Earth Engine (GEE) and R 4.3.3 run using RStudio.
-The code requires the tidyverse, sf, RSQlite, rFIA, RSToolbox, patchwork, ggpubr, kableExtra, and gstat packages.
+The code requires the tidyverse, sf, RSQlite, rFIA, RSToolbox, patchwork, ggpubr, kableExtra, and gstat packages. GEE code can be added to the 
+GEE Code Editor using the following link: https://code.earthengine.google.com/?accept_repo=users/cnorlen/fireDieoff.
 
 ## R Code
 Script used to create Figure 1, S2 of the manuscript.

@@ -1,12 +1,12 @@
 # Datasets and R scripts used in "Recent fire history enhances semi-arid conifer forest drought resistance"
 ---
 
-These data sets and scripts allow for the creation of all figures and supplementary figures and tables cited in 
-Norlen, C.A.; Hemes, K.S.; Wang, J.A.; Randerson, J.T.; Battles, J.J.; Tubbesing, C.L.; Goulden, M.L. (2024) "Recent fire history enhances semi-arid conifer forest drought resistance" Forest Ecology and management
+These data sets and scripts allow for the creation of all figures and supplementary figures and tables in the following manuscript. When using these data and script please cite the following manuscript.
+Norlen, C.A.; Hemes, K.S.; Wang, J.A.; Randerson, J.T.; Battles, J.J.; Tubbesing, C.L.; Goulden, M.L. (2024) "Recent fire history enhances semi-arid conifer forest drought resistance" Forest Ecology and Management. 573 (2024): 122331. https://doi.org/10.1016/j.foreco.2024.122331
 
 ## Data Access
 The data sets required to create the figures are available in the following DRYAD repository: 
-Norlen, C.A.; Hemes, K.S.; Wang, J.A.; Randerson, J.T.; Battles, J.J.; Tubbesing, C.L.; Goulden, M.L. (2024). "Recent fire history enhances semi-arid conifer forest drought resistance"" [Dataset]. Dryad. 
+Norlen, C.A.; Hemes, K.S.; Wang, J.A.; Randerson, J.T.; Battles, J.J.; Tubbesing, C.L.; Goulden, M.L. (2024). "Recent fire history enhances semi-arid conifer forest drought resistance"" [Dataset]. Dryad. https://doi.org/10.5061/dryad.s4mw6m9f2
 
 ## Description of the data and file structure
 Shape File of USFS Ecological Subsections used to create Manuscript Figures 1a, S1
@@ -63,17 +63,43 @@ Data was derived from these publicly available sources:
   * Eddy Covariance Data: https://www.ess.uci.edu/~california/
 
 ## Code/Software
-The code shared with this submission were written in R 4.3.3 and run using RStudio.
+The code shared with this submission were written in JavaScript for Google Earth Engine (GEE) and R 4.3.3 run using RStudio.
 The code requires the tidyverse, sf, RSQlite, rFIA, RSToolbox, patchwork, ggpubr, kableExtra, and gstat packages.
 
-R script used to create Figure 1, S2 of the manuscript.
+## R Code
+Script used to create Figure 1, S2 of the manuscript.
   * fig1_fire_history_maps.r
   
-R script used to to create Figures 2, 4, 5 and Table 1 of the manuscript and Figures S2, S4, S9, S11, R3, and Table S1.  
+Script used to to create Figures 2, 4, 5 and Table 1 of the manuscript and Figures S2, S4, S9, S11, R3, and Table S1.  
   * frap_rx_fire_recovery_dieback_comparison_30m.r
   
-R script used to create Figure Figures 3, 6, 7, and Table 1 of the manuscript and Figures S3, S5, S8, S10, S12, R4, and Tables S2,
+Script used to create Figure Figures 3, 6, 7, and Table 1 of the manuscript and Figures S3, S5, S8, S10, S12, R4, and Tables S2,
   * fire_sev_recovery_dieback_comparison_30m
   
-R script used to create Figures S6 and S7. 
+Script used to create Figures S6 and S7. 
   * fig_s9_ndvi_et_scaling
+  
+## GEE JavaScript Code
+Script used to compare Rx perimeters to CCDC disturbance detection
+  * compare_Rx_CCDC_Disturbances.js
+
+Script used to export stratified fire data for analysis
+  * Fire_stratified_data_export_for_analysis.js
+  
+Script used to export raster version of the wild and prescribed fire data to GEE Assets
+  * Frap_wild_rx_raster_export.js
+  
+Script used to export monthly NDVI data for the eddy covariance sites for analysis
+  * monthly_NDVI_raster_export.js
+  
+Script used to export raster versions of the wildfire severity data to GEE Assets
+  * USFS_Fire_severity_raster_export.js
+  
+Functions that for an Aerial Detection Survesy (ADS) time series to be added to scripts
+  * ads.js
+  
+Functions that allow for rasterized wildfire data to be added to other scripts
+  * frap.js
+  
+Functions that allow for a time series stack of Landsat data to be added to other scripts
+  * landsat.js

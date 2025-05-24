@@ -113,7 +113,6 @@ p1b <- ggplot(data = GEE_ET_tower_all %>% filter(ET.predict > 1 & site_ID != 'US
   stat_cor(label.x.npc = 0.1, label.y.npc = 0.95, mapping = aes(label = paste(..rr.label..)),
            size = 3.5, color = 'black', r.accuracy = 0.001, p.accuracy = 0.001) +
   stat_regline_equation(label.x.npc = 0.1, label.y.npc = 0.85, size = 3.5) +
-  
   theme_bw() +
   theme(legend.position = 'none') +
   ylab(expression('Predicted ET / Observed ET')) +

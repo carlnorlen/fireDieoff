@@ -351,7 +351,7 @@ sev.pixel.filter <- sev.pixel.sample %>% filter(fire.year <= 2010 & fire.year > 
           longitude = first(longitude),
           elevation = first(elevation))
 
-#Create fire recover curves
+#Create fire recovery curves
 p2a <- ggplot() + 
   geom_hline(yintercept = 0) + geom_vline(xintercept = 0, linetype = 'dashed') +
   #Create a Tree Cover line
